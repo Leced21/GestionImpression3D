@@ -40,6 +40,7 @@ export class PieceList implements OnInit {
         this.pieces = data;
         this.calculateStats(); // Calcule les chiffres pour les cartes statistiques
         this.isLoading = false;
+        console.log('Pieces loaded:', this.pieces);
       },
       error: (err) => {
         console.error('Error fetching pieces:', err);
