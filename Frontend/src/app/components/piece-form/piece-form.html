@@ -1,1 +1,195 @@
-<p>piece-form works!</p>
+<!-- src/app/components/piece-form/piece-form.component.html -->
+<div class="form-container">
+  <div class="form-header">
+    <button class="btn-back" routerLink="/pieces">
+      ← Retour à la liste
+    </button>
+    <h1>{{ isEditMode ? '✏️ Modifier la pièce' : '➕ Nouvelle pièce' }}</h1>
+  </div>
+
+  <form [formGroup]="pieceForm" (ngSubmit)="onSubmit()" class="piece-form">
+    <!-- Section 1: Informations générales -->
+    <div class="form-section">
+      <h2 class="section-title">📋 Informations générales</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nom">Nom de la pièce *</label>
+          <input 
+            type="text" 
+            id="nom" 
+            formControlName="nom"
+            placeholder="Ex: Support moteur MX-400"
+            [class.invalid]="pieceForm.get('nom')?.invalid && pieceForm.get('nom')?.touched"
+          >
+          <div class="error-message" *ngIf="pieceForm.get('nom')?.invalid && pieceForm.get('nom')?.touched">
+            Le nom est requis
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reference">Référence</label>
+          <input 
+            type="text" 
+            id="reference" 
+            formControlName="reference"
+            placeholder="Auto-généré si vide"
+          >
+          <div class="helper-text">Laissez vide pour génération automatique</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea 
+          id="description" 
+          formControlName="description"
+          rows="3"
+          placeholder="Description technique, usage prévu, contraintes..."
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Section 2: Coûts -->
+    <div class="form-section">
+      <h2 class="section-title">💰 Coûts</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="coutMatiere">Coût matière (€)</label>
+          <input 
+            type="number" 
+            id="coutMatiere" 
+            formControlName="coutMatiere"
+            step="0.01"
+            min="0"
+            (change)="updateCoutTotal()"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="coutMachine">Coût machine (€)</label>
+          <input 
+            type="number" 
+            id="coutMachine" 
+            formControlName="coutMachine"
+            step="0.01"
+            min="0"
+            (change)="updateCoutTotal()"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="coutMainOeuvre">Coût main d'œuvre (€)</label>
+          <input 
+            type="number" 
+            id="coutMainOeuvre" 
+            formControlName="coutMainOeuvre"
+            step="0.01"
+            min="0"
+            (change)="updateCoutTotal()"
+          >
+        </div>
+      </div>
+
+      <!-- Résumé des coûts -->
+      <div class="cost-summary">
+        <div class="cost-item">
+          <span>💰 Coût total :</span>
+          <strong>{{ getCoutTotal() | number:'1.2-2' }} €</strong>
+        </div>
+        <div class="cost-item">
+          <span>📊 Marge recommandée (30%) :</span>
+          <strong>{{ getPrixRecommande() | number:'1.2-2' }} €</strong>
+        </div>
+        <button type="button" class="btn-link" (click)="appliquerPrixRecommande()">
+          Appliquer le prix recommandé
+        </button>
+      </div>
+    </div>
+
+    <!-- Section 3: Commercial -->
+    <div class="form-section">
+      <h2 class="section-title">💶 Commercial</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="prixVente">Prix de vente (€ HT)</label>
+          <input 
+            type="number" 
+            id="prixVente" 
+            formControlName="prixVente"
+            step="0.01"
+            min="0"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="statut">Statut</label>
+          <select id="statut" formControlName="statut">
+            <option value="Brouillon">📝 Brouillon</option>
+            <option value="Conception">🎨 Conception</option>
+            <option value="Prototypage">🖨️ Prototypage</option>
+            <option value="Validation">✅ Validation</option>
+            <option value="Production">🏭 Production</option>
+            <option value="Commercialisable">💰 Commercialisable</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Aperçu de la marge -->
+      <div class="margin-preview" *ngIf="pieceForm.get('prixVente')?.value">
+        <div class="margin-info" [class.positive]="marge > 0" [class.negative]="marge < 0">
+          <span>Marge brute :</span>
+          <strong>{{ marge | number:'1.2-2' }} € ({{ margePourcentage | number:'1.0-0' }}%)</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Fichier STL -->
+    <div class="form-section">
+      <h2 class="section-title">📁 Fichier 3D</h2>
+      
+      <div class="file-zone" (click)="fileInput.click()" (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
+        <input 
+          type="file" 
+          #fileInput
+          accept=".stl,.step,.3mf"
+          (change)="onFileSelected($event)"
+          style="display: none"
+        >
+        
+        <div *ngIf="!selectedFile && !pieceForm.get('stlFileName')?.value" class="file-placeholder">
+          <div class="file-icon">📁</div>
+          <p>Cliquez ou glissez un fichier STL</p>
+          <span class="file-hint">Formats supportés : STL, STEP, 3MF</span>
+        </div>
+        
+        <div *ngIf="selectedFile" class="file-info">
+          <div class="file-icon">📄</div>
+          <div class="file-details">
+            <strong>{{ selectedFile.name }}</strong>
+            <span>{{ (selectedFile.size / 1024 / 1024) | number:'1.2-2' }} MB</span>
+          </div>
+          <button type="button" class="btn-remove" (click)="removeFile($event)">✕</button>
+        </div>
+        
+        <div *ngIf="!selectedFile && pieceForm.get('stlFileName')?.value" class="file-info existing">
+          <div class="file-icon">📄</div>
+          <div class="file-details">
+            <strong>{{ pieceForm.get('stlFileName')?.value }}</strong>
+            <span>Fichier existant</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions du formulaire -->
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" routerLink="/pieces">Annuler</button>
+      <button type="submit" class="btn-primary" [disabled]="pieceForm.invalid || isSubmitting">
+        {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer la pièce') }}
+      </button>
+    </div>
+  </form>
+</div>
