@@ -1,0 +1,292 @@
+/* src/app/components/piece-form/piece-form.component.css */
+
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Header */
+.form-header {
+  margin-bottom: 2rem;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-back:hover {
+  text-decoration: underline;
+}
+
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Form */
+.piece-form {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.form-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+input, select, textarea {
+  padding: 0.625rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+input.invalid, select.invalid, textarea.invalid {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+}
+
+.helper-text {
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+/* Cost summary */
+.cost-summary {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+}
+
+.cost-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.cost-item:first-child {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+/* Margin preview */
+.margin-preview {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+}
+
+.margin-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.margin-info.positive {
+  color: #10b981;
+}
+
+.margin-info.negative {
+  color: #ef4444;
+}
+
+/* File zone */
+.file-zone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-zone:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.file-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-icon {
+  font-size: 2rem;
+}
+
+.file-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #f1f5f9;
+  border-radius: 0.5rem;
+}
+
+.file-info.existing {
+  background: #dcfce7;
+}
+
+.file-details {
+  flex: 1;
+  text-align: left;
+}
+
+.file-details strong {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.file-details span {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.btn-remove {
+  background: #fee2e2;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.btn-remove:hover {
+  background: #fecaca;
+}
+
+/* Form actions */
+.form-actions {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: #f8fafc;
+}
+
+.btn-secondary {
+  padding: 0.625rem 1.25rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+.btn-primary {
+  padding: 0.625rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .form-container {
+    padding: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-secondary, .btn-primary {
+    width: 100%;
+  }
+}

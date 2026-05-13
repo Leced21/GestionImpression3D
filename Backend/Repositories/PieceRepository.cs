@@ -53,6 +53,28 @@ namespace Backend.Repositories
             return await _context.Pieces.FindAsync(id);
         }
 
+        public async Task<Piece?> UpdateAsync(int id, Piece piece)
+        {
+            var existingPiece = await _context.Pieces.FindAsync(id);
+            if (existingPiece == null)
+            {
+                return null;
+            }
+            // Mettre à jour les propriétés de la pièce existante avec les valeurs de la nouvelle pièce
+            existingPiece.Nom = piece.Nom;
+            existingPiece.Reference = piece.Reference;
+            existingPiece.Description = piece.Description;
+            existingPiece.Statut = piece.Statut;
+            existingPiece.CoutMatiere = piece.CoutMatiere;
+            existingPiece.CoutMachine = piece.CoutMachine;
+            existingPiece.CoutMainOeuvre = piece.CoutMainOeuvre;
+            existingPiece.PrixVente = piece.PrixVente;
+            existingPiece.StlFileName = piece.StlFileName;
+            existingPiece.DateModification = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return existingPiece;
+        }
+
         public async Task<Piece?> UpdateStatutAsync(int id, string nouveauStatut)
         {
             var piece = await _context.Pieces.FindAsync(id);

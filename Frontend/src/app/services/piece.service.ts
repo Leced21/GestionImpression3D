@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root',
 })
 export class PieceService {
-  private apiUrl = 'http://localhost:7096/api/Pieces';
+  private apiUrl = 'https://localhost:7096/api/Piece';
 
   constructor(private http: HttpClient) {}
 
@@ -25,6 +25,10 @@ export class PieceService {
 
   updateStatus(id: number, statut: string): Observable<Piece> {
     return this.http.patch<Piece>(`${this.apiUrl}/${id}`, { statut });
+  }
+
+  update(id: number, piece: Piece): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, piece);
   }
 
   delete(id: number): Observable<void> {

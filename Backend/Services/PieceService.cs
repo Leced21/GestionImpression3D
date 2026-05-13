@@ -35,6 +35,20 @@ namespace Backend.Services
             return await _pieceRepository.GetByIdAsync(id);
         }
 
+        public async Task<Piece> UpdateAsync(int id, Piece piece)
+        {
+            var existingPiece = await _pieceRepository.GetByIdAsync(id);
+            if (existingPiece == null)
+            {
+                return null;
+            }
+
+            piece.Id = id;
+            piece.DateCreation = existingPiece.DateCreation;
+
+            return await _pieceRepository.UpdateAsync(id, piece);
+        }
+
         public async Task<Piece?> UpdateStatutAsync(int id, string nouveauStatut)
         {
             return await _pieceRepository.UpdateStatutAsync(id, nouveauStatut);
