@@ -65,7 +65,29 @@ namespace Backend.Controllers
                 return BadRequest (ex.Message);
             }
         }
-        [HttpGet("{id}/prix-recommandé")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, Piece piece)
+        {
+            if (id != piece.Id)
+            {
+                return BadRequest("ID mismatch");
+            }
+            try
+            {
+                var updatedPiece = await _pieceService.UpdateAsync(id, piece);
+                if (updatedPiece == null)
+                {
+                    return NotFound();
+                }
+                return Ok(updatedPiece);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("{id}/prix-recommande")]
         public async Task<ActionResult<decimal>> GetPrixRecommandé(int id)
         {
             var prix = await _pieceService.CalculerPrixRecommandéAsync(id);

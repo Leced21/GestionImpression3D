@@ -4,7 +4,8 @@
   <div class="page-header">
     <div>
       <h1>📦 Gestion des pièces</h1>
-      <p class="subtitle">Gérez le cycle de vie de vos pièces imprimées en 3D</p>
+      <p class="subtitle">Gérez le cycle de vie de vos pièces imprimées en
+        3D</p>
     </div>
     <button class="btn-primary" routerLink="/pieces/nouveau">
       <span class="btn-icon">+</span>
@@ -16,17 +17,17 @@
   <div class="filters-bar">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input 
-        type="text" 
-        placeholder="Rechercher par nom, référence..." 
+      <input
+        type="text"
+        placeholder="Rechercher par nom, référence..."
         [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-      />
+        (input)="onSearch()" />
     </div>
-    
+
     <div class="filter-group">
-      <select [(ngModel)]="statutFiltre" (change)="onFilterChange()" class="filter-select">
-        <option value="">Tous les statuts</option>
+      <select [(ngModel)]="statutFiltre" (change)="onFilterChange()"
+        class="filter-select">
+        <option value>Tous les statuts</option>
         <option value="Brouillon">📝 Brouillon</option>
         <option value="Conception">🎨 Conception</option>
         <option value="Prototypage">🖨️ Prototypage</option>
@@ -35,7 +36,7 @@
         <option value="Commercialisable">💰 Commercialisable</option>
       </select>
     </div>
-    
+
     <button class="btn-refresh" (click)="loadPieces()" title="Rafraîchir">
       🔄
     </button>
@@ -74,7 +75,8 @@
     <div class="stat-card">
       <div class="stat-icon teal">💶</div>
       <div class="stat-content">
-        <div class="stat-value">{{stats.chiffreAffaires | number:'1.0-0'}} €</div>
+        <div class="stat-value">{{stats.chiffreAffaires | number:'1.0-0'}}
+          €</div>
         <div class="stat-label">CA potentiel</div>
       </div>
     </div>
@@ -91,7 +93,8 @@
     <div class="empty-icon">📭</div>
     <h3>Aucune pièce trouvée</h3>
     <p>Commencez par créer votre première pièce</p>
-    <button class="btn-primary" routerLink="/pieces/nouveau">+ Nouvelle pièce</button>
+    <button class="btn-primary" routerLink="/pieces/nouveau">+ Nouvelle
+      pièce</button>
   </div>
 
   <!-- Grille des pièces -->
@@ -112,7 +115,8 @@
       <!-- Description -->
       <div class="card-body">
         <p class="piece-description" *ngIf="piece.description">
-          {{piece.description | slice:0:80}}{{piece.description.length > 80 ? '...' : ''}}
+          {{piece.description | slice:0:80}}{{piece.description.length > 80 ?
+          '...' : ''}}
         </p>
         <p class="piece-description empty" *ngIf="!piece.description">
           <em>Aucune description</em>
@@ -133,8 +137,10 @@
         </div>
         <div class="margin-item" *ngIf="piece.prixVente">
           <span class="label">📊 Marge</span>
-          <span class="value" [class.positive]="getMarge(piece) > 0" [class.negative]="getMarge(piece) < 0">
-            {{getMarge(piece) | number:'1.2-2'}} € ({{getMargePourcentage(piece) | number:'1.0-0'}}%)
+          <span class="value" [class.positive]="getMarge(piece) > 0"
+            [class.negative]="getMarge(piece) < 0">
+            {{getMarge(piece) | number:'1.2-2'}} € ({{getMargePourcentage(piece)
+            | number:'1.0-0'}}%)
           </span>
         </div>
       </div>
@@ -153,16 +159,20 @@
 
       <!-- Actions -->
       <div class="card-actions">
-        <button class="action-btn view" [routerLink]="['/pieces', piece.id]" title="Voir le détail">
+        <button class="action-btn view" [routerLink]="['/pieces', piece.id]"
+          title="Voir le détail">
           🔍 Voir
         </button>
-        <button class="action-btn status" (click)="nextStatus(piece)" title="Passer à l'étape suivante">
+        <button class="action-btn status" (click)="nextStatus(piece)"
+          title="Passer à l'étape suivante">
           ⏩ Avancer
         </button>
-        <button class="action-btn edit" [routerLink]="['/pieces', piece.id, 'edit']" title="Modifier">
+        <button class="action-btn edit"
+          [routerLink]="['/pieces', piece.id, 'edit']" title="Modifier">
           ✏️ Modifier
         </button>
-        <button class="action-btn delete" (click)="deletePiece(piece.id)" title="Supprimer">
+        <button class="action-btn delete" (click)="deletePiece(piece.id)"
+          title="Supprimer">
           🗑️ Supprimer
         </button>
       </div>
@@ -171,30 +181,27 @@
 
   <!-- Pagination -->
   <div *ngIf="!isLoading && totalPages > 1" class="pagination">
-    <button 
-      class="page-btn" 
-      [disabled]="currentPage === 1" 
-      (click)="goToPage(currentPage - 1)"
-    >
+    <button
+      class="page-btn"
+      [disabled]="currentPage === 1"
+      (click)="goToPage(currentPage - 1)">
       ← Précédent
     </button>
-    
+
     <div class="page-numbers">
-      <button 
+      <button
         *ngFor="let page of getPageNumbers()"
         class="page-number"
         [class.active]="page === currentPage"
-        (click)="goToPage(page)"
-      >
+        (click)="goToPage(page)">
         {{page}}
       </button>
     </div>
-    
-    <button 
-      class="page-btn" 
-      [disabled]="currentPage === totalPages" 
-      (click)="goToPage(currentPage + 1)"
-    >
+
+    <button
+      class="page-btn"
+      [disabled]="currentPage === totalPages"
+      (click)="goToPage(currentPage + 1)">
       Suivant →
     </button>
   </div>
