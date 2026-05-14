@@ -87,7 +87,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("{id}/prix-recommandé")]
+        [HttpGet("{id}/prix-recommande")]
         public async Task<ActionResult<decimal>> GetPrixRecommandé(int id)
         {
             var prix = await _pieceService.CalculerPrixRecommandéAsync(id);

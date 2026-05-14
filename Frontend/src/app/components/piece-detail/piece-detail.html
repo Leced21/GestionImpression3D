@@ -1,1 +1,190 @@
-<p>piece-detail works!</p>
+<!-- src/app/components/piece-detail/piece-detail.component.html -->
+<div class="detail-container" *ngIf="piece; else loading">
+    <!-- En-tête avec navigation -->
+    <div class="detail-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/pieces">
+                ← Retour à la liste
+            </button>
+            <div class="piece-title">
+                <h1>{{ piece.nom }}</h1>
+                <span class="reference">Réf: {{ piece.reference }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-edit"
+                [routerLink]="['/pieces', piece.id, 'edit']">
+                ✏️ Modifier
+            </button>
+            <button class="btn-delete" (click)="deletePiece()">
+                🗑️ Supprimer
+            </button>
+        </div>
+    </div>
+
+    <!-- Grille principale 2 colonnes -->
+    <div class="detail-grid">
+        <!-- Colonne gauche - Informations générales -->
+        <div class="left-column">
+            <!-- Statut et progression -->
+            <div class="info-card">
+                <h3>📊 État actuel</h3>
+                <div class="status-section">
+                    <div class="status-badge-large"
+                        [class]="getBadgeClass(piece.statut)">
+                        {{ piece.statut }}
+                    </div>
+                    <div class="progress-steps">
+                        <div class="step" *ngFor="let step of statuts"
+                            [class.completed]="isStepCompleted(step)"
+                            [class.active]="step === piece.statut">
+                            <div class="step-dot"></div>
+                            <div class="step-label">{{ step }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="info-card">
+                <h3>📝 Description</h3>
+                <p class="description-text"
+                    *ngIf="piece.description; else noDescription">
+                    {{ piece.description }}
+                </p>
+                <ng-template #noDescription>
+                    <p class="empty-text">Aucune description fournie</p>
+                </ng-template>
+            </div>
+
+            <!-- Détails techniques -->
+            <div class="info-card">
+                <h3>🔧 Détails techniques</h3>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">ID technique</span>
+                        <span class="detail-value">{{ piece.id }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date de création</span>
+                        <span class="detail-value">{{ piece.dateCreation |
+                            date:'dd/MM/yyyy à HH:mm' }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="piece.dateModification">
+                        <span class="detail-label">Dernière modification</span>
+                        <span class="detail-value">{{ piece.dateModification |
+                            date:'dd/MM/yyyy à HH:mm' }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="piece.stlFileName">
+                        <span class="detail-label">Fichier STL</span>
+                        <span class="detail-value file-link">{{
+                            piece.stlFileName }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite - Finances et actions -->
+        <div class="right-column">
+            <!-- Analyse financière -->
+            <div class="info-card">
+                <h3>💰 Analyse financière</h3>
+
+                <div class="financial-section">
+                    <div class="financial-row">
+                        <span>Coût matière</span>
+                        <strong>{{ piece.coutMatiere | number:'1.2-2' }}
+                            €</strong>
+                    </div>
+                    <div class="financial-row">
+                        <span>Coût machine</span>
+                        <strong>{{ piece.coutMachine | number:'1.2-2' }}
+                            €</strong>
+                    </div>
+                    <div class="financial-row">
+                        <span>Coût main d'œuvre</span>
+                        <strong>{{ piece.coutMainOeuvre | number:'1.2-2' }}
+                            €</strong>
+                    </div>
+                    <div class="financial-row total">
+                        <span>💰 Coût total</span>
+                        <strong>{{ getCoutTotal() | number:'1.2-2' }} €</strong>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <div class="financial-row">
+                        <span>💶 Prix de vente</span>
+                        <strong [class.not-set]="!piece.prixVente">
+                            {{ piece.prixVente ? (piece.prixVente |
+                            number:'1.2-2') + ' €' : 'Non défini' }}
+                        </strong>
+                    </div>
+
+                    <div class="financial-row" *ngIf="piece.prixVente">
+                        <span>📊 Marge brute</span>
+                        <strong [class.positive]="getMarge() > 0"
+                            [class.negative]="getMarge() < 0">
+                            {{ getMarge() | number:'1.2-2' }} € ({{
+                            getMargePourcentage() | number:'1.0-0' }}%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prix recommandé -->
+            <div class="info-card recommended">
+                <h3>⭐ Prix recommandé</h3>
+                <div class="recommended-price">
+                    <span class="price">{{ prixRecommande | number:'1.2-2' }}
+                        €</span>
+                    <span class="label">(marge 30%)</span>
+                </div>
+                <button class="btn-apply" (click)="applyRecommendedPrice()"
+                    *ngIf="piece.prixVente !== prixRecommande">
+                    Appliquer ce prix
+                </button>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="info-card">
+                <h3>⚡ Actions rapides</h3>
+                <div class="quick-actions">
+                    <button class="action-btn status" (click)="nextStatus()">
+                        ⏩ Passer à l'étape suivante
+                    </button>
+                    <button class="action-btn edit"
+                        [routerLink]="['/pieces', piece.id, 'edit']">
+                        ✏️ Modifier la pièce
+                    </button>
+                    <button class="action-btn print" (click)="printPiece()">
+                        🖨️ Imprimer la fiche
+                    </button>
+                </div>
+            </div>
+
+            <!-- Versionning -->
+            <div class="info-card">
+                <h3>📦 Versions</h3>
+                <div class="version-list">
+                    <div class="version-item current">
+                        <span class="version-badge">v{{ versionNumber }}</span>
+                        <span class="version-date">{{ piece.dateCreation |
+                            date:'dd/MM/yyyy' }}</span>
+                        <span class="version-status">Version actuelle</span>
+                    </div>
+                </div>
+                <button class="btn-new-version" (click)="createNewVersion()">
+                    + Créer une nouvelle version
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement de la pièce...</p>
+    </div>
+</ng-template>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // Indispensable pour le [(ngModel)] de ton HTML
 import { PieceService } from '../../services/piece.service';
@@ -27,7 +27,10 @@ export class PieceList implements OnInit {
   itemsPerPage: number = 12;
   totalPages: number = 1;
 
-  constructor(private pieceService: PieceService) { }
+  constructor(
+    private pieceService: PieceService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     this.loadPieces();
@@ -40,7 +43,8 @@ export class PieceList implements OnInit {
         this.pieces = data;
         this.calculateStats(); // Calcule les chiffres pour les cartes statistiques
         this.isLoading = false;
-        console.log('Pieces loaded:', this.pieces);
+        this.cdr.detectChanges(); // Force Angular à vérifier les changements (utile si tu as des problèmes de détection de changement)
+        console.log('Pieces loaded:', this.pieces) // Simule un délai pour voir le spinner
       },
       error: (err) => {
         console.error('Error fetching pieces:', err);
@@ -66,12 +70,18 @@ export class PieceList implements OnInit {
     if (currentIndex === -1 || currentIndex === statuts.length - 1) return;
 
     const nextStatut = statuts[currentIndex + 1];
+    this.isLoading = true; // Affiche le spinner pendant la mise à jour du statut
     this.pieceService.updateStatus(piece.id, nextStatut).subscribe({
       next: () => {
         piece.statut = nextStatut;
         this.calculateStats(); // Met à jour les compteurs
+        this.isLoading = false; // Cache le spinner après la mise à jour
+        this.cdr.detectChanges(); // Force Angular à vérifier les changements
       },
-      error: (err) => console.error('Error updating status:', err)
+      error: (err) => {
+        console.error('Error updating status:', err); 
+        this.isLoading = false;
+      }
     });
   }
 
