@@ -24,7 +24,7 @@ export class PieceService {
   }
 
   updateStatus(id: number, statut: string): Observable<Piece> {
-    return this.http.patch<Piece>(`${this.apiUrl}/${id}`, { statut });
+    return this.http.patch<Piece>(`${this.apiUrl}/${id}/statut`,JSON.stringify(statut), { headers: { 'Content-Type': 'application/json' } });
   }
 
   update(id: number, piece: Piece): Observable<void> {

@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { PieceService } from "../../services/piece.service";
@@ -27,7 +27,8 @@ export class PieceForm implements OnInit {
     private fb: FormBuilder,
     private pieceService: PieceService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef  
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +76,7 @@ export class PieceForm implements OnInit {
           stlFileName: piece.stlFileName
         });
         this.updateCoutTotal();
+        this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
       },
       error: (err) => console.error('Erreur chargement:', err)
     });
