@@ -9,6 +9,7 @@ namespace Backend.Data
 
         public DbSet<Piece> Pieces { get; set; }
         public DbSet<DashboardStat> DashboardStats { get; set; }
+        public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
                 base.OnModelCreating(modelBuilder);
