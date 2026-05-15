@@ -115,5 +115,23 @@ namespace Backend.Controllers
             }
 
         }
+        // Controllers/PiecesController.cs - Ajouter cette méthode
+        [HttpGet("dashboard/stats")]
+        public async Task<ActionResult<DashboardStat>> GetDashboardStats()
+        {
+            var pieces = await _pieceService.GetAllAsync();
+
+            var stats = new DashboardStat
+            {
+                TotalPieces = pieces.Count(),
+                EnConception = pieces.Count(p => p.Statut == "Conception"),
+                EnPrototypage = pieces.Count(p => p.Statut == "Prototypage"),
+                EnProduction = pieces.Count(p => p.Statut == "Production"),
+                Commercialisables = pieces.Count(p => p.Statut == "Commercialisable"),
+                ChiffreAffaires = pieces.Where(p => p.Statut == "Commercialisable").Sum(p => p.PrixVente)
+            };
+
+            return Ok(stats);
+        }
     }
 }

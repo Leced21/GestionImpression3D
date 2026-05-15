@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/internal/Observable';
 import { Piece } from '../models/piece.model';
 import { HttpClient } from '@angular/common/http';
+import { DashboardStat } from '../models/dashboardstat';
 
 @Injectable({
   providedIn: 'root',
@@ -38,4 +39,7 @@ export class PieceService {
   getPrixRecommande(id: number): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/${id}/prix-recommande`);
   }
+  getDashboardStats(): Observable<DashboardStat> {
+  return this.http.get<DashboardStat>(`${this.apiUrl}/dashboard/stats`);
+}
 }
