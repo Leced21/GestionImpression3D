@@ -1,0 +1,49 @@
+<div class="register-container">
+    <div class="register-card">
+        <div class="logo">🖨️ PrintFlow3D</div>
+        <h2>Inscription</h2>
+
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Prénom</label>
+                    <input type="text" [(ngModel)]="prenom" name="prenom"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" [(ngModel)]="nom" name="nom" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" [(ngModel)]="password" name="password"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Confirmer le mot de passe</label>
+                <input type="password" [(ngModel)]="confirmPassword"
+                    name="confirmPassword" required>
+            </div>
+
+            <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+            <div class="success" *ngIf="successMessage">{{ successMessage }}</div>
+
+            <button type="submit" class="btn-primary" [disabled]="isLoading">
+                {{ isLoading ? 'Inscription...' : "S'inscrire" }}
+            </button>
+        </form>
+
+        <p class="login-link">
+            Déjà un compte ? <a routerLink="/login">Se connecter</a>
+        </p>
+    </div>
+</div>
