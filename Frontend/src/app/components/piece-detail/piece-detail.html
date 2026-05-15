@@ -1,190 +1,209 @@
 <!-- src/app/components/piece-detail/piece-detail.component.html -->
-<div class="detail-container" *ngIf="piece; else loading">
-    <!-- En-tête avec navigation -->
-    <div class="detail-header">
-        <div class="header-left">
-            <button class="btn-back" routerLink="/pieces">
-                ← Retour à la liste
-            </button>
-            <div class="piece-title">
-                <h1>{{ piece.nom }}</h1>
-                <span class="reference">Réf: {{ piece.reference }}</span>
+<div class="container" *ngIf="piece; else loading">
+  <!-- En-tête -->
+  <div class="header">
+    <div>
+      <span class="breadcrumb" style="color:#64748b">📋 Pièces / </span>
+      <span class="breadcrumb" style="color:#64748b">{{ piece.reference }}</span>
+    </div>
+    <div class="title">
+      {{ piece.nom }}
+      <span class="status" [class]="getStatusClass(piece.statut)">{{ piece.statut }}</span>
+    </div>
+    <p style="color:#64748b; margin-top:0.25rem">
+      Référence: {{ piece.reference }} | Version: {{ versionNumber }}.0
+    </p>
+    <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+      <button class="btn btn-secondary" [routerLink]="['/pieces', piece.id, 'edit']">📝 Modifier</button>
+      <button class="btn btn-primary" (click)="lancerImpression()">🖨️ Lancer impression</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'general'" (click)="activeTab = 'general'">📊 Infos générales</button>
+    <button class="tab" [class.active]="activeTab === 'parametres'" (click)="activeTab = 'parametres'">🖨️ Paramètres</button>
+    <button class="tab" [class.active]="activeTab === 'versions'" (click)="activeTab = 'versions'">📦 Versions</button>
+    <button class="tab" [class.active]="activeTab === 'commercial'" (click)="activeTab = 'commercial'">💰 Commercial</button>
+  </div>
+
+  <!-- Grille 2 colonnes -->
+  <div class="grid-2">
+    <!-- Colonne gauche -->
+    <div>
+      <!-- Onglet: Infos générales -->
+      <div *ngIf="activeTab === 'general'">
+        <div class="card">
+          <h3>📊 Informations générales</h3>
+          <div style="margin-top: 1rem;">
+            <div class="info-row">
+              <span>Statut</span>
+              <span><span class="status" [class]="getStatusClass(piece.statut)">{{ piece.statut }}</span></span>
             </div>
+            <div class="info-row">
+              <span>Priorité</span>
+              <span><span class="priority priority-high" style="background:#fee2e2;color:#991b1b;padding:0.125rem 0.5rem;border-radius:1rem">Haute</span></span>
+            </div>
+            <div class="info-row">
+              <span>Date création</span>
+              <span>{{ piece.dateCreation | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-row">
+              <span>Dernière modification</span>
+              <span>{{ (piece.dateModification || piece.dateCreation) | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-row" *ngIf="piece.description">
+              <span>Description</span>
+              <span>{{ piece.description }}</span>
+            </div>
+          </div>
         </div>
-        <div class="header-actions">
-            <button class="btn-edit"
-                [routerLink]="['/pieces', piece.id, 'edit']">
-                ✏️ Modifier
-            </button>
-            <button class="btn-delete" (click)="deletePiece()">
-                🗑️ Supprimer
-            </button>
+
+        <div class="card">
+          <h3>💰 Analyse des coûts</h3>
+          <div style="margin-top: 1rem;">
+            <div class="info-row">
+              <span>Matière ({{ getMatiereNom() }})</span>
+              <span>{{ piece.coutMatiere | number:'1.2-2' }} €</span>
+            </div>
+            <div class="info-row">
+              <span>Temps machine</span>
+              <span>{{ piece.coutMachine | number:'1.2-2' }} €</span>
+            </div>
+            <div class="info-row">
+              <span>Main d'œuvre</span>
+              <span>{{ piece.coutMainOeuvre | number:'1.2-2' }} €</span>
+            </div>
+            <div class="info-row">
+              <span>Électricité / usure</span>
+              <span>{{ getElectricite() | number:'1.2-2' }} €</span>
+            </div>
+            <div class="info-row" style="font-weight:700">
+              <span>Coût de revient</span>
+              <span>{{ getCoutTotal() | number:'1.2-2' }} €</span>
+            </div>
+            <div class="info-row" style="background:#f0fdf4; margin-top:0.5rem; border-radius:0.5rem">
+              <span>💶 Prix de vente</span>
+              <span><strong style="color:#16a34a">{{ piece.prixVente || getPrixRecommande() | number:'1.2-2' }} €</strong></span>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Onglet: Paramètres -->
+      <div *ngIf="activeTab === 'parametres'">
+        <div class="card">
+          <h3>🖨️ Paramètres d'impression</h3>
+          <div style="margin-top:1rem">
+            <div class="info-row"><span>Hauteur couche</span><span>0.20 mm</span></div>
+            <div class="info-row"><span>Remplissage</span><span>20% (Gyroid)</span></div>
+            <div class="info-row"><span>Supports</span><span>Tree support</span></div>
+            <div class="info-row"><span>Température</span><span>210°C / 60°C</span></div>
+            <div class="info-row"><span>Temps estimé</span><span>{{ getTempsImpression() }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet: Versions -->
+      <div *ngIf="activeTab === 'versions'">
+        <div class="card">
+          <h3>📦 Historique des versions</h3>
+          <div style="margin-top:1rem">
+            <div class="version-item" *ngFor="let version of versions; let i = index">
+              <div class="version-marker" [class.current]="i === 0">v{{ versions.length - i }}</div>
+              <div class="version-info">
+                <div class="version-date">{{ version.date | date:'dd/MM/yyyy' }}</div>
+                <div class="version-comment">{{ version.comment }}</div>
+              </div>
+            </div>
+            <button class="btn-new-version" (click)="createNewVersion()">+ Créer une nouvelle version</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet: Commercial -->
+      <div *ngIf="activeTab === 'commercial'">
+        <div class="card">
+          <h3>💰 Informations commerciales</h3>
+          <div style="margin-top:1rem">
+            <div class="info-row"><span>Prix de vente HT</span><span><strong>{{ piece.prixVente || getPrixRecommande() | number:'1.2-2' }} €</strong></span></div>
+            <div class="info-row"><span>Prix recommandé</span><span>{{ getPrixRecommande() | number:'1.2-2' }} €</span></div>
+            <div class="info-row"><span>Marge</span><span [style.color]="getMarge() >= 0 ? '#10b981' : '#ef4444'">{{ getMarge() | number:'1.2-2' }} € ({{ getMargePourcentage() | number:'1.0-0' }}%)</span></div>
+            <div class="info-row"><span>Stock disponible</span><span>{{ getStock() }} unités</span></div>
+          </div>
+          <button class="btn-primary" style="width:100%; margin-top:1rem" (click)="rendreCommercialisable()" *ngIf="piece.statut === 'Production'">
+            Rendre commercialisable
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Grille principale 2 colonnes -->
-    <div class="detail-grid">
-        <!-- Colonne gauche - Informations générales -->
-        <div class="left-column">
-            <!-- Statut et progression -->
-            <div class="info-card">
-                <h3>📊 État actuel</h3>
-                <div class="status-section">
-                    <div class="status-badge-large"
-                        [class]="getBadgeClass(piece.statut)">
-                        {{ piece.statut }}
-                    </div>
-                    <div class="progress-steps">
-                        <div class="step" *ngFor="let step of statuts"
-                            [class.completed]="isStepCompleted(step)"
-                            [class.active]="step === piece.statut">
-                            <div class="step-dot"></div>
-                            <div class="step-label">{{ step }}</div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Colonne droite -->
+    <div>
+      <!-- Aperçu 3D -->
+      <div class="card">
+        <h3>🖼️ Aperçu 3D</h3>
+        <div class="viewer3d" #viewerContainer>
+          <div *ngIf="!piece.stlFileName; else viewer3d" style="text-align:center">
+            <div style="font-size:4rem">🖨️</div>
+            <div>Visualisation 3D</div>
+            <div style="font-size:0.75rem;margin-top:0.5rem">Aucun fichier STL</div>
+          </div>
+          <ng-template #viewer3d>
+            <canvas #canvas3d class="viewer-canvas"></canvas>
+            <div class="viewer-controls">
+              <button class="control-btn" (click)="resetView()">↻</button>
+              <button class="control-btn" (click)="toggleWireframe()">🔲</button>
             </div>
-
-            <!-- Description -->
-            <div class="info-card">
-                <h3>📝 Description</h3>
-                <p class="description-text"
-                    *ngIf="piece.description; else noDescription">
-                    {{ piece.description }}
-                </p>
-                <ng-template #noDescription>
-                    <p class="empty-text">Aucune description fournie</p>
-                </ng-template>
-            </div>
-
-            <!-- Détails techniques -->
-            <div class="info-card">
-                <h3>🔧 Détails techniques</h3>
-                <div class="details-grid">
-                    <div class="detail-item">
-                        <span class="detail-label">ID technique</span>
-                        <span class="detail-value">{{ piece.id }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Date de création</span>
-                        <span class="detail-value">{{ piece.dateCreation |
-                            date:'dd/MM/yyyy à HH:mm' }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="piece.dateModification">
-                        <span class="detail-label">Dernière modification</span>
-                        <span class="detail-value">{{ piece.dateModification |
-                            date:'dd/MM/yyyy à HH:mm' }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="piece.stlFileName">
-                        <span class="detail-label">Fichier STL</span>
-                        <span class="detail-value file-link">{{
-                            piece.stlFileName }}</span>
-                    </div>
-                </div>
-            </div>
+          </ng-template>
         </div>
-
-        <!-- Colonne droite - Finances et actions -->
-        <div class="right-column">
-            <!-- Analyse financière -->
-            <div class="info-card">
-                <h3>💰 Analyse financière</h3>
-
-                <div class="financial-section">
-                    <div class="financial-row">
-                        <span>Coût matière</span>
-                        <strong>{{ piece.coutMatiere | number:'1.2-2' }}
-                            €</strong>
-                    </div>
-                    <div class="financial-row">
-                        <span>Coût machine</span>
-                        <strong>{{ piece.coutMachine | number:'1.2-2' }}
-                            €</strong>
-                    </div>
-                    <div class="financial-row">
-                        <span>Coût main d'œuvre</span>
-                        <strong>{{ piece.coutMainOeuvre | number:'1.2-2' }}
-                            €</strong>
-                    </div>
-                    <div class="financial-row total">
-                        <span>💰 Coût total</span>
-                        <strong>{{ getCoutTotal() | number:'1.2-2' }} €</strong>
-                    </div>
-
-                    <div class="separator"></div>
-
-                    <div class="financial-row">
-                        <span>💶 Prix de vente</span>
-                        <strong [class.not-set]="!piece.prixVente">
-                            {{ piece.prixVente ? (piece.prixVente |
-                            number:'1.2-2') + ' €' : 'Non défini' }}
-                        </strong>
-                    </div>
-
-                    <div class="financial-row" *ngIf="piece.prixVente">
-                        <span>📊 Marge brute</span>
-                        <strong [class.positive]="getMarge() > 0"
-                            [class.negative]="getMarge() < 0">
-                            {{ getMarge() | number:'1.2-2' }} € ({{
-                            getMargePourcentage() | number:'1.0-0' }}%)
-                        </strong>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Prix recommandé -->
-            <div class="info-card recommended">
-                <h3>⭐ Prix recommandé</h3>
-                <div class="recommended-price">
-                    <span class="price">{{ prixRecommande | number:'1.2-2' }}
-                        €</span>
-                    <span class="label">(marge 30%)</span>
-                </div>
-                <button class="btn-apply" (click)="applyRecommendedPrice()"
-                    *ngIf="piece.prixVente !== prixRecommande">
-                    Appliquer ce prix
-                </button>
-            </div>
-
-            <!-- Actions rapides -->
-            <div class="info-card">
-                <h3>⚡ Actions rapides</h3>
-                <div class="quick-actions">
-                    <button class="action-btn status" (click)="nextStatus()">
-                        ⏩ Passer à l'étape suivante
-                    </button>
-                    <button class="action-btn edit"
-                        [routerLink]="['/pieces', piece.id, 'edit']">
-                        ✏️ Modifier la pièce
-                    </button>
-                    <button class="action-btn print" (click)="printPiece()">
-                        🖨️ Imprimer la fiche
-                    </button>
-                </div>
-            </div>
-
-            <!-- Versionning -->
-            <div class="info-card">
-                <h3>📦 Versions</h3>
-                <div class="version-list">
-                    <div class="version-item current">
-                        <span class="version-badge">v{{ versionNumber }}</span>
-                        <span class="version-date">{{ piece.dateCreation |
-                            date:'dd/MM/yyyy' }}</span>
-                        <span class="version-status">Version actuelle</span>
-                    </div>
-                </div>
-                <button class="btn-new-version" (click)="createNewVersion()">
-                    + Créer une nouvelle version
-                </button>
-            </div>
+        
+        <!-- Upload STL -->
+        <div class="upload-zone" (click)="fileInput.click()">
+          <input type="file" #fileInput accept=".stl,.step,.3mf" style="display: none" (change)="onFileSelected($event)">
+          <div class="upload-icon">📁</div>
+          <p>{{ piece.stlFileName ? 'Remplacer le fichier' : 'Ajouter un fichier STL' }}</p>
+          <span>STL, STEP ou 3MF</span>
         </div>
+        
+        <button class="btn btn-secondary" style="width:100%; margin-top:1rem" (click)="downloadStl()" *ngIf="piece.stlFileName">
+          📥 Télécharger STL
+        </button>
+      </div>
+
+      <!-- Paramètres d'impression -->
+      <div class="card">
+        <h3>⚙️ Paramètres d'impression</h3>
+        <div style="margin-top:1rem">
+          <div class="info-row"><span>Hauteur couche</span><span>0.20 mm</span></div>
+          <div class="info-row"><span>Remplissage</span><span>20% (Gyroid)</span></div>
+          <div class="info-row"><span>Supports</span><span>Tree support</span></div>
+          <div class="info-row"><span>Température</span><span>210°C / 60°C</span></div>
+        </div>
+      </div>
+
+      <!-- Actions rapides -->
+      <div class="card">
+        <h3>⚡ Actions rapides</h3>
+        <div class="quick-actions">
+          <button class="action-btn" (click)="nextStatus()" *ngIf="piece.statut !== 'Commercialisable'">
+            ⏩ Passer à l'étape suivante
+          </button>
+          <button class="action-btn" (click)="previousStatus()" *ngIf="piece.statut !== 'Brouillon'">
+            ⏪ Revenir à l'étape précédente
+          </button>
+          <button class="action-btn delete" (click)="deletePiece()">
+            🗑️ Supprimer la pièce
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <ng-template #loading>
-    <div class="loading-container">
-        <div class="spinner"></div>
-        <p>Chargement de la pièce...</p>
-    </div>
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement de la pièce...</p>
+  </div>
 </ng-template>
