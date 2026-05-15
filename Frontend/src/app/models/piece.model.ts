@@ -11,4 +11,9 @@ export interface Piece {
   stlFileName: string;
   dateCreation: Date;
   dateModification?: Date;
+  categorie?: string;      // Mécanique, Électronique, Décoration, Outillage
+  materiau?: string;       // PLA, PETG, ABS, Résine
+  stock?: number;
+  imageUrl?: string;
+  estDisponible?: boolean;
 }

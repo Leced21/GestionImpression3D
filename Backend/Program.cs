@@ -37,6 +37,8 @@ builder.Services.AddScoped<IPieceRepository, PieceRepository>();
 builder.Services.AddScoped<IPieceService, PieceService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICommercialRepository, CommercialRepository>();
+builder.Services.AddScoped<ICommercialService, CommercialService>();
 
 builder.Services.AddCors(options =>
 {

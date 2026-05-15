@@ -18,7 +18,7 @@ export class PieceForm implements OnInit {
   pieceId?: number;
   isSubmitting = false;
   selectedFile: File | null = null;
-  
+
   // Calculs en temps réel
   coutTotal = 0;
   prixRecommande = 0;
@@ -28,12 +28,12 @@ export class PieceForm implements OnInit {
     private pieceService: PieceService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef  
-  ) {}
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     this.initForm();
-    
+
     // Vérifier si on est en mode édition
     this.pieceId = this.route.snapshot.params['id'];
     if (this.pieceId) {
@@ -52,9 +52,13 @@ export class PieceForm implements OnInit {
       coutMainOeuvre: [0, [Validators.min(0)]],
       prixVente: [0, [Validators.min(0)]],
       statut: ['Brouillon'],
-      stlFileName: ['']
+      stlFileName: [''],
+      categorie: ['Mécanique'],
+      materiau: ['PLA'],
+      stock: [0],
+      estDisponible: [true]
     });
-    
+
     // Écouter les changements de coûts
     this.pieceForm.valueChanges.subscribe(() => {
       this.updateCoutTotal();
@@ -73,7 +77,11 @@ export class PieceForm implements OnInit {
           coutMainOeuvre: piece.coutMainOeuvre,
           prixVente: piece.prixVente,
           statut: piece.statut,
-          stlFileName: piece.stlFileName
+          stlFileName: piece.stlFileName,
+          categorie: piece.categorie,
+          materiau: piece.materiau,
+          stock: piece.stock,
+          estDisponible: piece.estDisponible
         });
         this.updateCoutTotal();
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
@@ -124,7 +132,7 @@ export class PieceForm implements OnInit {
   onFileDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    
+
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       this.selectedFile = files[0];
@@ -139,16 +147,16 @@ export class PieceForm implements OnInit {
 
   onSubmit(): void {
     if (this.pieceForm.invalid) return;
-    
+
     this.isSubmitting = true;
-    
+
     const formValue = this.pieceForm.value;
-    
+
     // Générer une référence si vide
     if (!formValue.reference) {
       formValue.reference = `P-${Date.now()}`;
     }
-    
+
     if (this.isEditMode && this.pieceId) {
       // Mode édition
       const updatedPiece: Piece = {
@@ -156,7 +164,7 @@ export class PieceForm implements OnInit {
         ...formValue,
         dateCreation: new Date()
       };
-      
+
       this.pieceService.update(this.pieceId, updatedPiece).subscribe({
         next: () => {
           this.isSubmitting = false;
@@ -172,7 +180,7 @@ export class PieceForm implements OnInit {
       this.pieceService.create(formValue).subscribe({
         next: (newPiece) => {
           this.isSubmitting = false;
-          
+
           // Si un fichier STL est sélectionné, l'uploader
           if (this.selectedFile) {
             this.uploadStl(newPiece.id, this.selectedFile);
