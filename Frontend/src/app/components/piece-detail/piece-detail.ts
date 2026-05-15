@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Piece } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
+import * as THREE from 'three';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 @Component({
   selector: 'app-piece-detail',
@@ -11,11 +14,28 @@ import { PieceService } from '../../services/piece.service';
   templateUrl: './piece-detail.html',
   styleUrl: './piece-detail.css',
 })
-export class PieceDetail implements OnInit {
+export class PieceDetail implements OnInit, OnDestroy {
   piece: Piece | null = null;
   prixRecommande: number = 0;
+  activeTab: string = 'general';
   statuts: string[] = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
   versionNumber: number = 1;
+  @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;
+  private scene!: THREE.Scene;
+  private camera!: THREE.PerspectiveCamera;
+  private renderer!: THREE.WebGLRenderer;
+  private controls!: OrbitControls;
+  private currentMesh: THREE.Mesh | null = null;
+  private wireframeMode = false;
+  private animationId!: number;
+
+  uploading = false;
+  uploadProgress = 0;
+  uploadError = '';
+
+  versions = [
+    { date: new Date(), comment: 'Version initiale' }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -30,7 +50,26 @@ export class PieceDetail implements OnInit {
       this.loadPiece(id);
     }
   }
-
+  ngAfterViewInit(): void {
+    if (this.piece?.stlFileName) {
+      this.initThreeJS();
+      this.loadStlFile();
+    }
+  }
+  ngOnDestroy(): void {
+    // 1. Arrête l'animation
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    // 2. Nettoie les contrôles et le renderer
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer.forceContextLoss();
+    }
+    if (this.controls) {
+      this.controls.dispose();
+    }
+  }
   loadPiece(id: number): void {
     this.pieceService.getById(id).subscribe({
       next: (data) => {
@@ -38,6 +77,12 @@ export class PieceDetail implements OnInit {
         this.loadPrixRecommande(id);
         this.extractVersionNumber();
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
+        if (this.piece?.stlFileName) {
+          setTimeout(() => {
+            this.initThreeJS();
+            this.loadStlFile();
+          }, 0);
+        }
       },
       error: (err) => console.error('Erreur chargement:', err)
     });
@@ -192,5 +237,218 @@ export class PieceDetail implements OnInit {
       printWindow.document.close();
       printWindow.print();
     }
+  }
+  initThreeJS(): void {
+    const canvas = this.canvasRef.nativeElement;
+
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x1a1a2e);
+
+    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+    this.camera.position.set(2, 2, 2);
+    this.camera.lookAt(0, 0, 0);
+
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer.setSize(400, 400);
+
+    // Contrôles
+    this.controls = new OrbitControls(this.camera, canvas);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
+    this.controls.autoRotate = true;
+    this.controls.autoRotateSpeed = 2;
+
+    // Lumières
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    this.scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(2, 3, 4);
+    this.scene.add(directionalLight);
+
+    const backLight = new THREE.DirectionalLight(0x404040, 0.5);
+    backLight.position.set(-2, 1, -3);
+    this.scene.add(backLight);
+
+    // Grille et axes
+    const gridHelper = new THREE.GridHelper(5, 20, 0x888888, 0x444444);
+    this.scene.add(gridHelper);
+
+    this.animate();
+  }
+
+  loadStlFile(): void {
+    if (!this.piece?.stlFileName) return;
+
+    const loader = new STLLoader();
+    const url = this.pieceService.getStlUrl(this.piece.id);
+
+    loader.load(url, (geometry) => {
+      // Supprimer l'ancien mesh
+      if (this.currentMesh) {
+        this.scene.remove(this.currentMesh);
+      }
+
+      // Centrer la géométrie
+      geometry.computeBoundingBox();
+      const center = geometry.boundingBox!.getCenter(new THREE.Vector3());
+      geometry.translate(-center.x, -center.y, -center.z);
+
+      // Créer le matériau
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x3b82f6,
+        roughness: 0.4,
+        metalness: 0.6,
+        flatShading: false,
+        side: THREE.DoubleSide
+      });
+
+      this.currentMesh = new THREE.Mesh(geometry, material);
+      this.scene.add(this.currentMesh);
+
+      // Ajuster la caméra
+      const boundingBox = geometry.boundingBox;
+      const size = boundingBox!.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const distance = maxDim * 2;
+      this.camera.position.set(distance, distance * 0.8, distance);
+      this.camera.lookAt(0, 0, 0);
+      this.controls.target.set(0, 0, 0);
+      this.controls.update();
+      this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
+    }, undefined, (error) => {
+      console.error('Erreur chargement STL:', error);
+    });
+  }
+
+  animate(): void {
+    this.animationId = requestAnimationFrame(() => this.animate());
+    this.controls.update(); // Met à jour autoRotate si activé
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  resetView(): void {
+    this.camera.position.set(2, 2, 2);
+    this.camera.lookAt(0, 0, 0);
+    this.controls.target.set(0, 0, 0);
+    this.controls.update();
+  }
+
+  toggleWireframe(): void {
+    this.wireframeMode = !this.wireframeMode;
+    if (this.currentMesh) {
+      (this.currentMesh.material as THREE.MeshStandardMaterial).wireframe = this.wireframeMode;
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.uploadFile(input.files[0]);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.uploadFile(files[0]);
+    }
+  }
+
+  uploadFile(file: File): void {
+    this.uploading = true;
+    this.uploadProgress = 0;
+    this.uploadError = '';
+
+    // Simuler progression
+    const interval = setInterval(() => {
+      if (this.uploadProgress < 90) {
+        this.uploadProgress += 10;
+      }
+    }, 200);
+
+    this.pieceService.uploadStl(this.piece!.id, file).subscribe({
+      next: (response) => {
+        clearInterval(interval);
+        this.uploadProgress = 100;
+        setTimeout(() => {
+          this.uploading = false;
+          this.piece!.stlFileName = response.fileName;
+          this.loadStlFile();
+        }, 500);
+      },
+      error: (err) => {
+        clearInterval(interval);
+        this.uploading = false;
+        this.uploadError = err.error?.error || 'Erreur lors de l\'upload';
+      }
+    });
+  }
+
+  retryUpload(): void {
+    this.uploadError = '';
+    // Re-sélectionner le fichier (à implémenter)
+  }
+
+  downloadStl(): void {
+    if (this.piece?.stlFileName) {
+      window.open(this.pieceService.getStlUrl(this.piece.id), '_blank');
+    }
+  }
+  previousStatus(): void {
+    if (!this.piece) return;
+    const statuts = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
+    const index = statuts.indexOf(this.piece.statut);
+    if (index > 0) {
+      this.pieceService.updateStatus(this.piece.id, statuts[index - 1]).subscribe({
+        next: (updated) => { this.piece = updated; }
+      });
+    }
+  }
+  rendreCommercialisable(): void {
+    if (!this.piece) return;
+    this.pieceService.updateStatus(this.piece.id, 'Commercialisable').subscribe({
+      next: (updated) => { this.piece = updated; }
+    });
+  }
+  getStock(): number {
+    return Math.floor(Math.random() * 100) + 10;
+  }
+  getTempsImpression(): string {
+    const minutes = Math.round(this.getCoutTotal() * 15);
+    const heures = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${heures}h${mins.toString().padStart(2, '0')}`;
+  }
+
+  getPrixRecommande(): number {
+    return this.getCoutTotal() * 1.3;
+  }
+  getElectricite(): number {
+    return this.getCoutTotal() * 0.05;
+  }
+  getMatiereNom(): string {
+    return 'PLA - 350g';
+  }
+  getStatusClass(statut: string): string {
+    const classes: Record<string, string> = {
+      'Brouillon': 'status-brouillon',
+      'Conception': 'status-conception',
+      'Prototypage': 'status-prototypage',
+      'Validation': 'status-validation',
+      'Production': 'status-production',
+      'Commercialisable': 'status-commercialisable'
+    };
+    return classes[statut] || 'status-brouillon';
+  }
+  lancerImpression(): void {
+    alert(`Impression lancée pour ${this.piece?.nom}`);
   }
 }
