@@ -1,0 +1,84 @@
+.app {
+    display: flex;
+    /* Aligne sidebar et main horizontalement */
+    height: 100vh;
+    /* Prend toute la hauteur de l'écran */
+    width: 100vw;
+    overflow: hidden;
+    /* Empêche le scroll sur toute la page */
+}
+
+.sidebar {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    /* Empêche la sidebar de s'écraser */
+}
+
+.main {
+    flex-grow: 1;
+    /* Prend tout l'espace restant */
+    overflow-y: auto;
+    /* Permet le scroll uniquement ici */
+    background-color: #f8fafc;
+    padding: 2rem;
+}
+
+/* Style pour les liens de navigation */
+.nav-item {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.nav-item:hover {
+    background-color: #f1f5f9;
+}
+
+/* La classe 'active' ajoutée automatiquement par Angular */
+.active {
+    background-color: #eff6ff !important;
+    color: #3b82f6 !important;
+    font-weight: 600;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+        z-index: 1000;
+    }
+}
