@@ -8,6 +8,7 @@ namespace Backend.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Piece> Pieces { get; set; }
+        public DbSet<DashboardStat> DashboardStats { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
                 base.OnModelCreating(modelBuilder);

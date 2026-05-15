@@ -1,0 +1,95 @@
+<!-- src/app/components/dashboard/dashboard.component.html -->
+<div class="app">
+    <div class="header">
+        <h1 class="page-title">Tableau de bord</h1>
+        <button class="btn btn-primary" routerLink="/pieces/nouveau">+
+            Nouvelle pièce</button>
+    </div>
+
+    <!-- Stats dynamiques -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: #eff6ff;">📐</div>
+                <span style="color: var(--primary); font-weight: 600;">{{
+                    evolutions.conception }}</span>
+            </div>
+            <div class="stat-value">{{ stats.enConception }}</div>
+            <div class="stat-label">Pièces en conception</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon"
+                    style="background: #fef3c7;">🖨️</div>
+                <span style="color: var(--warning);">{{
+                    evolutions.impressions }}</span>
+            </div>
+            <div class="stat-value">{{ stats.enPrototypage +
+                stats.enProduction }}</div>
+            <div class="stat-label">Impressions en cours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: #dcfce7;">✅</div>
+                <span style="color: var(--success);">{{ evolutions.produites
+                    }}</span>
+            </div>
+            <div class="stat-value">{{ stats.enProduction +
+                stats.commercialisables }}</div>
+            <div class="stat-label">Pièces produites</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: #f3e8ff;">💶</div>
+                <span style="color: #9333ea;">{{ evolutions.ca }}</span>
+            </div>
+            <div class="stat-value">{{ stats.chiffreAffaires |
+                number:'1.0-0' }} €</div>
+            <div class="stat-label">Chiffre d'affaires</div>
+        </div>
+    </div>
+
+    <!-- Projets récents -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📋 Projets récents</h2>
+            <button class="btn btn-outline" routerLink="/pieces">Voir
+                tout</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Nom</th>
+                    <th>Statut</th>
+                    <th>Avancement</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let piece of pieces | slice:0:5">
+                    <td><strong>{{ piece.reference }}</strong></td>
+                    <td>{{ piece.nom }}</td>
+                    <td><span class="badge"
+                            [class]="getBadgeClass(piece.statut)">{{
+                            piece.statut }}</span></td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar"
+                                [style.width.%]="getProgressWidth(piece)"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline"
+                            style="padding:0.25rem 0.5rem;"
+                            [routerLink]="['/pieces', piece.id]">📝</button>
+                    </td>
+                </tr>
+                <tr *ngIf="pieces.length === 0">
+                    <td colspan="5" style="text-align: center;">Aucune pièce
+                        pour le moment</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
