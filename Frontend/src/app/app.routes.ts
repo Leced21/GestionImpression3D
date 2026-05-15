@@ -5,14 +5,19 @@ import { PieceDetail } from './components/piece-detail/piece-detail';
 import { PieceKanban } from './components/piece-kanban/piece-kanban';
 import { CommercialCatalog } from './components/commercial-catalog/commercial-catalog';
 import { Dashboard } from './components/dashboard/dashboard';
+import { Login } from './components/login/login';
+import { Register } from './components/register/register';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-    { path: 'pieces', component: PieceList },
-    { path: 'pieces/nouveau', component: PieceForm },
-    { path: 'pieces/:id', component: PieceDetail },
-    { path: 'pieces/:id/edit', component: PieceForm },
-    { path: 'kanban', component: PieceKanban },
-    { path: 'commercial', component: CommercialCatalog },
-    { path: 'dashboard', component: Dashboard}
+    { path: 'login', component: Login },
+    { path: 'register', component: Register },
+    { path: 'pieces', component: PieceList, canActivate: [AuthGuard] },
+    { path: 'pieces/nouveau', component: PieceForm, canActivate: [AuthGuard] },
+    { path: 'pieces/:id', component: PieceDetail, canActivate: [AuthGuard] },
+    { path: 'pieces/:id/edit', component: PieceForm, canActivate: [AuthGuard] },
+    { path: 'kanban', component: PieceKanban, canActivate: [AuthGuard] },
+    { path: 'commercial', component: CommercialCatalog, canActivate: [AuthGuard] },
+    { path: 'dashboard', component: Dashboard, canActivate: [AuthGuard] },
 ];
