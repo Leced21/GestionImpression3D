@@ -133,5 +133,59 @@ namespace Backend.Controllers
 
             return Ok(stats);
         }
+        [HttpPost("{id}/upload-stl")]
+        public async Task<IActionResult> UploadStl (int id,  IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { error = "Aucun fichier fourni" });
+            }
+            var piece = await _pieceService.GetByIdAsync(id);
+            if (piece == null) 
+            {
+                return NotFound(new { error = "Pièce non trouvé" });
+            }
+            var allowedExtensions = new[] { ".stl", ".step", ".3mf" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest(new { error = "Format non supporté. Utilisez STL, STEP ou 3MF" });
+            }
+            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            if (!Directory.Exists(uploadDir))
+                Directory.CreateDirectory(uploadDir);
+
+            var fileName = $"{piece.Reference}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+            var filePath = Path.Combine(uploadDir, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Mettre à jour la pièce
+            piece.StlFileName = fileName;
+            await _pieceService.UpdateAsync(id, piece);
+
+            return Ok(new
+            {
+                fileName = fileName,
+                filePath = $"/uploads/{fileName}",
+                size = file.Length
+            });
+        }
+        [HttpGet("{id}/stl")]
+        public async Task<IActionResult> GetStlFile(int id)
+        {
+            var piece = await _pieceService.GetByIdAsync(id);
+            if (piece == null || string.IsNullOrEmpty(piece.StlFileName))
+                return NotFound(new { error = "Fichier STL non trouvé" });
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", piece.StlFileName);
+            if (!System.IO.File.Exists(filePath))
+                return NotFound(new { error = "Fichier introuvable sur le serveur" });
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            return File(fileBytes, "application/sla", piece.StlFileName);
+        }
     }
 }

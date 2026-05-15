@@ -10,12 +10,12 @@ import { DashboardStat } from '../models/dashboardstat';
 export class PieceService {
   private apiUrl = 'https://localhost:7096/api/Piece';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAll(): Observable<Piece[]> {
     return this.http.get<Piece[]>(this.apiUrl);
   }
-  
+
   getById(id: number): Observable<Piece> {
     return this.http.get<Piece>(`${this.apiUrl}/${id}`);
   }
@@ -25,7 +25,7 @@ export class PieceService {
   }
 
   updateStatus(id: number, statut: string): Observable<Piece> {
-    return this.http.patch<Piece>(`${this.apiUrl}/${id}/statut`,JSON.stringify(statut), { headers: { 'Content-Type': 'application/json' } });
+    return this.http.patch<Piece>(`${this.apiUrl}/${id}/statut`, JSON.stringify(statut), { headers: { 'Content-Type': 'application/json' } });
   }
 
   update(id: number, piece: Piece): Observable<void> {
@@ -40,6 +40,17 @@ export class PieceService {
     return this.http.get<number>(`${this.apiUrl}/${id}/prix-recommande`);
   }
   getDashboardStats(): Observable<DashboardStat> {
-  return this.http.get<DashboardStat>(`${this.apiUrl}/dashboard/stats`);
-}
+    return this.http.get<DashboardStat>(`${this.apiUrl}/dashboard/stats`);
+  }
+  // services/piece.service.ts - Ajouter ces méthodes
+
+  uploadStl(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.apiUrl}/${id}/upload-stl`, formData);
+  }
+
+  getStlUrl(id: number): string {
+    return `${this.apiUrl}/${id}/stl`;
+  }
 }
