@@ -1,4 +1,6 @@
-﻿namespace Backend.Models
+﻿using System.Text.Json.Serialization;
+
+namespace Backend.Models
 {
     public class Piece
     {
@@ -20,6 +22,10 @@
         public int Stock { get; set; } = 0;
         public string? ImageUrl { get; set; }
         public bool EstDisponible { get; set; } = true;
+
+        // Navigation inverse vers les projets contenant cette pièce
+        [JsonIgnore]
+        public List<ProjetPiece> ProjetPieces { get; set; } = new();
 
         // Propriétés calculées (non stockées en base)
         public decimal CoutTotal => CoutMatiere + CoutMachine + CoutMainOeuvre;

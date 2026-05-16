@@ -8,6 +8,9 @@ import { Dashboard } from './components/dashboard/dashboard';
 import { Login } from './components/login/login';
 import { Register } from './components/register/register';
 import { AuthGuard } from './guards/auth.guard';
+import { ProjectList } from './components/project-list/project-list';
+import { ProjetForm } from './components/projet-form/projet-form';
+import { ProjetDetail } from './components/projet-detail/projet-detail';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -20,4 +23,8 @@ export const routes: Routes = [
     { path: 'kanban', component: PieceKanban, canActivate: [AuthGuard] },
     { path: 'commercial', component: CommercialCatalog, canActivate: [AuthGuard] },
     { path: 'dashboard', component: Dashboard, canActivate: [AuthGuard] },
+    { path: 'projets', component: ProjectList, canActivate: [AuthGuard] },
+    { path: 'projets/nouveau', component: ProjetForm, canActivate: [AuthGuard] },
+    { path: 'projets/:id', component: ProjetDetail, canActivate: [AuthGuard] },
+    { path: 'projets/:id/edit', component: ProjetForm, canActivate: [AuthGuard] }
 ];

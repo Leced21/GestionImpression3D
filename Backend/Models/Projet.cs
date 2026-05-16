@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models
 {
@@ -7,18 +8,30 @@ namespace Backend.Models
         public int Id { get; set; }
 
         [Required]
+        [MaxLength(200)]
         public string Nom { get; set; } = string.Empty;
 
+        // 1. RETRAIT de [Required] si c'est le backend qui la génère après le POST
+        [MaxLength(50)]
         public string Reference { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
 
-        public string Statut { get; set; } = "Brouillon"; // Brouillon, EnCours, Termine
-        public DateTime DateCreation { get; set; } = DateTime.Now;
+        // 2. Rendu optionnel (string?) pour éviter la 400 si l'utilisateur ne met rien
+        public string? Description { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Statut { get; set; } = "Brouillon";
+
+        public DateTime? DateCreation { get; set; } = DateTime.Now;
         public DateTime? DateLivraisonPrevue { get; set; }
 
-        public string ClientNom { get; set; } = string.Empty;
-        public string ClientEmail { get; set; } = string.Empty;
+        // 3. Rendu optionnel ou à initialiser si non saisis immédiatement
+        public string? ClientNom { get; set; }
 
+        [EmailAddress] // S'il y a un email, il doit être valide, mais il peut être nul
+        public string? ClientEmail { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Budget { get; set; }
 
         // Navigation

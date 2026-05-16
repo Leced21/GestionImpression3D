@@ -1,4 +1,6 @@
-﻿namespace Backend.Models
+﻿using System.Text.Json.Serialization;
+
+namespace Backend.Models
 {
     public class ProjetPiece
     {
@@ -9,6 +11,7 @@
         public DateTime DateAjout { get; set; } = DateTime.Now;
 
         // Navigation
+        [JsonIgnore]
         public Projet Projet { get; set; } = null!;
         public Piece Piece { get; set; } = null!;
     }
