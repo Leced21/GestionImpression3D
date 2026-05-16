@@ -75,6 +75,39 @@
     margin-top: auto;
 }
 
+.sidebar-sublist {
+    padding: 0 1rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sidebar-section-title {
+    margin: 0.75rem 1rem 0.25rem 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.nav-subitem {
+    cursor: pointer;
+    padding: 0.55rem 1rem;
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.88);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-subitem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-subitem.active {
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
