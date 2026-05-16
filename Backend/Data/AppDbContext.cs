@@ -65,8 +65,11 @@ namespace Backend.Data
                       .WithMany(p => p.ProjetPieces)
                       .HasForeignKey(e => e.ProjetId);
                 entity.HasOne(e => e.Piece)
-                      .WithMany()
+                      .WithMany(p => p.ProjetPieces)
                       .HasForeignKey(e => e.PieceId);
+
+                // Unicité ProjetId + PieceId pour éviter les doublons
+                entity.HasIndex(e => new { e.ProjetId, e.PieceId }).IsUnique();
             });
         }
     }
