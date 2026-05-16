@@ -14,6 +14,12 @@
         public string StlFileName { get; set; } = string.Empty;
         public DateTime DateCreation { get; set; } = DateTime.Now;
         public DateTime? DateModification { get; set; }
+        // NOUVEAUX ATTRIBUTS POUR LE CATALOGUE
+        public string? Categorie { get; set; } = "Mécanique";  // Mécanique, Électronique, Décoration, Outillage
+        public string? Materiau { get; set; } = "PLA";         // PLA, PETG, ABS, Résine
+        public int Stock { get; set; } = 0;
+        public string? ImageUrl { get; set; }
+        public bool EstDisponible { get; set; } = true;
 
         // Propriétés calculées (non stockées en base)
         public decimal CoutTotal => CoutMatiere + CoutMachine + CoutMainOeuvre;
