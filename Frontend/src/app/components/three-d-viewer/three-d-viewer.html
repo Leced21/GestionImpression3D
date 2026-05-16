@@ -1,0 +1,75 @@
+<div class="viewer-container" [style.height]="height">
+    <canvas #canvas3d class="viewer-canvas"></canvas>
+
+    <!-- Contrôles des vues -->
+    <div class="view-controls">
+        <button class="view-btn" [class.active]="currentView === 'perspective'"
+            (click)="setView('perspective')">
+            🎯 Perspective
+        </button>
+        <button class="view-btn" [class.active]="currentView === 'face'"
+            (click)="setView('face')">
+            📐 Face
+        </button>
+        <button class="view-btn" [class.active]="currentView === 'dessus'"
+            (click)="setView('dessus')">
+            ⬇️ Dessus
+        </button>
+        <button class="view-btn" [class.active]="currentView === 'profil'"
+            (click)="setView('profil')">
+            ↔️ Profil
+        </button>
+        <button class="view-btn" [class.active]="currentView === 'isometrique'"
+            (click)="setView('isometrique')">
+            🔷 Isométrique
+        </button>
+    </div>
+
+    <!-- Panneau des dimensions -->
+    <div class="dimensions-panel" *ngIf="dimensions">
+        <h4>📏 Dimensions réelles</h4>
+        <div class="dimension-item">
+            <span>Longueur (X) :</span>
+            <strong>{{ dimensions.longueur }} mm</strong>
+        </div>
+        <div class="dimension-item">
+            <span>Largeur (Y) :</span>
+            <strong>{{ dimensions.largeur }} mm</strong>
+        </div>
+        <div class="dimension-item">
+            <span>Hauteur (Z) :</span>
+            <strong>{{ dimensions.hauteur }} mm</strong>
+        </div>
+        <div class="dimension-divider"></div>
+        <div class="dimension-item">
+            <span>Volume :</span>
+            <strong>{{ dimensions.volume }} cm³</strong>
+        </div>
+        <div class="dimension-item">
+            <span>Poids estimé :</span>
+            <strong>{{ dimensions.poids }} g</strong>
+        </div>
+    </div>
+
+    <!-- Barre d'échelle -->
+    <div class="scale-bar" *ngIf="dimensions">
+        <span>📏 Échelle</span>
+        <div class="scale-line">
+            <div class="scale-marker"></div>
+            <span>0</span>
+            <div class="scale-marker"></div>
+            <span>{{ dimensions.longueur }} mm</span>
+        </div>
+    </div>
+
+    <!-- Contrôles bottom -->
+    <div class="bottom-controls">
+        <button class="bottom-btn" (click)="resetView()">⟳
+            Réinitialiser</button>
+        <button class="bottom-btn" (click)="toggleWireframe()">🔲 Mode fil de
+            fer</button>
+        <button class="bottom-btn" (click)="toggleAutoRotate()">🔄 Rotation
+            auto</button>
+        <button class="bottom-btn" (click)="centerView()">🎯 Centrer</button>
+    </div>
+</div>

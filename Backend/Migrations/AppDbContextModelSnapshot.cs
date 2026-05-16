@@ -218,6 +218,84 @@ namespace Backend.Migrations
                     b.ToTable("Pieces");
                 });
 
+            modelBuilder.Entity("Backend.Models.Projet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Budget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ClientEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientNom")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateLivraisonPrevue")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Statut")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Projets");
+                });
+
+            modelBuilder.Entity("Backend.Models.ProjetPiece", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateAjout")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PieceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantite")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PieceId");
+
+                    b.HasIndex("ProjetId");
+
+                    b.ToTable("ProjetPieces");
+                });
+
             modelBuilder.Entity("Backend.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -280,9 +358,33 @@ namespace Backend.Migrations
                     b.Navigation("Piece");
                 });
 
+            modelBuilder.Entity("Backend.Models.ProjetPiece", b =>
+                {
+                    b.HasOne("Backend.Models.Piece", "Piece")
+                        .WithMany()
+                        .HasForeignKey("PieceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Projet", "Projet")
+                        .WithMany("ProjetPieces")
+                        .HasForeignKey("ProjetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Piece");
+
+                    b.Navigation("Projet");
+                });
+
             modelBuilder.Entity("Backend.Models.Commande", b =>
                 {
                     b.Navigation("Lignes");
+                });
+
+            modelBuilder.Entity("Backend.Models.Projet", b =>
+                {
+                    b.Navigation("ProjetPieces");
                 });
 #pragma warning restore 612, 618
         }
