@@ -39,6 +39,8 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommercialRepository, CommercialRepository>();
 builder.Services.AddScoped<ICommercialService, CommercialService>();
+builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
+builder.Services.AddScoped<IProjetService, ProjetService>();
 
 builder.Services.AddCors(options =>
 {

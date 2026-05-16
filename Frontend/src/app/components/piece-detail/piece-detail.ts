@@ -3,13 +3,15 @@ import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Piece } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
+import { Subject, takeUntil } from 'rxjs';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { ThreeDViewer } from '../three-d-viewer/three-d-viewer';
 
 @Component({
   selector: 'app-piece-detail',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ThreeDViewer],
   standalone: true,
   templateUrl: './piece-detail.html',
   styleUrl: './piece-detail.css',
@@ -20,6 +22,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   activeTab: string = 'general';
   statuts: string[] = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
   versionNumber: number = 1;
+  private destroy$ = new Subject<void>();
   @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -50,13 +53,11 @@ export class PieceDetail implements OnInit, OnDestroy {
       this.loadPiece(id);
     }
   }
-  ngAfterViewInit(): void {
-    if (this.piece?.stlFileName) {
-      this.initThreeJS();
-      this.loadStlFile();
-    }
-  }
+  ngAfterViewInit(): void { }
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
     // 1. Arrête l'animation
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
@@ -71,7 +72,7 @@ export class PieceDetail implements OnInit, OnDestroy {
     }
   }
   loadPiece(id: number): void {
-    this.pieceService.getById(id).subscribe({
+    this.pieceService.getById(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
         this.piece = data;
         this.loadPrixRecommande(id);
@@ -79,9 +80,13 @@ export class PieceDetail implements OnInit, OnDestroy {
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
         if (this.piece?.stlFileName) {
           setTimeout(() => {
-            this.initThreeJS();
-            this.loadStlFile();
-          }, 0);
+            if (this.canvasRef && this.canvasRef.nativeElement) {
+              this.initThreeJS();
+              this.loadStlFile();
+            } else {
+              console.warn('Canvas reference not found');
+            }
+          }, 50);
         }
       },
       error: (err) => console.error('Erreur chargement:', err)
@@ -89,7 +94,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   }
 
   loadPrixRecommande(id: number): void {
-    this.pieceService.getPrixRecommande(id).subscribe({
+    this.pieceService.getPrixRecommande(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (prix) => this.prixRecommande = prix,
       error: (err) => console.error('Erreur calcul prix:', err)
     });
@@ -239,6 +244,10 @@ export class PieceDetail implements OnInit, OnDestroy {
     }
   }
   initThreeJS(): void {
+
+    if(this.renderer) {
+      return; // Déjà initialisé
+    }
     const canvas = this.canvasRef.nativeElement;
 
     this.scene = new THREE.Scene();
@@ -249,7 +258,7 @@ export class PieceDetail implements OnInit, OnDestroy {
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    this.renderer.setSize(400, 400);
+    this.renderer.setSize(canvas.clientWidth || 400, canvas.clientHeight || 400);
 
     // Contrôles
     this.controls = new OrbitControls(this.camera, canvas);
@@ -278,10 +287,12 @@ export class PieceDetail implements OnInit, OnDestroy {
   }
 
   loadStlFile(): void {
-    if (!this.piece?.stlFileName) return;
+    if (!this.piece?.stlFileName || !this.scene) return;
 
     const loader = new STLLoader();
     const url = this.pieceService.getStlUrl(this.piece.id);
+
+    console.log("URL envoyée au STLLoader :", url);
 
     loader.load(url, (geometry) => {
       // Supprimer l'ancien mesh
@@ -450,5 +461,9 @@ export class PieceDetail implements OnInit, OnDestroy {
   }
   lancerImpression(): void {
     alert(`Impression lancée pour ${this.piece?.nom}`);
+  }
+  getStlUrl(): string {
+    if (!this.piece?.stlFileName) return '';
+    return this.pieceService.getStlUrl(this.piece.id);
   }
 }

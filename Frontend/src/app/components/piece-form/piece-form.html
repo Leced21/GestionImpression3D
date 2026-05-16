@@ -213,6 +213,9 @@
     </div>
 
     <!-- Actions du formulaire -->
+    <div *ngIf="submissionError" class="form-error">
+      <p>Erreur : {{ submissionError }}</p>
+    </div>
     <div class="form-actions">
       <button type="button" class="btn-secondary"
         routerLink="/pieces">Annuler</button>

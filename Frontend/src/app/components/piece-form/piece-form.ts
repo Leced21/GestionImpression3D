@@ -1,7 +1,8 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
+import { Subject, takeUntil } from "rxjs";
 import { PieceService } from "../../services/piece.service";
 import { Piece } from "../../models/piece.model";
 
@@ -12,12 +13,14 @@ import { Piece } from "../../models/piece.model";
   templateUrl: './piece-form.html',
   styleUrls: ['./piece-form.css']
 })
-export class PieceForm implements OnInit {
+export class PieceForm implements OnInit, OnDestroy {
   pieceForm!: FormGroup;
   isEditMode = false;
   pieceId?: number;
   isSubmitting = false;
+  submissionError: string = '';
   selectedFile: File | null = null;
+  private destroy$ = new Subject<void>();
 
   // Calculs en temps réel
   coutTotal = 0;
@@ -60,7 +63,7 @@ export class PieceForm implements OnInit {
     });
 
     // Écouter les changements de coûts
-    this.pieceForm.valueChanges.subscribe(() => {
+    this.pieceForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.updateCoutTotal();
     });
   }
@@ -148,6 +151,7 @@ export class PieceForm implements OnInit {
   onSubmit(): void {
     if (this.pieceForm.invalid) return;
 
+    this.submissionError = '';
     this.isSubmitting = true;
 
     const formValue = this.pieceForm.value;
@@ -172,6 +176,7 @@ export class PieceForm implements OnInit {
         },
         error: (err) => {
           console.error('Erreur mise à jour:', err);
+          this.submissionError = err?.message || 'Erreur lors de la mise à jour';
           this.isSubmitting = false;
         }
       });
@@ -190,6 +195,7 @@ export class PieceForm implements OnInit {
         },
         error: (err) => {
           console.error('Erreur création:', err);
+          this.submissionError = err?.message || 'Erreur lors de la création';
           this.isSubmitting = false;
         }
       });
@@ -200,5 +206,10 @@ export class PieceForm implements OnInit {
     // À implémenter quand l'upload STL sera disponible
     console.log('Upload STL à implémenter:', pieceId, file.name);
     this.router.navigate(['/pieces', pieceId]);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
