@@ -1,0 +1,61 @@
+<div class="projets-container">
+    <div class="header">
+        <h1>📁 Projets</h1>
+        <button class="btn-primary" routerLink="/projets/nouveau">+ Nouveau
+            projet</button>
+    </div>
+
+    <div class="stats" *ngIf="projets.length > 0">
+        <div class="stat-card">
+            <div class="stat-value">{{ projets.length }}</div>
+            <div class="stat-label">Total projets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ getProjetsByStatus('EnCours').length
+                }}</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ getProjetsByStatus('Termine').length
+                }}</div>
+            <div class="stat-label">Terminés</div>
+        </div>
+    </div>
+
+    <div class="projets-grid">
+        <div class="projet-card" *ngFor="let projet of projets">
+            <div class="projet-header">
+                <h3>{{ projet.nom }}</h3>
+                <span class="statut-badge"
+                    [class]="getBadgeClass(projet.statut)">
+                    {{ getStatusLabel(projet.statut) }}
+                </span>
+            </div>
+            <div class="projet-ref">Réf: {{ projet.reference }}</div>
+            <div class="projet-client" *ngIf="projet.clientNom">
+                Client: {{ projet.clientNom }}
+            </div>
+            <div class="projet-details">
+                <div>📦 {{ projet.projetPieces?.length || 0 }} pièces</div>
+                <div>💶 {{ projet.budget | number:'1.2-2' }} €</div>
+            </div>
+            <div class="projet-actions">
+                <button class="btn-sm" [routerLink]="['/projets', projet.id]">🔍
+                    Voir</button>
+                <button class="btn-sm"
+                    [routerLink]="['/projets', projet.id, 'edit']">✏️
+                    Modifier</button>
+                <button class="btn-sm danger"
+                    (click)="supprimer(projet.id)">🗑️</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="projets.length === 0" class="empty-state">
+        <div class="empty-icon">📁</div>
+        <h3>Aucun projet</h3>
+        <p>Créez votre premier projet</p>
+        <button class="btn-primary" routerLink="/projets/nouveau">+ Nouveau
+            projet</button>
+    </div>
+</div>

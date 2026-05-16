@@ -14,6 +14,19 @@ namespace Backend.Repositories
         }
         public async Task<ProjetPiece> AddPieceAsync(int projetId, int pieceId, int quantite)
         {
+            // Vérifier si la pièce est déjà liée au projet
+            var existing = await _context.ProjetPieces
+                .FirstOrDefaultAsync(pp => pp.ProjetId == projetId && pp.PieceId == pieceId);
+
+            if (existing != null)
+            {
+                existing.Quantite += quantite;
+                // Mettre à jour la date d'ajout pour refléter la modification
+                existing.DateAjout = DateTime.Now;
+                await _context.SaveChangesAsync();
+                return existing;
+            }
+
             var projetPiece = new ProjetPiece
             {
                 ProjetId = projetId,
