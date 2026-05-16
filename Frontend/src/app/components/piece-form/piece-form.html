@@ -11,84 +11,80 @@
     <!-- Section 1: Informations générales -->
     <div class="form-section">
       <h2 class="section-title">📋 Informations générales</h2>
-      
+
       <div class="form-row">
         <div class="form-group">
           <label for="nom">Nom de la pièce *</label>
-          <input 
-            type="text" 
-            id="nom" 
+          <input
+            type="text"
+            id="nom"
             formControlName="nom"
             placeholder="Ex: Support moteur MX-400"
-            [class.invalid]="pieceForm.get('nom')?.invalid && pieceForm.get('nom')?.touched"
-          >
-          <div class="error-message" *ngIf="pieceForm.get('nom')?.invalid && pieceForm.get('nom')?.touched">
+            [class.invalid]="pieceForm.get('nom')?.invalid && pieceForm.get('nom')?.touched">
+          <div class="error-message"
+            *ngIf="pieceForm.get('nom')?.invalid && pieceForm.get('nom')?.touched">
             Le nom est requis
           </div>
         </div>
 
         <div class="form-group">
           <label for="reference">Référence</label>
-          <input 
-            type="text" 
-            id="reference" 
+          <input
+            type="text"
+            id="reference"
             formControlName="reference"
-            placeholder="Auto-généré si vide"
-          >
-          <div class="helper-text">Laissez vide pour génération automatique</div>
+            placeholder="Auto-généré si vide">
+          <div class="helper-text">Laissez vide pour génération
+            automatique</div>
         </div>
       </div>
 
       <div class="form-group">
         <label for="description">Description</label>
-        <textarea 
-          id="description" 
+        <textarea
+          id="description"
           formControlName="description"
           rows="3"
-          placeholder="Description technique, usage prévu, contraintes..."
-        ></textarea>
+          placeholder="Description technique, usage prévu, contraintes..."></textarea>
       </div>
     </div>
 
     <!-- Section 2: Coûts -->
     <div class="form-section">
       <h2 class="section-title">💰 Coûts</h2>
-      
+
       <div class="form-row">
         <div class="form-group">
           <label for="coutMatiere">Coût matière (€)</label>
-          <input 
-            type="number" 
-            id="coutMatiere" 
+          <input
+            type="number"
+            id="coutMatiere"
             formControlName="coutMatiere"
             step="0.01"
             min="0"
-            (change)="updateCoutTotal()"
-          >
+            (change)="updateCoutTotal()">
         </div>
 
         <div class="form-group">
           <label for="coutMachine">Coût machine (€)</label>
-          <input 
-            type="number" 
-            id="coutMachine" 
+          <input
+            type="number"
+            id="coutMachine"
             formControlName="coutMachine"
             step="0.01"
             min="0"
-            (change)="updateCoutTotal()"
-          >
+            (change)="updateCoutTotal()">
         </div>
 
         <div class="form-group">
           <label for="coutMainOeuvre">Coût main d'œuvre (€)</label>
-          <input 
-            type="number" 
-            id="coutMainOeuvre" 
+          <input
+            type="number"
+            id="coutMainOeuvre"
             formControlName="coutMainOeuvre"
             step="0.01"
             min="0"
-            (change)="updateCoutTotal()"
-          >
+            (change)="updateCoutTotal()">
         </div>
       </div>
 
@@ -102,7 +98,8 @@
           <span>📊 Marge recommandée (30%) :</span>
           <strong>{{ getPrixRecommande() | number:'1.2-2' }} €</strong>
         </div>
-        <button type="button" class="btn-link" (click)="appliquerPrixRecommande()">
+        <button type="button" class="btn-link"
+          (click)="appliquerPrixRecommande()">
           Appliquer le prix recommandé
         </button>
       </div>
@@ -111,17 +108,16 @@
     <!-- Section 3: Commercial -->
     <div class="form-section">
       <h2 class="section-title">💶 Commercial</h2>
-      
+
       <div class="form-row">
         <div class="form-group">
           <label for="prixVente">Prix de vente (€ HT)</label>
-          <input 
-            type="number" 
-            id="prixVente" 
+          <input
+            type="number"
+            id="prixVente"
             formControlName="prixVente"
             step="0.01"
-            min="0"
-          >
+            min="0">
         </div>
 
         <div class="form-group">
@@ -139,9 +135,37 @@
 
       <!-- Aperçu de la marge -->
       <div class="margin-preview" *ngIf="pieceForm.get('prixVente')?.value">
-        <div class="margin-info" [class.positive]="marge > 0" [class.negative]="marge < 0">
+        <div class="margin-info" [class.positive]="marge > 0"
+          [class.negative]="marge < 0">
           <span>Marge brute :</span>
-          <strong>{{ marge | number:'1.2-2' }} € ({{ margePourcentage | number:'1.0-0' }}%)</strong>
+          <strong>{{ marge | number:'1.2-2' }} € ({{ margePourcentage |
+            number:'1.0-0' }}%)</strong>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="categorie">Catégorie</label>
+          <select id="categorie" formControlName="categorie">
+            <option value="Mécanique">🔧 Mécanique</option>
+            <option value="Électronique">⚡ Électronique</option>
+            <option value="Décoration">🎨 Décoration</option>
+            <option value="Outillage">🔨 Outillage</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="materiau">Matériau</label>
+          <select id="materiau" formControlName="materiau">
+            <option value="PLA">PLA</option>
+            <option value="PETG">PETG</option>
+            <option value="ABS">ABS</option>
+            <option value="Résine">Résine</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="stock">Stock initial</label>
+          <input type="number" id="stock" formControlName="stock" min="0">
         </div>
       </div>
     </div>
@@ -149,32 +173,36 @@
     <!-- Section 4: Fichier STL -->
     <div class="form-section">
       <h2 class="section-title">📁 Fichier 3D</h2>
-      
-      <div class="file-zone" (click)="fileInput.click()" (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
-        <input 
-          type="file" 
+
+      <div class="file-zone" (click)="fileInput.click()"
+        (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
+        <input
+          type="file"
           #fileInput
           accept=".stl,.step,.3mf"
           (change)="onFileSelected($event)"
-          style="display: none"
-        >
-        
-        <div *ngIf="!selectedFile && !pieceForm.get('stlFileName')?.value" class="file-placeholder">
+          style="display: none">
+
+        <div *ngIf="!selectedFile && !pieceForm.get('stlFileName')?.value"
+          class="file-placeholder">
           <div class="file-icon">📁</div>
           <p>Cliquez ou glissez un fichier STL</p>
           <span class="file-hint">Formats supportés : STL, STEP, 3MF</span>
         </div>
-        
+
         <div *ngIf="selectedFile" class="file-info">
           <div class="file-icon">📄</div>
           <div class="file-details">
             <strong>{{ selectedFile.name }}</strong>
-            <span>{{ (selectedFile.size / 1024 / 1024) | number:'1.2-2' }} MB</span>
+            <span>{{ (selectedFile.size / 1024 / 1024) | number:'1.2-2' }}
+              MB</span>
           </div>
-          <button type="button" class="btn-remove" (click)="removeFile($event)">✕</button>
+          <button type="button" class="btn-remove"
+            (click)="removeFile($event)">✕</button>
         </div>
-        
-        <div *ngIf="!selectedFile && pieceForm.get('stlFileName')?.value" class="file-info existing">
+
+        <div *ngIf="!selectedFile && pieceForm.get('stlFileName')?.value"
+          class="file-info existing">
           <div class="file-icon">📄</div>
           <div class="file-details">
             <strong>{{ pieceForm.get('stlFileName')?.value }}</strong>
@@ -186,9 +214,12 @@
 
     <!-- Actions du formulaire -->
     <div class="form-actions">
-      <button type="button" class="btn-secondary" routerLink="/pieces">Annuler</button>
-      <button type="submit" class="btn-primary" [disabled]="pieceForm.invalid || isSubmitting">
-        {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer la pièce') }}
+      <button type="button" class="btn-secondary"
+        routerLink="/pieces">Annuler</button>
+      <button type="submit" class="btn-primary"
+        [disabled]="pieceForm.invalid || isSubmitting">
+        {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' :
+        'Créer la pièce') }}
       </button>
     </div>
   </form>
