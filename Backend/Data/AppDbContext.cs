@@ -12,6 +12,8 @@ namespace Backend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Commande> Commandes { get; set; }
         public DbSet<CommandeLigne> CommandeLignes { get; set; }
+        public DbSet<Projet> Projets { get; set; }
+        public DbSet<ProjetPiece> ProjetPieces { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -43,6 +45,25 @@ namespace Backend.Data
                 entity.HasOne(e => e.Commande)
                       .WithMany()
                       .HasForeignKey(e => e.CommandeId);
+                entity.HasOne(e => e.Piece)
+                      .WithMany()
+                      .HasForeignKey(e => e.PieceId);
+            });
+            
+            modelBuilder.Entity<Projet>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nom).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Reference).HasMaxLength(50);
+                entity.Property(e => e.Statut).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<ProjetPiece>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Projet)
+                      .WithMany(p => p.ProjetPieces)
+                      .HasForeignKey(e => e.ProjetId);
                 entity.HasOne(e => e.Piece)
                       .WithMany()
                       .HasForeignKey(e => e.PieceId);
