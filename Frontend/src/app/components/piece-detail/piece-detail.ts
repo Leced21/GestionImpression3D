@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ThreeDViewer } from '../three-d-viewer/three-d-viewer';
+import { ExportService } from '../../services/export.service';
 
 @Component({
   selector: 'app-piece-detail',
@@ -44,7 +45,8 @@ export class PieceDetail implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private pieceService: PieceService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private exportService: ExportService
   ) { }
 
   ngOnInit(): void {
@@ -245,7 +247,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   }
   initThreeJS(): void {
 
-    if(this.renderer) {
+    if (this.renderer) {
       return; // Déjà initialisé
     }
     const canvas = this.canvasRef.nativeElement;
@@ -465,5 +467,17 @@ export class PieceDetail implements OnInit, OnDestroy {
   getStlUrl(): string {
     if (!this.piece?.stlFileName) return '';
     return this.pieceService.getStlUrl(this.piece.id);
+  }
+  exportPdf(): void {
+    if (!this.piece) {
+      console.warn("Impossible d'exporter : aucune pièce n'est chargée.");
+      return;
+    }
+    this.exportService.exportPiecePdf(this.piece.id).subscribe({
+      next: (blob) => {
+        this.exportService.downloadPdf(blob, `Piece_${this.piece?.reference}.pdf`);
+      },
+      error: (err) => console.error('Erreur export PDF:', err)
+    });
   }
 }

@@ -13,11 +13,13 @@ namespace Backend.Controllers
         private readonly IProjetService _projetService;
         private readonly ILogger<ProjetController> _logger;
         private readonly IWebHostEnvironment _env;
-        public ProjetController(IProjetService projetService, ILogger<ProjetController> logger, IWebHostEnvironment env)
+        private readonly IPdfExportService _pdfExportService;
+        public ProjetController(IProjetService projetService, ILogger<ProjetController> logger, IWebHostEnvironment env, IPdfExportService pdfExportService)
         {
             _projetService = projetService;
             _logger = logger;
             _env = env;
+            _pdfExportService = pdfExportService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -129,6 +131,26 @@ namespace Backend.Controllers
         {
             var stats = await _projetService.GetStatsAsync(id);
             return Ok(stats);
+        }
+        // Controllers/ProjetsController.cs - Ajouter
+        [HttpGet("{id}/pdf")]
+        public async Task<IActionResult> ExportPdf(int id)
+        {
+            var projet = await _projetService.GetByIdAsync(id);
+            if (projet == null) return NotFound();
+
+            var pdfBytes = await _pdfExportService.ExportProjetToPdfAsync(projet);
+            return File(pdfBytes, "application/pdf", $"Projet_{projet.Reference}.pdf");
+        }
+
+        [HttpGet("{id}/devis")]
+        public async Task<IActionResult> ExportDevis(int id)
+        {
+            var projet = await _projetService.GetByIdAsync(id);
+            if (projet == null) return NotFound();
+
+            var pdfBytes = await _pdfExportService.ExportDevisToPdfAsync(projet);
+            return File(pdfBytes, "application/pdf", $"Devis_{projet.Reference}.pdf");
         }
         public class AjouterPieceRequest
         {
