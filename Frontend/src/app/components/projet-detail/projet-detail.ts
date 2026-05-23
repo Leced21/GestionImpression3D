@@ -7,6 +7,7 @@ import { ProjetService } from '../../services/projet.service';
 import { Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ExportService } from '../../services/export.service';
 
 @Component({
   selector: 'app-projet-detail',
@@ -27,7 +28,8 @@ export class ProjetDetail implements OnInit, OnDestroy {
     private pieceService: PieceService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private exportService: ExportService
   ) { }
 
   ngOnInit(): void {
@@ -123,5 +125,22 @@ export class ProjetDetail implements OnInit, OnDestroy {
         next: () => this.router.navigate(['/projets'])
       });
     }
+  }
+  exportPdf(): void {
+    this.exportService.exportProjetPdf(this.projet.id).subscribe({
+      next: (blob) => {
+        this.exportService.downloadPdf(blob, `Projet_${this.projet.reference}.pdf`);
+      },
+      error: (err) => console.error('Erreur export PDF:', err)
+    });
+  }
+
+  exportDevis(): void {
+    this.exportService.exportDevisPdf(this.projet.id).subscribe({
+      next: (blob) => {
+        this.exportService.downloadPdf(blob, `Devis_${this.projet.reference}.pdf`);
+      },
+      error: (err) => console.error('Erreur export devis:', err)
+    });
   }
 }

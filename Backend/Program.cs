@@ -45,6 +45,7 @@ builder.Services.AddScoped<ICommercialRepository, CommercialRepository>();
 builder.Services.AddScoped<ICommercialService, CommercialService>();
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
 builder.Services.AddScoped<IProjetService, ProjetService>();
+builder.Services.AddScoped<IPdfExportService, PdfExportService>();
 
 builder.Services.AddCors(options =>
 {
