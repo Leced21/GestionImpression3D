@@ -9,9 +9,11 @@ namespace Backend.Controllers
     public class PieceController:ControllerBase
     {
         private readonly IPieceService _pieceService;
-        public PieceController(IPieceService pieceService)
+        private readonly IPdfExportService _pdfExportService;
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService)
         {
             _pieceService = pieceService;
+            _pdfExportService = pdfExportService;
         }
 
         [HttpGet]
@@ -186,6 +188,16 @@ namespace Backend.Controllers
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             return File(fileBytes, "application/sla", piece.StlFileName);
+        }
+        // Controllers/PiecesController.cs - Ajouter
+        [HttpGet("{id}/pdf")]
+        public async Task<IActionResult> ExportPdf(int id)
+        {
+            var piece = await _pieceService.GetByIdAsync(id);
+            if (piece == null) return NotFound();
+
+            var pdfBytes = await _pdfExportService.ExportPieceToPdfAsync(piece);
+            return File(pdfBytes, "application/pdf", $"Piece_{piece.Reference}.pdf");
         }
     }
 }

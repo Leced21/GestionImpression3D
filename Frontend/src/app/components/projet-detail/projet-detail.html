@@ -162,6 +162,18 @@
                             €</strong>
                     </div>
                 </div>
+                <!-- Ajouter dans header-actions -->
+                <div class="header-actions">
+                    <button class="btn-pdf" (click)="exportPdf()">📄 Exporter
+                        PDF</button>
+                    <button class="btn-devis" (click)="exportDevis()">📑 Générer
+                        devis</button>
+                    <button class="btn-edit"
+                        [routerLink]="['/projets', projet.id, 'edit']">✏️
+                        Modifier</button>
+                    <button class="btn-delete" (click)="deleteProjet()">🗑️
+                        Supprimer</button>
+                </div>
             </div>
         </div>
     </div>

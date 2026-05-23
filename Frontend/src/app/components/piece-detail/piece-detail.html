@@ -39,7 +39,8 @@
     </div>
 
     <!-- Grille 2 colonnes -->
-    <div class="grid-2" [style.gridTemplateColumns]="activeTab === '3d' ? '1fr' : '1fr 420px'">
+    <div class="grid-2"
+        [style.gridTemplateColumns]="activeTab === '3d' ? '1fr' : '1fr 420px'">
         <!-- Colonne gauche -->
         <div>
             <!-- Onglet: Infos générales -->
@@ -197,7 +198,8 @@
                     </app-three-d-viewer>
                 </div>
                 <ng-template #noStl3d>
-                    <div class="no-stl-message" style="text-align:center; padding:2rem">
+                    <div class="no-stl-message"
+                        style="text-align:center; padding:2rem">
                         <div class="message-icon">🖨️</div>
                         <h3>Aucun fichier 3D</h3>
                         <p>Aucun fichier STL n'est associé à cette pièce.</p>
@@ -208,7 +210,8 @@
                     </div>
                 </ng-template>
 
-                <div class="upload-zone" (click)="fileInput.click()" (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
+                <div class="upload-zone" (click)="fileInput.click()"
+                    (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
                     <input type="file" #fileInput accept=".stl,.step,.3mf"
                         style="display: none" (change)="onFileSelected($event)">
                     <div class="upload-icon">📁</div>
@@ -228,16 +231,20 @@
             <div class="card" *ngIf="activeTab === 'general'">
                 <h3>🖼️ Aperçu 3D</h3>
                 <div class="viewer3d" #viewerContainer>
-                    <div *ngIf="!piece.stlFileName; else viewer3dPreview" style="text-align:center">
+                    <div *ngIf="!piece.stlFileName; else viewer3dPreview"
+                        style="text-align:center">
                         <div style="font-size:4rem">🖨️</div>
                         <div>Visualisation 3D</div>
-                        <div style="font-size:0.75rem; margin-top:0.5rem">Aucun fichier STL</div>
+                        <div style="font-size:0.75rem; margin-top:0.5rem">Aucun
+                            fichier STL</div>
                     </div>
                     <ng-template #viewer3dPreview>
                         <canvas #canvas3d class="viewer-canvas"></canvas>
                         <div class="viewer-controls">
-                            <button class="control-btn" (click)="resetView()">↻</button>
-                            <button class="control-btn" (click)="toggleWireframe()">🔲</button>
+                            <button class="control-btn"
+                                (click)="resetView()">↻</button>
+                            <button class="control-btn"
+                                (click)="toggleWireframe()">🔲</button>
                         </div>
                     </ng-template>
                 </div>
@@ -246,9 +253,17 @@
             <div class="card">
                 <h3>⚡ Actions rapides</h3>
                 <div class="quick-actions">
-                    <button class="action-btn" (click)="nextStatus()" *ngIf="piece.statut !== 'Commercialisable'">⏩ Passer à l'étape suivante</button>
-                    <button class="action-btn" (click)="previousStatus()" *ngIf="piece.statut !== 'Brouillon'">⏪ Revenir à l'étape précédente</button>
-                    <button class="action-btn delete" (click)="deletePiece()">🗑️ Supprimer la pièce</button>
+                    <button class="action-btn" (click)="nextStatus()"
+                        *ngIf="piece.statut !== 'Commercialisable'">⏩ Passer à
+                        l'étape suivante</button>
+                    <button class="action-btn" (click)="previousStatus()"
+                        *ngIf="piece.statut !== 'Brouillon'">⏪ Revenir à l'étape
+                        précédente</button>
+                    <button class="action-btn delete"
+                        (click)="deletePiece()">🗑️ Supprimer la pièce</button>
+                    <!-- Ajouter dans header-actions -->
+                    <button class="btn-pdf" (click)="exportPdf()">📄 Exporter
+                        PDF</button>
                 </div>
             </div>
         </div>
