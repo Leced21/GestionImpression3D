@@ -1,0 +1,136 @@
+<div class="jobs-container">
+    <div class="header">
+        <div>
+            <h1>🖨️ Jobs d'impression</h1>
+            <p class="subtitle">Gérez vos travaux d'impression 3D</p>
+        </div>
+        <button class="btn-primary" routerLink="/print-jobs/new">+ Nouveau
+            job</button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalJobs }}</div>
+            <div class="stat-label">Total jobs</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ statistics.pendingJobs +
+                statistics.queuedJobs }}</div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ statistics.printingJobs }}</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ statistics.completedJobs }}</div>
+            <div class="stat-label">Terminés</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ statistics.failedJobs }}</div>
+            <div class="stat-label">Échoués</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.successRate | number:'1.0-0'
+                }}%</div>
+            <div class="stat-label">Taux de succès</div>
+        </div>
+    </div>
+
+    <!-- Onglets -->
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'all'"
+            (click)="activeTab = 'all'">Tous</button>
+        <button class="tab" [class.active]="activeTab === 'active'"
+            (click)="activeTab = 'active'">En cours</button>
+        <button class="tab" [class.active]="activeTab === 'queue'"
+            (click)="activeTab = 'queue'">File d'attente</button>
+        <button class="tab" [class.active]="activeTab === 'completed'"
+            (click)="activeTab = 'completed'">Terminés</button>
+    </div>
+
+    <!-- Liste des jobs -->
+    <div class="jobs-list">
+        <div class="job-card" *ngFor="let job of filteredJobs">
+            <div class="job-header">
+                <div class="job-info">
+                    <span class="job-number">{{ job.jobNumber }}</span>
+                    <span class="job-piece">{{ job.pieceName }}</span>
+                    <span class="job-ref">{{ job.pieceReference }}</span>
+                </div>
+                <div class="job-status">
+                    <span class="status-badge"
+                        [style.backgroundColor]="job.statusColor">
+                        {{ job.statusLabel }}
+                    </span>
+                    <span class="priority-badge"
+                        [class.urgent]="job.priority === 'Urgent'"
+                        [class.high]="job.priority === 'High'">
+                        {{ job.priorityLabel }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="job-progress"
+                *ngIf="job.status !== 'Completed' && job.status !== 'Failed'">
+                <div class="progress-bar">
+                    <div class="progress-fill"
+                        [style.width.%]="job.progressPercent"></div>
+                </div>
+                <div class="progress-text">{{ job.progressPercent }}%</div>
+            </div>
+
+            <div class="job-details">
+                <div class="detail-item">
+                    <span>📦 Quantité:</span>
+                    <strong>{{ job.quantityCompleted }}/{{ job.quantity
+                        }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>🖨️ Imprimante:</span>
+                    <strong>{{ job.printerName || 'Non assignée' }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>⏱️ Durée estimée:</span>
+                    <strong>{{ getDurationString(job.estimatedDurationMinutes)
+                        }}</strong>
+                </div>
+                <div class="detail-item" *ngIf="job.actualDurationMinutes">
+                    <span>⏱️ Durée réelle:</span>
+                    <strong>{{ getDurationString(job.actualDurationMinutes)
+                        }}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>📅 Créé le:</span>
+                    <strong>{{ job.createdAt | date:'dd/MM/yyyy HH:mm'
+                        }}</strong>
+                </div>
+            </div>
+
+            <div class="job-actions">
+                <button class="btn-sm" [routerLink]="['/print-jobs', job.id]">🔍
+                    Détail</button>
+                <button class="btn-sm" (click)="startJob(job)"
+                    *ngIf="job.status === 'Queued'">▶️ Démarrer</button>
+                <button class="btn-sm warning" (click)="pauseJob(job)"
+                    *ngIf="job.status === 'Printing'">⏸️ Pause</button>
+                <button class="btn-sm" (click)="resumeJob(job)"
+                    *ngIf="job.status === 'Paused'">▶️ Reprendre</button>
+                <button class="btn-sm success" (click)="completeJob(job)"
+                    *ngIf="job.status === 'Printing'">✅ Terminer</button>
+                <button class="btn-sm danger" (click)="failJob(job)"
+                    *ngIf="job.status === 'Printing' || job.status === 'Queued'">❌
+                    Échouer</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="filteredJobs.length === 0" class="empty-state">
+        <div class="empty-icon">🖨️</div>
+        <h3>Aucun job d'impression</h3>
+        <p>Créez votre premier job d'impression</p>
+        <button class="btn-primary" routerLink="/print-jobs/new">+ Nouveau
+            job</button>
+    </div>
+</div>
