@@ -64,6 +64,9 @@ export class AuthService {
       nom: response.nom,
       prenom: response.prenom,
       role: response.role,
+      isActive: true, // Par défaut, on considère que l'utilisateur est actif
+      dateCreation: new Date(), // Date de création actuelle
+      fullName: `${response.prenom} ${response.nom}` // Concaténation du prénom et du nom
     };
 
     localStorage.setItem(AUTH_TOKEN_KEY, response.token);
