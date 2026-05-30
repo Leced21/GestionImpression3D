@@ -61,6 +61,8 @@ builder.Services.AddScoped<ICommercialRepository, CommercialRepository>();
 builder.Services.AddScoped<ICommercialService, CommercialService>();
 builder.Services.AddScoped<IPrinterRepository, PrinterRepository>();
 builder.Services.AddScoped<IPrinterService, PrinterService>();
+builder.Services.AddScoped<IPrintJobRepository, PrintJobRepository>();
+builder.Services.AddScoped<IPrintJobService, PrintJobService>();
 
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();

@@ -15,6 +15,9 @@ import { AuditLogs } from './components/admin/audit-log/audit-logs/audit-logs';
 import { PrinterList } from './components/printers/printer-list/printer-list';
 import { PrinterForm } from './components/printers/printer-form/printer-form';
 import { PrinterDetail } from './components/printers/printer-detail/printer-detail';
+import { PrintJobList } from './components/printers/print-job-list/print-job-list';
+import { PrintJobForm } from './components/printers/print-job-form/print-job-form';
+import { PrintJobDetail } from './components/printers/print-job-detail/print-job-detail';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -35,5 +38,8 @@ export const routes: Routes = [
     { path: 'printers', component: PrinterList, canActivate: [AuthGuard] },
     { path: 'printers/new', component: PrinterForm, canActivate: [AuthGuard] },
     { path: 'printers/:id', component: PrinterDetail, canActivate: [AuthGuard] },
-    { path: 'printers/:id/edit', component: PrinterForm, canActivate: [AuthGuard] }
+    { path: 'printers/:id/edit', component: PrinterForm, canActivate: [AuthGuard] },
+    { path: 'print-jobs', component: PrintJobList, canActivate: [AuthGuard] },
+    { path: 'print-jobs/new', component: PrintJobForm, canActivate: [AuthGuard] },
+    { path: 'print-jobs/:id', component: PrintJobDetail, canActivate: [AuthGuard] }
 ];

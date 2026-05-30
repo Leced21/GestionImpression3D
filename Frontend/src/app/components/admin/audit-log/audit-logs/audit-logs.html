@@ -5,7 +5,7 @@
     </div>
 
     <app-audit-log-filters
-        (filterChange)="applyFilters($event)"></app-audit-log-filters>
+        (filtersChange)="applyFilters($event)"></app-audit-log-filters>
 
     <div *ngIf="isLoading" class="loading">Chargement...</div>
 
