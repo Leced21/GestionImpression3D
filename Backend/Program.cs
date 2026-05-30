@@ -59,6 +59,8 @@ builder.Services.AddScoped<IPieceRepository, PieceRepository>();
 builder.Services.AddScoped<IPieceService, PieceService>();
 builder.Services.AddScoped<ICommercialRepository, CommercialRepository>();
 builder.Services.AddScoped<ICommercialService, CommercialService>();
+builder.Services.AddScoped<IPrinterRepository, PrinterRepository>();
+builder.Services.AddScoped<IPrinterService, PrinterService>();
 
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();

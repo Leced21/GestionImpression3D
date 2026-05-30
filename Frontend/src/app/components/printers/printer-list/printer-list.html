@@ -1,0 +1,135 @@
+<div class="printers-container">
+    <!-- En-tête -->
+    <div class="header">
+        <div>
+            <h1>🖨️ Gestion des imprimantes</h1>
+            <p class="subtitle">Gérez votre parc d'imprimantes 3D</p>
+        </div>
+        <button class="btn-primary" routerLink="/printers/new">+ Nouvelle
+            imprimante</button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+            <div class="stat-icon">🖨️</div>
+            <div class="stat-value">{{ statistics.totalPrinters }}</div>
+            <div class="stat-label">Total imprimantes</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">{{ statistics.availablePrinters }}</div>
+            <div class="stat-label">Disponibles</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-value">{{ statistics.printingPrinters }}</div>
+            <div class="stat-label">En impression</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value">{{ statistics.errorPrinters }}</div>
+            <div class="stat-label">En erreur</div>
+        </div>
+    </div>
+
+    <!-- Grille des imprimantes -->
+    <div class="printers-grid">
+        <div class="printer-card" *ngFor="let printer of printers">
+            <!-- Statut LED -->
+            <div class="status-led"
+                [style.backgroundColor]="printer.statusColor"></div>
+
+            <!-- En-tête -->
+            <div class="printer-header">
+                <div class="printer-icon">
+                    {{ getPrinterIcon(printer.type) }}
+                </div>
+                <div class="printer-info">
+                    <h3>{{ printer.nom }}</h3>
+                    <span class="printer-model">{{ printer.brand }} {{
+                        printer.model }}</span>
+                </div>
+                <div class="printer-status" [style.color]="printer.statusColor">
+                    {{ printer.statusLabel }}
+                </div>
+            </div>
+
+            <!-- Détails -->
+            <div class="printer-details">
+                <div class="detail-item">
+                    <span class="detail-label">📡 IP:</span>
+                    <span class="detail-value">{{ printer.ipAddress ||
+                        'Non configurée' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">📏 Volume:</span>
+                    <span class="detail-value">{{ printer.maxPrintSizeX }}x{{
+                        printer.maxPrintSizeY }}x{{ printer.maxPrintSizeZ }}
+                        mm</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">📊 Impressions:</span>
+                    <span class="detail-value">{{ printer.totalPrintJobs }} jobs
+                        ({{ printer.totalPrintHours }}h)</span>
+                </div>
+                <div class="detail-item" *ngIf="printer.lastPrint">
+                    <span class="detail-label">🕐 Dernière impression:</span>
+                    <span class="detail-value">{{ printer.lastPrint |
+                        date:'dd/MM/yyyy' }}</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="printer-actions">
+                <button class="btn-sm"
+                    [routerLink]="['/printers', printer.id]">🔍 Détail</button>
+                <button class="btn-sm"
+                    [routerLink]="['/printers', printer.id, 'edit']">✏️
+                    Modifier</button>
+                <button class="btn-sm status" (click)="changeStatus(printer)">🔄
+                    Changer statut</button>
+                <button class="btn-sm danger"
+                    (click)="deletePrinter(printer.id)">🗑️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- État vide -->
+    <div *ngIf="printers.length === 0" class="empty-state">
+        <div class="empty-icon">🖨️</div>
+        <h3>Aucune imprimante</h3>
+        <p>Ajoutez votre première imprimante 3D</p>
+        <button class="btn-primary" routerLink="/printers/new">+ Ajouter une
+            imprimante</button>
+    </div>
+</div>
+
+<!-- Modal changement de statut -->
+<div class="modal" [class.show]="showStatusModal"
+    (click)="closeModalOnOverlay($event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Changer le statut</h3>
+            <button class="modal-close" (click)="closeStatusModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="status-options">
+                <button class="status-option"
+                    *ngFor="let status of statusOptions"
+                    [class.active]="selectedStatus === status.value"
+                    (click)="selectedStatus = status.value">
+                    <span class="status-dot"
+                        [style.backgroundColor]="status.color"></span>
+                    {{ status.label }}
+                </button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary"
+                (click)="closeStatusModal()">Annuler</button>
+            <button class="btn-primary"
+                (click)="confirmStatusChange()">Valider</button>
+        </div>
+    </div>
+</div>

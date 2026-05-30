@@ -1,0 +1,81 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/printers">← Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier l\'imprimante' :
+            '➕ Nouvelle imprimante' }}</h1>
+    </div>
+
+    <form [formGroup]="printerForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Informations générales</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nom *</label>
+                    <input type="text" formControlName="nom"
+                        placeholder="Ex: Prusa MK4">
+                </div>
+                <div class="form-group">
+                    <label>Référence</label>
+                    <input type="text" formControlName="reference"
+                        placeholder="Ex: PRUSA-001">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Marque *</label>
+                    <input type="text" formControlName="brand"
+                        placeholder="Ex: Prusa">
+                </div>
+                <div class="form-group">
+                    <label>Modèle *</label>
+                    <input type="text" formControlName="model"
+                        placeholder="Ex: MK4">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Type *</label>
+                <select formControlName="type">
+                    <option value="FDM">🏭 FDM (Filament)</option>
+                    <option value="SLA">🔮 SLA (Résine)</option>
+                    <option value="SLS">⚙️ SLS (Poudre)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🌐 Connexion</h3>
+            <div class="form-group">
+                <label>Adresse IP</label>
+                <input type="text" formControlName="ipAddress"
+                    placeholder="192.168.1.100">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>📏 Volume d'impression</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>X (mm)</label>
+                    <input type="number" formControlName="maxPrintSizeX">
+                </div>
+                <div class="form-group">
+                    <label>Y (mm)</label>
+                    <input type="number" formControlName="maxPrintSizeY">
+                </div>
+                <div class="form-group">
+                    <label>Z (mm)</label>
+                    <input type="number" formControlName="maxPrintSizeZ">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/printers">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>
