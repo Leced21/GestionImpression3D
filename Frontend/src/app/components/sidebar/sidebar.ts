@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { Projet } from '../../models/projet.model';
 import { ProjetService } from '../../services/projet.service';
 import { Subject, takeUntil } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,12 +15,16 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class Sidebar implements OnInit, OnDestroy {
   recentProjets: Projet[] = [];
+  isAdmin = false;
   private destroy$ = new Subject<void>();
 
   constructor(
     private projetService: ProjetService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {this.authService.currentUser$.subscribe(user => {
+      this.isAdmin = user?.role === 'Admin';
+    });}
 
   ngOnInit(): void {
     this.projetService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
@@ -35,4 +40,5 @@ export class Sidebar implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+  
 }

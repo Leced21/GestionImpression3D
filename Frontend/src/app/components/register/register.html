@@ -33,6 +33,15 @@
                 <input type="password" [(ngModel)]="confirmPassword"
                     name="confirmPassword" required>
             </div>
+            <!-- Sélection du rôle (visible uniquement pour les admins) -->
+          <div class="form-group" *ngIf="isAdminCreating">
+            <label>Rôle</label>
+            <select [(ngModel)]="role" name="role">
+              <option value="User">👤 Utilisateur</option>
+              <option value="Admin">👑 Administrateur</option>
+              <option value="Viewer">👁️ Visualisateur</option>
+            </select>
+          </div>
 
             <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
             <div class="success" *ngIf="successMessage">{{ successMessage }}</div>

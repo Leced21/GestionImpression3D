@@ -1,0 +1,38 @@
+<div class="filters-bar">
+    <div class="filter-group">
+        <label>Action</label>
+        <select [(ngModel)]="filters.action" (change)="onFilterChange()">
+            <option [value]="undefined">Toutes</option>
+            <option [value]="ActionType.Create">➕ Création</option>
+            <option [value]="ActionType.Update">✏️ Modification</option>
+            <option [value]="ActionType.Delete">🗑️ Suppression</option>
+            <option [value]="ActionType.StatusChange">🔄 Changement
+                statut</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label>Entité</label>
+        <select [(ngModel)]="filters.entityType" (change)="onFilterChange()">
+            <option [value]="undefined">Toutes</option>
+            <option [value]="EntityType.Piece">📦 Pièces</option>
+            <option [value]="EntityType.Projet">📁 Projets</option>
+            <option [value]="EntityType.PrintJob">🖨️ Impressions</option>
+            <option [value]="EntityType.User">👤 Utilisateurs</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label>ID Entité</label>
+        <input type="number" [(ngModel)]="filters.entityId"
+            (change)="onFilterChange()" placeholder="ID...">
+    </div>
+
+    <div class="filter-group">
+        <label>Utilisateur</label>
+        <input type="text" [(ngModel)]="filters.userEmail"
+            (change)="onFilterChange()" placeholder="Email...">
+    </div>
+
+    <button class="btn-clear" (click)="clearFilters()">Effacer</button>
+</div>
