@@ -1,0 +1,321 @@
+<div class="detail-container" *ngIf="material; else loading">
+    <!-- En-tête -->
+    <div class="detail-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/stock">← Retour à la
+                liste</button>
+            <div class="material-title">
+                <h1>{{ material.name }}</h1>
+                <span class="reference">{{ material.reference ||
+                    'Pas de référence' }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-edit"
+                [routerLink]="['/stock', material.id, 'edit']">✏️
+                Modifier</button>
+            <button class="btn-delete" (click)="deleteMaterial()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <!-- Grille 2 colonnes -->
+    <div class="grid-2">
+        <!-- Colonne gauche -->
+        <div class="left-column">
+            <!-- Informations générales -->
+            <div class="info-card">
+                <h3>📋 Informations générales</h3>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span>Type</span>
+                        <span class="type-badge">{{
+                            getMaterialIcon(material.type) }} {{
+                            material.typeLabel }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Marque</span>
+                        <strong>{{ material.brand }}</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Couleur</span>
+                        <span>
+                            <span class="color-dot"
+                                [style.backgroundColor]="getColorValue(material.color)"></span>
+                            {{ material.color }}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span>Emplacement</span>
+                        <span>{{ material.location || 'Non défini' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Fournisseur</span>
+                        <span>{{ material.supplier || 'Non défini' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seuils -->
+            <div class="info-card">
+                <h3>📊 Seuils d'alerte</h3>
+                <div class="thresholds-section">
+                    <div class="threshold-item">
+                        <span>Seuil minimum</span>
+                        <strong>{{ material.minThreshold }} {{
+                            material.unitLabel }}</strong>
+                    </div>
+                    <div class="threshold-item">
+                        <span>Seuil maximum</span>
+                        <strong>{{ material.maxThreshold > 0 ?
+                            material.maxThreshold + ' ' + material.unitLabel :
+                            'Non défini' }}</strong>
+                    </div>
+                </div>
+                <div class="threshold-actions">
+                    <button class="btn-sm"
+                        (click)="showThresholdModal = true">Modifier les
+                        seuils</button>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="info-card" *ngIf="material.notes">
+                <h3>📝 Notes</h3>
+                <p class="notes-text">{{ material.notes }}</p>
+            </div>
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="right-column">
+            <!-- Stock actuel -->
+            <div class="info-card">
+                <h3>📦 Stock actuel</h3>
+                <div class="stock-display">
+                    <div class="stock-quantity"
+                        [class.critical]="material.isCriticalStock"
+                        [class.low]="material.isLowStock">
+                        {{ material.quantity }} {{ material.unitLabel }}
+                    </div>
+                    <div class="stock-status">
+                        <span class="status-badge"
+                            [class.low]="material.isLowStock"
+                            [class.critical]="material.isCriticalStock">
+                            {{ getStockStatus() }}
+                        </span>
+                    </div>
+                </div>
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill"
+                            [style.width.%]="getStockPercentage()"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valeur du stock -->
+            <div class="info-card">
+                <h3>💰 Valeur du stock</h3>
+                <div class="value-display">
+                    <div class="value-item">
+                        <span>Prix unitaire</span>
+                        <strong>{{ material.unitPrice | number:'1.2-2' }} € / {{
+                            material.unitLabel }}</strong>
+                    </div>
+                    <div class="value-item total">
+                        <span>Valeur totale</span>
+                        <strong>{{ material.totalValue | number:'1.2-2' }}
+                            €</strong>
+                    </div>
+                </div>
+                <div class="price-actions" *ngIf="!showPriceModal">
+                    <button class="btn-sm"
+                        (click)="showPriceModal = true">Modifier le
+                        prix</button>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="info-card">
+                <h3>⚡ Actions rapides</h3>
+                <div class="quick-actions">
+                    <button class="action-btn success"
+                        (click)="showAddModal = true">
+                        ➕ Ajouter du stock
+                    </button>
+                    <button class="action-btn warning"
+                        (click)="showRemoveModal = true">
+                        ➖ Consommer du stock
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dernières activités -->
+            <div class="info-card">
+                <h3>🕐 Dernières activités</h3>
+                <div class="activities-list">
+                    <div class="activity-item" *ngIf="material.lastRestockedAt">
+                        <span class="activity-icon">📥</span>
+                        <div class="activity-info">
+                            <div
+                                class="activity-title">Réapprovisionnement</div>
+                            <div class="activity-date">{{
+                                material.lastRestockedAt |
+                                date:'dd/MM/yyyy HH:mm' }}</div>
+                        </div>
+                    </div>
+                    <div class="activity-item" *ngIf="material.lastUsedAt">
+                        <span class="activity-icon">📤</span>
+                        <div class="activity-info">
+                            <div class="activity-title">Consommation</div>
+                            <div class="activity-date">{{ material.lastUsedAt |
+                                date:'dd/MM/yyyy HH:mm' }}</div>
+                        </div>
+                    </div>
+                    <div class="activity-item"
+                        *ngIf="!material.lastRestockedAt && !material.lastUsedAt">
+                        <span class="activity-icon">📭</span>
+                        <div class="activity-info">
+                            <div class="activity-title">Aucune activité</div>
+                            <div class="activity-date">Pas encore d'activité sur
+                                ce matériau</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale ajout stock -->
+    <div class="modal" [class.show]="showAddModal"
+        (click)="closeModalOnOverlay($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Ajouter du stock</h3>
+                <button class="modal-close" (click)="closeAddModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Quantité à ajouter ({{ material.unitLabel
+                        }})</label>
+                    <input type="number" [(ngModel)]="stockQuantity"
+                        class="modal-input" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Note (optionnelle)</label>
+                    <textarea [(ngModel)]="stockNote" class="modal-input"
+                        rows="2"
+                        placeholder="Ex: Réapprovisionnement fournisseur..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary"
+                    (click)="closeAddModal()">Annuler</button>
+                <button class="btn-primary" (click)="confirmAddStock()"
+                    [disabled]="stockQuantity <= 0">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale retrait stock -->
+    <div class="modal" [class.show]="showRemoveModal"
+        (click)="closeModalOnOverlay($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➖ Consommer du stock</h3>
+                <button class="modal-close"
+                    (click)="closeRemoveModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Quantité à retirer ({{ material.unitLabel
+                        }})</label>
+                    <input type="number" [(ngModel)]="stockQuantity"
+                        class="modal-input" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Note (optionnelle)</label>
+                    <textarea [(ngModel)]="stockNote" class="modal-input"
+                        rows="2"
+                        placeholder="Ex: Production job #123..."></textarea>
+                </div>
+                <div class="warning-message"
+                    *ngIf="stockQuantity > (material.quantity || 0)">
+                    ⚠️ Attention: La quantité dépasse le stock disponible ({{
+                    material.quantity }} {{ material.unitLabel }})
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary"
+                    (click)="closeRemoveModal()">Annuler</button>
+                <button class="btn-primary warning"
+                    (click)="confirmRemoveStock()"
+                    [disabled]="stockQuantity <= 0 || stockQuantity > (material.quantity || 0)">
+                    Consommer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale modification seuils -->
+    <div class="modal" [class.show]="showThresholdModal"
+        (click)="closeModalOnOverlay($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 Modifier les seuils</h3>
+                <button class="modal-close"
+                    (click)="closeThresholdModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Seuil minimum ({{ material.unitLabel }})</label>
+                    <input type="number" [(ngModel)]="minThreshold"
+                        class="modal-input" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Seuil maximum ({{ material.unitLabel }})</label>
+                    <input type="number" [(ngModel)]="maxThreshold"
+                        class="modal-input" step="0.1" min="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary"
+                    (click)="closeThresholdModal()">Annuler</button>
+                <button class="btn-primary"
+                    (click)="confirmUpdateThresholds()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale modification prix -->
+    <div class="modal" [class.show]="showPriceModal"
+        (click)="closeModalOnOverlay($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💰 Modifier le prix</h3>
+                <button class="modal-close"
+                    (click)="closePriceModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Prix unitaire (€ / {{ material.unitLabel }})</label>
+                    <input type="number" [(ngModel)]="unitPrice"
+                        class="modal-input" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary"
+                    (click)="closePriceModal()">Annuler</button>
+                <button class="btn-primary"
+                    (click)="confirmUpdatePrice()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement du matériau...</p>
+    </div>
+</ng-template>
