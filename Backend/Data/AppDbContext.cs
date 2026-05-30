@@ -16,6 +16,7 @@ namespace Backend.Data
         public DbSet<ProjetPiece> ProjetPieces { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Printer> Printers { get; set; }
+        public DbSet<PrintJob> PrintJobs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -98,6 +99,18 @@ namespace Backend.Data
                 entity.Property(e => e.Brand).HasMaxLength(100);
                 entity.Property(e => e.IpAddress).HasMaxLength(50);
                 entity.Property(e => e.ApiKey).HasMaxLength(200);
+            });
+            modelBuilder.Entity<PrintJob>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.JobNumber).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.GCodeFileName).HasMaxLength(200);
+                entity.Property(e => e.FailureReason).HasMaxLength(500);
+                entity.Property(e => e.Notes).HasMaxLength(1000);
+
+                entity.HasIndex(e => e.JobNumber).IsUnique();
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
             });
         }
     }
