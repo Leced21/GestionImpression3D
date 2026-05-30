@@ -17,6 +17,7 @@ namespace Backend.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Printer> Printers { get; set; }
         public DbSet<PrintJob> PrintJobs { get; set; }
+        public DbSet<MaterialStock> MaterialStocks { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -111,6 +112,21 @@ namespace Backend.Data
                 entity.HasIndex(e => e.JobNumber).IsUnique();
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.CreatedAt);
+            });
+            modelBuilder.Entity<MaterialStock>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Brand).HasMaxLength(100);
+                entity.Property(e => e.Color).HasMaxLength(50);
+                entity.Property(e => e.Reference).HasMaxLength(50);
+                entity.Property(e => e.Location).HasMaxLength(100);
+                entity.Property(e => e.Supplier).HasMaxLength(200);
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.IsActive);
+                entity.HasIndex(e => e.Quantity);
             });
         }
     }

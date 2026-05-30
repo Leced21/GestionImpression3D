@@ -1,0 +1,123 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/stock">← Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier le matériau' : '➕ Nouveau matériau'
+            }}</h1>
+    </div>
+
+    <form [formGroup]="materialForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Informations générales</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nom *</label>
+                    <input type="text" formControlName="name"
+                        placeholder="Ex: PLA Basic">
+                </div>
+                <div class="form-group">
+                    <label>Référence</label>
+                    <input type="text" formControlName="reference"
+                        placeholder="Ex: REF-001">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Type *</label>
+                    <select formControlName="type">
+                        <option value="PLA">🧵 PLA</option>
+                        <option value="PETG">🧶 PETG</option>
+                        <option value="ABS">🔧 ABS</option>
+                        <option value="TPU">🪢 TPU</option>
+                        <option value="Nylon">🧵 Nylon</option>
+                        <option value="Resin">💧 Résine</option>
+                        <option value="Other">📦 Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Couleur *</label>
+                    <input type="text" formControlName="color"
+                        placeholder="Ex: Blanc, Noir, Rouge...">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Marque *</label>
+                    <input type="text" formControlName="brand"
+                        placeholder="Ex: Prusa, Bambu Lab">
+                </div>
+                <div class="form-group">
+                    <label>Unité *</label>
+                    <select formControlName="unit">
+                        <option value="Grams">Grammes (g)</option>
+                        <option value="Kilograms">Kilogrammes (kg)</option>
+                        <option value="Meters">Mètres (m)</option>
+                        <option value="Liters">Litres (L)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>📊 Stock et seuils</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quantité initiale *</label>
+                    <input type="number" formControlName="quantity" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Emplacement</label>
+                    <input type="text" formControlName="location"
+                        placeholder="Ex: Étagère A3">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Seuil minimum *</label>
+                    <input type="number" formControlName="minThreshold"
+                        step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Seuil maximum</label>
+                    <input type="number" formControlName="maxThreshold"
+                        step="0.1">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>💰 Informations commerciales</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Prix unitaire (€) *</label>
+                    <input type="number" formControlName="unitPrice"
+                        step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Fournisseur</label>
+                    <input type="text" formControlName="supplier"
+                        placeholder="Ex: Amazon, 3D Prima">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>📝 Notes</h3>
+            <div class="form-group">
+                <textarea formControlName="notes" rows="3"
+                    placeholder="Informations complémentaires..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/stock">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>

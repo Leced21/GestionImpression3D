@@ -1,0 +1,209 @@
+<div class="stock-container">
+    <div class="header">
+        <div>
+            <h1>📦 Gestion des stocks</h1>
+            <p class="subtitle">Filaments, résines et consommables</p>
+        </div>
+        <button class="btn-primary" routerLink="/stock/new">+ Ajouter un
+            matériau</button>
+    </div>
+
+    <!-- Alertes stock bas -->
+    <div class="alerts-section" *ngIf="lowStockAlerts.length > 0">
+        <div class="alert-card warning">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <strong>{{ lowStockAlerts.length }} matériau(x) en stock
+                    bas</strong>
+                <p>Certains matériaux atteignent leur seuil minimum.</p>
+            </div>
+            <button class="alert-btn" (click)="showLowStock = !showLowStock">
+                {{ showLowStock ? 'Masquer' : 'Voir' }}
+            </button>
+        </div>
+
+        <div class="low-stock-list" *ngIf="showLowStock">
+            <div class="low-stock-item" *ngFor="let material of lowStockAlerts">
+                <span class="material-name">{{ material.name }}</span>
+                <span class="material-stock"
+                    [class.critical]="material.isCriticalStock">
+                    {{ material.quantity }} {{ material.unitLabel }}
+                </span>
+                <span class="material-threshold">Seuil: {{ material.minThreshold
+                    }} {{ material.unitLabel }}</span>
+                <button class="btn-restock"
+                    (click)="restockMaterial(material)">Réapprovisionner</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalMaterials }}</div>
+            <div class="stat-label">Total matériaux</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ statistics.lowStockMaterials }}</div>
+            <div class="stat-label">Stock bas</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ statistics.criticalStockMaterials
+                }}</div>
+            <div class="stat-label">Stock critique</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalValue | number:'1.2-2' }}
+                €</div>
+            <div class="stat-label">Valeur totale</div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+        <input type="text" placeholder="Rechercher..." [(ngModel)]="searchTerm"
+            (input)="filterMaterials()">
+        <select [(ngModel)]="filterType" (change)="filterMaterials()">
+            <option value>Tous les types</option>
+            <option value="PLA">PLA</option>
+            <option value="PETG">PETG</option>
+            <option value="ABS">ABS</option>
+            <option value="TPU">TPU</option>
+            <option value="Resin">Résine</option>
+        </select>
+        <select [(ngModel)]="filterStatus" (change)="filterMaterials()">
+            <option value>Tous les statuts</option>
+            <option value="low">Stock bas</option>
+            <option value="critical">Stock critique</option>
+            <option value="normal">Stock normal</option>
+        </select>
+    </div>
+
+    <!-- Grille des matériaux -->
+    <div class="materials-grid">
+        <div class="material-card" *ngFor="let material of filteredMaterials">
+            <div class="material-header">
+                <div class="material-icon">{{ getMaterialIcon(material.type)
+                    }}</div>
+                <div class="material-info">
+                    <h3>{{ material.name }}</h3>
+                    <span class="material-brand">{{ material.brand }} - {{
+                        material.color }}</span>
+                </div>
+                <div class="stock-status">
+                    <span class="status-badge" [class.low]="material.isLowStock"
+                        [class.critical]="material.isCriticalStock">
+                        {{ getStockStatus(material) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="material-details">
+                <div class="detail-row">
+                    <span>📦 Quantité</span>
+                    <strong>{{ material.quantity }} {{ material.unitLabel
+                        }}</strong>
+                </div>
+                <div class="detail-row">
+                    <span>📊 Seuil min</span>
+                    <span>{{ material.minThreshold }} {{ material.unitLabel
+                        }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>💰 Prix unitaire</span>
+                    <span>{{ material.unitPrice | number:'1.2-2' }} € / {{
+                        material.unitLabel }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>💶 Valeur totale</span>
+                    <strong>{{ material.totalValue | number:'1.2-2' }}
+                        €</strong>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-bar">
+                    <div class="progress-fill"
+                        [style.width.%]="getStockPercentage(material)"></div>
+                </div>
+            </div>
+
+            <div class="material-actions">
+                <button class="btn-sm" [routerLink]="['/stock', material.id]">🔍
+                    Détail</button>
+                <button class="btn-sm success" (click)="addStock(material)">➕
+                    Ajouter</button>
+                <button class="btn-sm warning" (click)="removeStock(material)">➖
+                    Consommer</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="filteredMaterials.length === 0" class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>Aucun matériau</h3>
+        <p>Ajoutez votre premier matériau</p>
+        <button class="btn-primary" routerLink="/stock/new">+ Ajouter un
+            matériau</button>
+    </div>
+</div>
+
+<!-- Modale ajout stock -->
+<div class="modal" [class.show]="showAddModal"
+    (click)="closeModalOnOverlay($event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Ajouter du stock</h3>
+            <button class="modal-close" (click)="closeAddModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Quantité à ajouter ({{ selectedMaterial?.unitLabel
+                    }})</label>
+                <input type="number" [(ngModel)]="stockQuantity"
+                    class="modal-input" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Note (optionnelle)</label>
+                <textarea [(ngModel)]="stockNote" class="modal-input"
+                    rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary"
+                (click)="closeAddModal()">Annuler</button>
+            <button class="btn-primary"
+                (click)="confirmAddStock()">Ajouter</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale retrait stock -->
+<div class="modal" [class.show]="showRemoveModal"
+    (click)="closeModalOnOverlay($event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Consommer du stock</h3>
+            <button class="modal-close" (click)="closeRemoveModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Quantité à retirer ({{ selectedMaterial?.unitLabel
+                    }})</label>
+                <input type="number" [(ngModel)]="stockQuantity"
+                    class="modal-input" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Note (optionnelle)</label>
+                <textarea [(ngModel)]="stockNote" class="modal-input"
+                    rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary"
+                (click)="closeRemoveModal()">Annuler</button>
+            <button class="btn-primary warning"
+                (click)="confirmRemoveStock()">Consommer</button>
+        </div>
+    </div>
+</div>
