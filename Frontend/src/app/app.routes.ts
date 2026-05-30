@@ -11,6 +11,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { ProjectList } from './components/project-list/project-list';
 import { ProjetForm } from './components/projet-form/projet-form';
 import { ProjetDetail } from './components/projet-detail/projet-detail';
+import { AuditLogs } from './components/admin/audit-log/audit-logs/audit-logs';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -26,5 +27,6 @@ export const routes: Routes = [
     { path: 'projets', component: ProjectList, canActivate: [AuthGuard] },
     { path: 'projets/nouveau', component: ProjetForm, canActivate: [AuthGuard] },
     { path: 'projets/:id', component: ProjetDetail, canActivate: [AuthGuard] },
-    { path: 'projets/:id/edit', component: ProjetForm, canActivate: [AuthGuard] }
+    { path: 'projets/:id/edit', component: ProjetForm, canActivate: [AuthGuard] },
+    { path: 'admin/audit-logs', component: AuditLogs, canActivate: [AuthGuard], data: { roles: ['admin'] } },
 ];

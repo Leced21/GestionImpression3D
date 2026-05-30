@@ -14,6 +14,7 @@ namespace Backend.Data
         public DbSet<CommandeLigne> CommandeLignes { get; set; }
         public DbSet<Projet> Projets { get; set; }
         public DbSet<ProjetPiece> ProjetPieces { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -70,6 +71,22 @@ namespace Backend.Data
 
                 // Unicité ProjetId + PieceId pour éviter les doublons
                 entity.HasIndex(e => new { e.ProjetId, e.PieceId }).IsUnique();
+            });
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserEmail).HasMaxLength(200);
+                entity.Property(e => e.EntityName).HasMaxLength(200);
+                entity.Property(e => e.FieldName).HasMaxLength(100);
+                entity.Property(e => e.OldValue).HasMaxLength(500);
+                entity.Property(e => e.NewValue).HasMaxLength(500);
+                entity.Property(e => e.IpAddress).HasMaxLength(50);
+
+                entity.HasIndex(e => e.EntityType);
+                entity.HasIndex(e => e.EntityId);
+                entity.HasIndex(e => e.Timestamp);
+                entity.HasIndex(e => e.UserId);
             });
         }
     }

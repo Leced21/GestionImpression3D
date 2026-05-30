@@ -1,8 +1,11 @@
 using Backend.Data;
+using Backend.Helpers;
 using Backend.Interface;
+using Backend.Mappers;
 using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -10,12 +13,20 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// --- 1. Configuration des services de base ---
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
+    // Évite les boucles infinies de sérialisation JSON si vos entités ont des relations bidirectionnelles
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+
+// Récupération et validation stricte de la clé JWT
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
+{
+    throw new InvalidOperationException("La clé JWT ('Jwt:Key') est manquante dans la configuration ou est trop courte (minimum 32 caractères).");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -27,50 +38,82 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "supersecretkey12345678901234567890"))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero // Optionnel : Élimine la tolérance par défaut de 5 minutes pour l'expiration du token
         };
     });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddSwaggerGen();
-builder.Services.AddAuthorization();
-builder.Services.AddDbContext<AppDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddAuthorization();
+
+// --- 2. Configuration de la base de données ---
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// --- 3. Documentation & Outils ---
+builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
+
+// --- 4. Injection de dépendances (Scope & Business Logic) ---
+// Métier : Pièces et Commerciaux
 builder.Services.AddScoped<IPieceRepository, PieceRepository>();
 builder.Services.AddScoped<IPieceService, PieceService>();
-builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommercialRepository, CommercialRepository>();
 builder.Services.AddScoped<ICommercialService, CommercialService>();
+
+// Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
 builder.Services.AddScoped<IProjetService, ProjetService>();
 builder.Services.AddScoped<IPdfExportService, PdfExportService>();
 
+// Métier : Utilisateurs (Auth, Audit, Users)
+// Note : IAuthRepository a été retiré conformément au nettoyage de l'architecture.
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IAuditLogger, AuditLogger>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Mappers & Validations
+builder.Services.AddScoped<IUserMapper, UserMapper>();
+builder.Services.AddScoped<IUserValidator, UserValidator>();
+
+// --- 5. Configuration de la stratégie CORS ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy( "AllowAngular", policy =>
+    options.AddPolicy("AllowAngular", policy =>
     {
         policy.WithOrigins("http://localhost:4200")
                .AllowAnyMethod()
                .AllowAnyHeader()
+               // Essentiel pour que le frontend Angular puisse lire le nom du fichier PDF généré
                .WithExposedHeaders("Content-Disposition");
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- 6. Pipeline des Middlewares (L'ordre est TRÈS important) ---
+
+// Étape A : Gestion des reverse proxies (doit être tout en haut)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// Étape B : Gestion du CORS (Placé haut pour intercepter et autoriser immédiatement les requêtes OPTIONS)
+app.UseCors("AllowAngular");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseCors("AllowAngular");
+
 app.UseHttpsRedirection();
 
+// Étape C : Sécurité et Routage (L'authentification TOUJOURS avant l'autorisation)
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
