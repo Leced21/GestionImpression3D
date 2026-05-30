@@ -17,14 +17,22 @@ export class Register {
   confirmPassword: string = '';
   nom: string = '';
   prenom: string = '';
+  role: string = 'User'; // Par défaut, le rôle est "User"
   isLoading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
+  isAdminCreating: boolean = false; // Indique si un admin crée un nouvel utilisateur
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private auth?: AuthService
+  ) {
+    // Vérifier si l'utilisateur connecté est admin (pour afficher le sélecteur de rôle)
+    this.authService.currentUser$.subscribe(user => {
+      this.isAdminCreating = user?.role === 'Admin';
+    });
+  }
 
   onSubmit(): void {
     // Validation
@@ -32,26 +40,27 @@ export class Register {
       this.errorMessage = 'Tous les champs sont requis';
       return;
     }
-    
+
     if (this.password !== this.confirmPassword) {
       this.errorMessage = 'Les mots de passe ne correspondent pas';
       return;
     }
-    
+
     if (this.password.length < 6) {
       this.errorMessage = 'Le mot de passe doit contenir au moins 6 caractères';
       return;
     }
-    
+
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-    
+
     this.authService.register({
       email: this.email,
       password: this.password,
       nom: this.nom,
-      prenom: this.prenom
+      prenom: this.prenom,
+      role: this.role // Envoyer le rôle sélectionné
     }).subscribe({
       next: () => {
         this.successMessage = 'Inscription réussie ! Redirection...';

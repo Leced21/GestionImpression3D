@@ -1,4 +1,5 @@
-﻿using Backend.Interface;
+﻿using Backend.Enums;
+using Backend.Interface;
 using Backend.Models;
 
 namespace Backend.Services
@@ -6,9 +7,11 @@ namespace Backend.Services
     public class PieceService : IPieceService
     {
         private readonly IPieceRepository _pieceRepository;
-        public PieceService(IPieceRepository pieceRepository)
+        private readonly IAuditLogger _auditLogger;
+        public PieceService(IPieceRepository pieceRepository, IAuditLogger auditLogger)
         {
             _pieceRepository = pieceRepository;
+            _auditLogger = auditLogger;
         }
         public async Task<decimal> CalculerPrixRecommandéAsync(int id)
         {
@@ -17,12 +20,31 @@ namespace Backend.Services
 
         public async Task<Piece> CreateAsync(Piece piece)
         {
-            return await _pieceRepository.CreateAsync(piece);
+            var created = await _pieceRepository.CreateAsync(piece);
+
+            await _auditLogger.LogCreationAsync(
+                EntityType.Piece,
+                created.Id,
+                created.Nom
+            );
+
+            return created;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            return await _pieceRepository.DeleteAsync(id);
+            var existing = await _pieceRepository.GetByIdAsync(id);
+            if (existing == null) return false;
+
+            var entityName = existing.Nom;
+
+            await _pieceRepository.DeleteAsync(id);
+
+            await _auditLogger.LogDeletionAsync(
+                EntityType.Piece, id, entityName
+            );
+
+            return true;
         }
 
         public async Task<IEnumerable<Piece>> GetAllAsync()
@@ -42,6 +64,30 @@ namespace Backend.Services
             {
                 return null;
             }
+            if (existingPiece.Nom != piece.Nom)
+            {
+                await _auditLogger.LogUpdateAsync(
+                    EntityType.Piece, id, "Nom", existingPiece.Nom, piece.Nom
+                );
+            }
+
+            if (existingPiece.PrixVente != piece.PrixVente)
+            {
+                await _auditLogger.LogUpdateAsync(
+                    EntityType.Piece, id, "PrixVente",
+                    existingPiece.PrixVente.ToString("F2"),
+                    piece.PrixVente.ToString("F2")
+                );
+            }
+
+            if (existingPiece.Description != piece.Description)
+            {
+                await _auditLogger.LogUpdateAsync(
+                    EntityType.Piece, id, "Description",
+                    existingPiece.Description ?? "",
+                    piece.Description ?? ""
+                );
+            }
 
             piece.Id = id;
             piece.DateCreation = existingPiece.DateCreation;
@@ -51,7 +97,14 @@ namespace Backend.Services
 
         public async Task<Piece?> UpdateStatutAsync(int id, string nouveauStatut)
         {
-            return await _pieceRepository.UpdateStatutAsync(id, nouveauStatut);
+            var existing = await _pieceRepository.GetByIdAsync(id);
+            if (existing == null) return null;
+
+            var oldStatut = existing.Statut;
+            existing.Statut = nouveauStatut;
+            await _pieceRepository.UpdateStatutAsync(id, nouveauStatut);
+            await _auditLogger.LogStatusChangeAsync(EntityType.Piece, id, oldStatut, nouveauStatut);
+            return existing;
         }
     }
 }

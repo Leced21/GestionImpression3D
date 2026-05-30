@@ -4,6 +4,9 @@ export interface User {
   nom: string;
   prenom: string;
   role: string;
+  isActive: boolean;
+  dateCreation: Date;
+  fullName: string;
 }
 
 export interface LoginRequest {
@@ -16,6 +19,7 @@ export interface RegisterRequest {
   password: string;
   nom: string;
   prenom: string;
+  role: string; // Ajout du rôle lors de l'inscription
 }
 
 export interface AuthResponse {
