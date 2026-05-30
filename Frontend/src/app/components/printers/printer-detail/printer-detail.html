@@ -1,0 +1,159 @@
+<div class="detail-container" *ngIf="printer; else loading">
+    <!-- En-tête -->
+    <div class="detail-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/printers">← Retour à la
+                liste</button>
+            <div class="printer-title">
+                <h1>{{ printer.nom }}</h1>
+                <span class="reference">Réf: {{ printer.reference ||
+                    'Non définie' }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-edit"
+                [routerLink]="['/printers', printer.id, 'edit']">✏️
+                Modifier</button>
+            <button class="btn-delete" (click)="deletePrinter()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <!-- Grille 2 colonnes -->
+    <div class="grid-2">
+        <!-- Colonne gauche -->
+        <div class="left-column">
+            <!-- Informations générales -->
+            <div class="info-card">
+                <h3>📋 Informations générales</h3>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span>Modèle</span>
+                        <strong>{{ printer.brand }} {{ printer.model }}</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Type</span>
+                        <span class="type-badge">{{ getTypeLabel(printer.type)
+                            }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Adresse IP</span>
+                        <span>{{ printer.ipAddress || 'Non configurée' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Statut</span>
+                        <div class="status-indicator">
+                            <div class="status-led"
+                                [style.backgroundColor]="printer.statusColor"></div>
+                            <span [style.color]="printer.statusColor">{{
+                                printer.statusLabel }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume d'impression -->
+            <div class="info-card">
+                <h3>📏 Volume d'impression</h3>
+                <div class="volume-display">
+                    <div class="volume-dimension">
+                        <span class="dimension-label">X</span>
+                        <span class="dimension-value">{{ printer.maxPrintSizeX
+                            }} mm</span>
+                    </div>
+                    <div class="volume-dimension">
+                        <span class="dimension-label">Y</span>
+                        <span class="dimension-value">{{ printer.maxPrintSizeY
+                            }} mm</span>
+                    </div>
+                    <div class="volume-dimension">
+                        <span class="dimension-label">Z</span>
+                        <span class="dimension-value">{{ printer.maxPrintSizeZ
+                            }} mm</span>
+                    </div>
+                </div>
+                <div class="volume-total">
+                    Volume total: {{ getVolume() }} cm³
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="right-column">
+            <!-- Statistiques -->
+            <div class="info-card">
+                <h3>📊 Statistiques</h3>
+                <div class="stats-list">
+                    <div class="stat-item">
+                        <span class="stat-label">Total impressions</span>
+                        <span class="stat-value">{{ printer.totalPrintJobs
+                            }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Temps total impression</span>
+                        <span class="stat-value">{{ printer.totalPrintHours }}
+                            heures</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Dernière impression</span>
+                        <span class="stat-value">{{ (printer.lastPrint |
+                            date:'dd/MM/yyyy' )?? 'Jamais' }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Dernière maintenance</span>
+                        <span class="stat-value">{{ (printer.lastMaintenance |
+                            date:'dd/MM/yyyy')?? 'Jamais' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="info-card">
+                <h3>⚡ Actions rapides</h3>
+                <div class="quick-actions">
+                    <button class="action-btn"
+                        (click)="changeStatus('Available')"
+                        *ngIf="printer.status !== 'Available'">
+                        ✅ Marquer disponible
+                    </button>
+                    <button class="action-btn warning"
+                        (click)="changeStatus('Maintenance')"
+                        *ngIf="printer.status !== 'Maintenance'">
+                        🔧 Mettre en maintenance
+                    </button>
+                    <button class="action-btn danger"
+                        (click)="changeStatus('Error')"
+                        *ngIf="printer.status !== 'Error'">
+                        ⚠️ Signaler une erreur
+                    </button>
+                    <button class="action-btn offline"
+                        (click)="changeStatus('Offline')"
+                        *ngIf="printer.status !== 'Offline'">
+                        📴 Mettre hors ligne
+                    </button>
+                </div>
+            </div>
+
+            <!-- Configuration API -->
+            <div class="info-card" *ngIf="printer.ipAddress">
+                <h3>🔌 Connexion API</h3>
+                <div class="api-config">
+                    <div class="api-url">
+                        <span>URL:</span>
+                        <code>http://{{ printer.ipAddress }}/api</code>
+                    </div>
+                    <button class="btn-test" (click)="testConnection()">
+                        🔍 Tester la connexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement de l'imprimante...</p>
+    </div>
+</ng-template>

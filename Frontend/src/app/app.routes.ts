@@ -12,6 +12,9 @@ import { ProjectList } from './components/project-list/project-list';
 import { ProjetForm } from './components/projet-form/projet-form';
 import { ProjetDetail } from './components/projet-detail/projet-detail';
 import { AuditLogs } from './components/admin/audit-log/audit-logs/audit-logs';
+import { PrinterList } from './components/printers/printer-list/printer-list';
+import { PrinterForm } from './components/printers/printer-form/printer-form';
+import { PrinterDetail } from './components/printers/printer-detail/printer-detail';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -29,4 +32,8 @@ export const routes: Routes = [
     { path: 'projets/:id', component: ProjetDetail, canActivate: [AuthGuard] },
     { path: 'projets/:id/edit', component: ProjetForm, canActivate: [AuthGuard] },
     { path: 'admin/audit-logs', component: AuditLogs, canActivate: [AuthGuard], data: { roles: ['admin'] } },
+    { path: 'printers', component: PrinterList, canActivate: [AuthGuard] },
+    { path: 'printers/new', component: PrinterForm, canActivate: [AuthGuard] },
+    { path: 'printers/:id', component: PrinterDetail, canActivate: [AuthGuard] },
+    { path: 'printers/:id/edit', component: PrinterForm, canActivate: [AuthGuard] }
 ];

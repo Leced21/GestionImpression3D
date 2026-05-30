@@ -15,6 +15,7 @@ namespace Backend.Data
         public DbSet<Projet> Projets { get; set; }
         public DbSet<ProjetPiece> ProjetPieces { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Printer> Printers { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -87,6 +88,16 @@ namespace Backend.Data
                 entity.HasIndex(e => e.EntityId);
                 entity.HasIndex(e => e.Timestamp);
                 entity.HasIndex(e => e.UserId);
+            });
+            modelBuilder.Entity<Printer>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nom).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Reference).HasMaxLength(50);
+                entity.Property(e => e.Model).HasMaxLength(100);
+                entity.Property(e => e.Brand).HasMaxLength(100);
+                entity.Property(e => e.IpAddress).HasMaxLength(50);
+                entity.Property(e => e.ApiKey).HasMaxLength(200);
             });
         }
     }
