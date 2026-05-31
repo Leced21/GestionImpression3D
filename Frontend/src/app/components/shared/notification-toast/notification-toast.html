@@ -1,0 +1,19 @@
+<div class="notification-container">
+    <div class="notification-toast" *ngFor="let notification of notifications"
+        [class]="notification.type" (click)="markAsRead(notification.id)">
+        <div class="toast-icon">
+            <span *ngIf="notification.type === 'success'">✅</span>
+            <span *ngIf="notification.type === 'error'">❌</span>
+            <span *ngIf="notification.type === 'warning'">⚠️</span>
+            <span *ngIf="notification.type === 'info'">ℹ️</span>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title">{{ notification.title }}</div>
+            <div class="toast-message">{{ notification.message }}</div>
+            <div class="toast-time">{{ notification.timestamp | date:'HH:mm:ss'
+                }}</div>
+        </div>
+        <button class="toast-close"
+            (click)="$event.stopPropagation(); removeNotification(notification.id)">✕</button>
+    </div>
+</div>

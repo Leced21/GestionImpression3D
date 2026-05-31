@@ -11,13 +11,15 @@ namespace Backend.Services
         private readonly IPieceRepository _pieceRepository;
         private readonly IPrinterRepository _printerRepository;
         private readonly IPrintJobRepository _printJobRepository;
+        private readonly INotificationService _notificationService;
 
-        public PrintJobService(IAuditLogger auditLogger, IPieceRepository pieceRepository, IPrinterRepository printerRepository, IPrintJobRepository printJobRepository)
+        public PrintJobService(IAuditLogger auditLogger, IPieceRepository pieceRepository, IPrinterRepository printerRepository, IPrintJobRepository printJobRepository, INotificationService notificationService)
         {
             _auditLogger = auditLogger;
             _pieceRepository = pieceRepository;
             _printerRepository = printerRepository;
             _printJobRepository = printJobRepository;
+            _notificationService = notificationService;
         }
         public async Task<PrintJobDto?> AssignPrinterAsync(int id, int printerId, int? operatorId = null)
         {
@@ -63,6 +65,7 @@ namespace Backend.Services
             var updated = await _printJobRepository.UpdateAsync(job);
 
             await _auditLogger.LogStatusChangeAsync(EntityType.PrintJob, id, "Printing", "Completed");
+            await _notificationService.SendPrintJobCompleted(id, job.JobNumber);
 
             // Mettre à jour le statut de l'imprimante
             if (job.PrinterId.HasValue)
@@ -123,6 +126,7 @@ namespace Backend.Services
             var updated = await _printJobRepository.UpdateAsync(job);
 
             await _auditLogger.LogStatusChangeAsync(EntityType.PrintJob, id, "Printing", "Failed");
+            await _notificationService.SendPrintJobFailed(id, job.JobNumber, reason);
 
             return MapToDto(updated);
         }
@@ -198,6 +202,7 @@ namespace Backend.Services
             var updated = await _printJobRepository.UpdateAsync(job);
 
             await _auditLogger.LogStatusChangeAsync(EntityType.PrintJob, id, "Queued", "Printing");
+            await _notificationService.SendPrintJobStarted(id, job.JobNumber);
 
             // Mettre à jour le statut de l'imprimante
             if (job.PrinterId.HasValue)
