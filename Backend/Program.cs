@@ -1,5 +1,6 @@
 using Backend.Data;
 using Backend.Helpers;
+using Backend.Hubs;
 using Backend.Interface;
 using Backend.Mappers;
 using Backend.Repositories;
@@ -52,6 +53,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // --- 3. Documentation & Outils ---
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
 
 // --- 4. Injection de dépendances (Scope & Business Logic) ---
 // Métier : Pièces et Commerciaux
@@ -65,6 +67,7 @@ builder.Services.AddScoped<IPrintJobRepository, PrintJobRepository>();
 builder.Services.AddScoped<IPrintJobService, PrintJobService>();
 builder.Services.AddScoped<IMaterialStockRepository, MaterialStockRepository>();
 builder.Services.AddScoped<IMaterialStockService, MaterialStockService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
@@ -121,6 +124,7 @@ app.UseHttpsRedirection();
 // Étape C : Sécurité et Routage (L'authentification TOUJOURS avant l'autorisation)
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllers();
 
