@@ -9,10 +9,12 @@ namespace Backend.Services
     {
         private readonly IMaterialStockRepository _materialRepository;
         private readonly IAuditLogger _auditLogger;
-        public MaterialStockService(IMaterialStockRepository materialRepository, IAuditLogger auditLogger)
+        private readonly INotificationService _notificationService;
+        public MaterialStockService(IMaterialStockRepository materialRepository, IAuditLogger auditLogger, INotificationService notificationService)
         {
             _materialRepository = materialRepository;
             _auditLogger = auditLogger;
+            _notificationService = notificationService;
         }
         public async Task<MaterialStockDto?> AddStockAsync(int id, UpdateStockRequest request)
         {
@@ -124,6 +126,10 @@ namespace Backend.Services
                 material.RemoveStock(request.Quantity);
 
                 var updated = await _materialRepository.UpdateAsync(material);
+                if (material.IsLowStock())
+                {
+                    await _notificationService.SendLowStockAlert(material.Id, material.Name, material.Quantity);
+                }
 
                 await _auditLogger.LogUpdateAsync(EntityType.MaterialStock, id, "Quantity",
                     oldQuantity.ToString(), material.Quantity.ToString());
