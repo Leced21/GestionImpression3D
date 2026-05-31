@@ -1,96 +1,144 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { BaseChartDirective } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
-import { Piece } from '../../models/piece.model';
-import { PieceService } from '../../services/piece.service';
-import { DashboardStat } from '../../models/dashboardstat';
+import { GlobalStats, PrinterActivity, ProductionTrend } from '../../models/dashboard.model';
+import { ChartConfiguration, ChartData } from 'chart.js';
+import { DashboardService } from '../../services/dashboard.service';
+import { PrintJobService } from '../../services/print-job.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, BaseChartDirective],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
-  pieces:Piece[] = [];
-  stats: DashboardStat = {
-    totalPieces:0,
-    enConception:0,
-    enPrototypage:0,
-    enProduction:0,
-    commercialisables:0,
-    chiffreAffaires:0
+export class Dashboard implements OnInit, OnDestroy {
+  stats?: GlobalStats;
+  productionTrend: ProductionTrend[] = [];
+  printersActivity: PrinterActivity[] = [];
+  recentJobs: any[] = [];
+  lastUpdated: Date = new Date();
+  private refreshInterval: any;
+
+  // Configuration graphiques
+  lineChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend: { position: 'top' } }
+  };
+  
+  doughnutChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend: { position: 'right' } }
+  };
+  
+  barChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend: { position: 'top' } }
   };
 
-  evolutions = {
-    conception:'+12%',
-    impressions:'+8%',
-    produites:'+15%',
-    ca:'+10%'
-  }
+  productionChartData: ChartData<'line'> = { labels: [], datasets: [] };
+  printerStatusChartData: ChartData<'doughnut'> = { labels: [], datasets: [] };
+  materialChartData: ChartData<'bar'> = { labels: [], datasets: [] };
+
   constructor(
-    private pieceService: PieceService,
-    private cdr: ChangeDetectorRef
-  ) { }
+    private dashboardService: DashboardService, 
+    private printJobService: PrintJobService,
+    private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
-    this.loadPieces();
-    this.loadStats();
+    this.loadAllData();
+    this.refreshInterval = setInterval(() => this.loadAllData(), 30000);
   }
 
-  loadPieces() : void {
-    this.pieceService.getAll().subscribe({
+  ngOnDestroy(): void {
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
+  }
+
+  loadAllData(): void {
+    this.loadGlobalStats();
+    this.loadProductionTrend();
+    this.loadPrintersActivity();
+    this.loadRecentJobs();
+  }
+
+  loadGlobalStats(): void {
+    this.dashboardService.getGlobalStats().subscribe({
       next: (data) => {
-        this.pieces = data;
-        this.updateStats();
-        this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
-        console.log('Pieces loaded:', this.pieces);
+        this.stats = data,
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error fetching pieces:', err)
+      error: (err) => console.error(err)
     });
   }
 
-  loadStats() : void {
-    this.pieceService.getDashboardStats().subscribe({
+  loadProductionTrend(): void {
+    this.dashboardService.getProductionTrend(30).subscribe({
       next: (data) => {
-        this.stats = data;
-        this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
-        console.log('Stats loaded:', this.stats);
+        this.productionTrend = data;
+        this.productionChartData = {
+          labels: data.map(d => new Date(d.date).toLocaleDateString()),
+          datasets: [
+            { label: 'Terminés', data: data.map(d => d.completed), borderColor: '#10b981', fill: false },
+            { label: 'Échoués', data: data.map(d => d.failed), borderColor: '#ef4444', fill: false }
+          ]
+        };
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error fetching stats:', err)
+      error: (err) => console.error(err)
     });
   }
 
-  updateStats(): void {
-    this.stats.totalPieces = this.pieces.length;
-    this.stats.enConception = this.pieces.filter(p => p.statut === 'Conception').length;
-    this.stats.enPrototypage = this.pieces.filter(p => p.statut === 'Prototypage').length;
-    this.stats.enProduction = this.pieces.filter(p => p.statut === 'Production').length;
-    this.stats.commercialisables = this.pieces.filter(p => p.statut === 'Commercialisable').length;
-    this.stats.chiffreAffaires = this.pieces
-      .filter(p => p.statut === 'Commercialisable')
-      .reduce((sum, p) => sum + (p.prixVente || 0), 0);
+  loadPrintersActivity(): void {
+    this.dashboardService.getPrintersActivity().subscribe({
+      next: (data) => {
+        this.printersActivity = data;
+        const statusCount = {
+          Available: data.filter(p => p.status === 'Available').length,
+          Printing: data.filter(p => p.status === 'Printing').length,
+          Maintenance: data.filter(p => p.status === 'Maintenance').length,
+          Offline: data.filter(p => p.status === 'Offline').length
+        };
+        this.printerStatusChartData = {
+          labels: ['Disponibles', 'En impression', 'Maintenance', 'Hors ligne'],
+          datasets: [{ data: [statusCount.Available, statusCount.Printing, statusCount.Maintenance, statusCount.Offline], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#64748b'] }]
+        };
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  getCoutTotal(piece: Piece): number {
-    return piece.coutMatiere + piece.coutMachine + piece.coutMainOeuvre;
+  loadRecentJobs(): void {
+    this.printJobService.getAll().subscribe({
+      next: (data) => {
+        this.recentJobs = data.slice(0, 10),
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
+    });
   }
 
-  getProgressWidth(piece: Piece): number {
-    const statuts = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
-    const index = statuts.indexOf(piece.statut);
-    return (index / (statuts.length - 1)) * 100;
+  refresh(): void {
+    this.loadAllData();
+    this.lastUpdated = new Date();
   }
 
-  getBadgeClass(statut: string): string {
-    const classes: Record<string, string> = {
-      'Brouillon': 'badge-brouillon',
-      'Conception': 'badge-conception',
-      'Prototypage': 'badge-prototypage',
-      'Validation': 'badge-validation',
-      'Production': 'badge-production',
-      'Commercialisable': 'badge-commercial'
-    };
-    return classes[statut] || 'badge-brouillon';
+  getStatusClass(status: string): string {
+    return `status-${status}`;
+  }
+
+  getDurationString(minutes?: number): string {
+    if (!minutes) return '-';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h${mins.toString().padStart(2, '0')}` : `${mins}min`;
   }
 }

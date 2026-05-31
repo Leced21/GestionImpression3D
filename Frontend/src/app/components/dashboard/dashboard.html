@@ -1,95 +1,140 @@
-<!-- src/app/components/dashboard/dashboard.component.html -->
-<div class="app">
+<div class="dashboard-container">
     <div class="header">
-        <h1 class="page-title">Tableau de bord</h1>
-        <button class="btn btn-primary" routerLink="/pieces/nouveau">+
-            Nouvelle pièce</button>
-    </div>
-
-    <!-- Stats dynamiques -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon" style="background: #eff6ff;">📐</div>
-                <span style="color: var(--primary); font-weight: 600;">{{
-                    evolutions.conception }}</span>
-            </div>
-            <div class="stat-value">{{ stats.enConception }}</div>
-            <div class="stat-label">Pièces en conception</div>
+        <div>
+            <h1>📊 Tableau de bord industriel</h1>
+            <p class="subtitle">Vue d'ensemble de la production</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon"
-                    style="background: #fef3c7;">🖨️</div>
-                <span style="color: var(--warning);">{{
-                    evolutions.impressions }}</span>
-            </div>
-            <div class="stat-value">{{ stats.enPrototypage +
-                stats.enProduction }}</div>
-            <div class="stat-label">Impressions en cours</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon" style="background: #dcfce7;">✅</div>
-                <span style="color: var(--success);">{{ evolutions.produites
-                    }}</span>
-            </div>
-            <div class="stat-value">{{ stats.enProduction +
-                stats.commercialisables }}</div>
-            <div class="stat-label">Pièces produites</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon" style="background: #f3e8ff;">💶</div>
-                <span style="color: #9333ea;">{{ evolutions.ca }}</span>
-            </div>
-            <div class="stat-value">{{ stats.chiffreAffaires |
-                number:'1.0-0' }} €</div>
-            <div class="stat-label">Chiffre d'affaires</div>
+        <div class="last-updated">
+            Dernière mise à jour: {{ lastUpdated | date:'HH:mm:ss' }}
+            <button class="refresh-btn" (click)="refresh()">🔄</button>
         </div>
     </div>
 
-    <!-- Projets récents -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">📋 Projets récents</h2>
-            <button class="btn btn-outline" routerLink="/pieces">Voir
-                tout</button>
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon blue">📦</div>
+            <div class="kpi-content">
+                <div class="kpi-value">{{ stats?.totalPieces || 0 }}</div>
+                <div class="kpi-label">Pièces créées</div>
+            </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Référence</th>
-                    <th>Nom</th>
-                    <th>Statut</th>
-                    <th>Avancement</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let piece of pieces | slice:0:5">
-                    <td><strong>{{ piece.reference }}</strong></td>
-                    <td>{{ piece.nom }}</td>
-                    <td><span class="badge"
-                            [class]="getBadgeClass(piece.statut)">{{
-                            piece.statut }}</span></td>
-                    <td>
-                        <div class="progress">
-                            <div class="progress-bar"
-                                [style.width.%]="getProgressWidth(piece)"></div>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-outline"
-                            style="padding:0.25rem 0.5rem;"
-                            [routerLink]="['/pieces', piece.id]">📝</button>
-                    </td>
-                </tr>
-                <tr *ngIf="pieces.length === 0">
-                    <td colspan="5" style="text-align: center;">Aucune pièce
-                        pour le moment</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="kpi-card">
+            <div class="kpi-icon green">🏭</div>
+            <div class="kpi-content">
+                <div class="kpi-value">{{ stats?.printJobs?.completedJobs || 0
+                    }}</div>
+                <div class="kpi-label">Impressions terminées</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon orange">🖨️</div>
+            <div class="kpi-content">
+                <div class="kpi-value">{{ stats?.activePrinters || 0 }}/{{
+                    stats?.totalPrinters || 0 }}</div>
+                <div class="kpi-label">Imprimantes actives</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon purple">📊</div>
+            <div class="kpi-content">
+                <div class="kpi-value">{{ stats?.printJobs?.successRate || 0 |
+                    number:'1.0-0' }}%</div>
+                <div class="kpi-label">Taux de succès</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon red">⚠️</div>
+            <div class="kpi-content">
+                <div class="kpi-value">{{
+                    stats?.materialStock?.lowStockMaterials || 0 }}</div>
+                <div class="kpi-label">Stocks bas</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon teal">💰</div>
+            <div class="kpi-content">
+                <div class="kpi-value">{{ stats?.materialStock?.totalValue || 0
+                    | number:'1.2-2' }} €</div>
+                <div class="kpi-label">Valeur stock</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="charts-grid">
+        <!-- Production trend -->
+        <div class="chart-card">
+            <h3>📈 Tendance production (30 jours)</h3>
+            <canvas baseChart
+                [data]="productionChartData"
+                [options]="lineChartOptions"
+                [type]="'line'">
+            </canvas>
+        </div>
+
+        <!-- Status imprimantes -->
+        <div class="chart-card">
+            <h3>🖨️ Statut imprimantes</h3>
+            <canvas baseChart
+                [data]="printerStatusChartData"
+                [options]="doughnutChartOptions"
+                [type]="'doughnut'">
+            </canvas>
+        </div>
+
+        <!-- Matériaux consommés -->
+        <div class="chart-card">
+            <h3>🧪 Top matériaux consommés</h3>
+            <canvas baseChart
+                [data]="materialChartData"
+                [options]="barChartOptions"
+                [type]="'bar'">
+            </canvas>
+        </div>
+
+        <!-- Activité imprimantes -->
+        <div class="chart-card">
+            <h3>📊 Activité imprimantes</h3>
+            <div class="printers-list">
+                <div class="printer-item"
+                    *ngFor="let printer of printersActivity">
+                    <div class="printer-name">
+                        <span class="status-dot"
+                            [class.active]="printer.status === 'Available'"
+                            [class.printing]="printer.status === 'Printing'"></span>
+                        {{ printer.nom }}
+                    </div>
+                    <div class="printer-stats">
+                        <span>{{ printer.totalPrintJobs }} jobs</span>
+                        <span>{{ printer.totalPrintHours }}h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Derniers jobs -->
+    <div class="recent-jobs">
+        <h3>🕐 Derniers jobs d'impression</h3>
+        <div class="jobs-table">
+            <div class="jobs-header">
+                <span>Job</span>
+                <span>Pièce</span>
+                <span>Statut</span>
+                <span>Durée</span>
+                <span>Date</span>
+            </div>
+            <div class="jobs-row" *ngFor="let job of recentJobs">
+                <span class="job-number">{{ job.jobNumber }}</span>
+                <span>{{ job.pieceName }}</span>
+                <span class="status-badge" [class]="getStatusClass(job.status)">
+                    {{ job.statusLabel }}
+                </span>
+                <span>{{ getDurationString(job.actualDurationMinutes ||
+                    job.estimatedDurationMinutes) }}</span>
+                <span>{{ job.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+        </div>
     </div>
 </div>

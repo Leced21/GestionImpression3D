@@ -68,6 +68,7 @@ builder.Services.AddScoped<IPrintJobService, PrintJobService>();
 builder.Services.AddScoped<IMaterialStockRepository, MaterialStockRepository>();
 builder.Services.AddScoped<IMaterialStockService, MaterialStockService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
