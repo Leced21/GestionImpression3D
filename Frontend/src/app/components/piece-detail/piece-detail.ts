@@ -9,10 +9,11 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ThreeDViewer } from '../three-d-viewer/three-d-viewer';
 import { ExportService } from '../../services/export.service';
+import { PieceVersions } from '../piece-versions/piece-versions';
 
 @Component({
   selector: 'app-piece-detail',
-  imports: [CommonModule, RouterModule, ThreeDViewer],
+  imports: [CommonModule, RouterModule, ThreeDViewer, PieceVersions],
   standalone: true,
   templateUrl: './piece-detail.html',
   styleUrl: './piece-detail.css',

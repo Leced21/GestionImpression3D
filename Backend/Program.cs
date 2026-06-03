@@ -73,6 +73,8 @@ builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IExcelExportService, ExcelExportService>();
 builder.Services.AddScoped<IExcelExportRepository, ExcelExportRepository>();
+builder.Services.AddScoped<IPieceVersionRepository, PieceVersionRepository>();
+builder.Services.AddScoped<IPieceVersionService, PieceVersionService>();
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
 builder.Services.AddScoped<IProjetService, ProjetService>();
