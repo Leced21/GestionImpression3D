@@ -37,4 +37,34 @@ export class ExportService {
     a.click();
     window.URL.revokeObjectURL(url);
   }
+
+  // Export Excel
+  exportPiecesExcel(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/Piece/export/excel`, { responseType: 'blob' });
+  }
+
+  exportProjetsExcel(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/projets/export/excel`, { responseType: 'blob' });
+  }
+
+  exportPrintJobsExcel(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/printjobs/export/excel`, { responseType: 'blob' });
+  }
+
+  exportCommandesExcel(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/commercial/commandes/export/excel`, { responseType: 'blob' });
+  }
+
+  exportStockExcel(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/materialstock/export/excel`, { responseType: 'blob' });
+  }
+
+  downloadFile(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
 }

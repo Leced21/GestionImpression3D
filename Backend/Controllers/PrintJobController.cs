@@ -11,9 +11,11 @@ namespace Backend.Controllers
     public class PrintJobController: ControllerBase
     {
         private readonly IPrintJobService _printJobService;
-        public PrintJobController(IPrintJobService printJobService)
+        private readonly IExcelExportService _excelExportService;
+        public PrintJobController(IPrintJobService printJobService, IExcelExportService excelExportService)
         {
             _printJobService = printJobService;
+            _excelExportService = excelExportService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -136,6 +138,14 @@ namespace Backend.Controllers
             var result = await _printJobService.DeleteAsync(id);
             if (!result) return NotFound();
             return NoContent();
+        }
+        [HttpGet("export/excel")]
+        [Authorize(Roles = "Admin,ProductionManager")]
+        public async Task<IActionResult> ExportToExcel()
+        {
+            var jobs = await _printJobService.GetAllAsync();
+            var excelBytes = await _excelExportService.ExportPrintJobsToExcelAsync();
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PrintJobs_{DateTime.Now:yyyyMMdd}.xlsx");
         }
     }
 }

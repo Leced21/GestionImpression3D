@@ -1,4 +1,5 @@
-﻿using Backend.Interface;
+﻿using Backend.DTOs;
+using Backend.Interface;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,12 +15,14 @@ namespace Backend.Controllers
         private readonly ILogger<ProjetController> _logger;
         private readonly IWebHostEnvironment _env;
         private readonly IPdfExportService _pdfExportService;
-        public ProjetController(IProjetService projetService, ILogger<ProjetController> logger, IWebHostEnvironment env, IPdfExportService pdfExportService)
+        private readonly IExcelExportService _excelExportService;
+        public ProjetController(IProjetService projetService, ILogger<ProjetController> logger, IWebHostEnvironment env, IPdfExportService pdfExportService, IExcelExportService excelExportService)
         {
             _projetService = projetService;
             _logger = logger;
             _env = env;
             _pdfExportService = pdfExportService;
+            _excelExportService = excelExportService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -152,10 +155,15 @@ namespace Backend.Controllers
             var pdfBytes = await _pdfExportService.ExportDevisToPdfAsync(projet);
             return File(pdfBytes, "application/pdf", $"Devis_{projet.Reference}.pdf");
         }
-        public class AjouterPieceRequest
+
+        [HttpGet("export/excel")]
+        [Authorize(Roles = "Admin,ProductionManager")]
+        public async Task<IActionResult> ExportToExcel()
         {
-            public int PieceId { get; set; }
-            public int Quantite { get; set; } = 1;
+            var projets = await _projetService.GetAllAsync();
+            var excelBytes = await _excelExportService.ExportProjetsToExcelAsync();
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Projets_{DateTime.Now:yyyyMMdd}.xlsx");
         }
+        
     }
 }
