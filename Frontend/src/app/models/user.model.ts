@@ -9,6 +9,23 @@ export interface User {
   fullName: string;
 }
 
+export interface Invitation {
+  id: number;
+  email: string;
+  token: string;
+  role: string;
+  expiresAt: Date;
+  createdAt: Date;
+  isUsed: boolean;
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

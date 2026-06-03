@@ -47,9 +47,9 @@ namespace Backend.Repositories
         public async Task<IEnumerable<Commande>> GetByClientAsync(string email)
         {
             return await _context.Commandes
-    .Include(c => c.Lignes)
-    .Where(c => c.ClientEmail == email)
-    .ToListAsync();
+                .Include(c => c.Lignes)
+                .Where(c => c.ClientEmail == email)
+                .ToListAsync();
         }
 
         public async Task<Commande?> GetByIdAsync(int id)
@@ -70,20 +70,20 @@ namespace Backend.Repositories
         public async Task<IEnumerable<CatalogueItem>> GetCatalogueAsync()
         {
             var pieces = await _context.Pieces
-    .Where(p => p.Statut == "Commercialisable" && p.PrixVente > 0 && p.EstDisponible && p.Stock > 0)
-    .Select(p => new CatalogueItem
-    {
-        Id = p.Id,
-        Nom = p.Nom,
-        Reference = p.Reference,
-        Description = p.Description,
-        PrixVente = p.PrixVente,
-        Categorie = p.Categorie ?? "Mécanique",
-        Materiau = p.Materiau ?? "PLA",
-        Stock = p.Stock,
-        ImageUrl = p.ImageUrl
-    })
-    .ToListAsync();
+                .Where(p => p.Statut == "Commercialisable" && p.PrixVente > 0 && p.EstDisponible && p.Stock > 0)
+                .Select(p => new CatalogueItem
+                {
+                    Id = p.Id,
+                    Nom = p.Nom,
+                    Reference = p.Reference,
+                    Description = p.Description,
+                    PrixVente = p.PrixVente,
+                    Categorie = p.Categorie ?? "Mécanique",
+                    Materiau = p.Materiau ?? "PLA",
+                    Stock = p.Stock,
+                    ImageUrl = p.ImageUrl
+                })
+                .ToListAsync();
 
             return pieces;
         }
@@ -91,16 +91,16 @@ namespace Backend.Repositories
         public async Task<decimal> GetChiffreAffairesAsync()
         {
             return await _context.Commandes
-    .Where(c => c.Statut == "Livrée")
-    .SumAsync(c => c.Total);
+                .Where(c => c.Statut == "Livrée")
+                .SumAsync(c => c.Total);
         }
 
         public async Task<Dictionary<string, int>> GetStatistiquesCommandesAsync()
         {
             var stats = await _context.Commandes
-    .GroupBy(c => c.Statut)
-    .Select(g => new { Statut = g.Key, Count = g.Count() })
-    .ToDictionaryAsync(g => g.Statut, g => g.Count);
+                .GroupBy(c => c.Statut)
+                .Select(g => new { Statut = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.Statut, g => g.Count);
 
             return stats;
         }

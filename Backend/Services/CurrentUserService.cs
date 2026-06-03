@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using Backend.Interface;
-using Microsoft.AspNetCore.Http;
 
 namespace Backend.Services
 {
