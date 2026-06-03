@@ -38,6 +38,11 @@
             (click)="activeTab = 'commercial'">💰 Commercial</button>
     </div>
 
+    <!-- Nouvel onglet Versions -->
+    <div *ngIf="activeTab === 'versions'" class="versions-tab">
+        <app-piece-versions [pieceId]="piece.id"></app-piece-versions>
+    </div>
+
     <!-- Grille 2 colonnes -->
     <div class="grid-2"
         [style.gridTemplateColumns]="activeTab === '3d' ? '1fr' : '1fr 420px'">
