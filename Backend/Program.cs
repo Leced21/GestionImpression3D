@@ -69,6 +69,8 @@ builder.Services.AddScoped<IMaterialStockRepository, MaterialStockRepository>();
 builder.Services.AddScoped<IMaterialStockService, MaterialStockService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
+builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
