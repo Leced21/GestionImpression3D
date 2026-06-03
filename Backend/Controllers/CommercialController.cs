@@ -1,7 +1,9 @@
 ﻿using Azure.Core;
 using Backend.Interface;
 using Backend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers
 {
@@ -10,9 +12,11 @@ namespace Backend.Controllers
     public class CommercialController:ControllerBase
     {
         private readonly ICommercialService _commercialService;
-        public CommercialController(ICommercialService commercialService)
+        private readonly IExcelExportService _excelExportService;
+        public CommercialController(ICommercialService commercialService, IExcelExportService excelExportService)
         {
             _commercialService = commercialService;
+            _excelExportService = excelExportService;
         }
         [HttpGet("catalogue")]
         public async Task<IActionResult> GetCatalogue()
@@ -103,6 +107,13 @@ namespace Backend.Controllers
         {
             var ca = await _commercialService.GetChiffreAffairesAsync();
             return Ok(new { chiffreAffaires = ca });
+        }
+        [HttpGet("commandes/export/excel")]
+        [Authorize(Roles = "Admin,Commercial")]
+        public async Task<IActionResult> ExportCommandesToExcel()
+        {
+            var excelBytes = await _excelExportService.ExportCommandesToExcelAsync();
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Commandes_{DateTime.Now:yyyyMMdd}.xlsx");
         }
     }
 }
