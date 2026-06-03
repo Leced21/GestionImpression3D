@@ -21,6 +21,7 @@ namespace Backend.Data
         public DbSet<Invitation> Invitations { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<PieceVersion> PieceVersions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -150,6 +151,20 @@ namespace Backend.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Permission).WithMany().HasForeignKey(e => e.PermissionId);
+            });
+            modelBuilder.Entity<PieceVersion>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nom).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.ChangeLog).HasMaxLength(500);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+
+                entity.HasOne(e => e.Piece)
+                      .WithMany()
+                      .HasForeignKey(e => e.PieceId);
+
+                entity.HasIndex(e => new { e.PieceId, e.VersionNumber }).IsUnique();
             });
         }
     }

@@ -23,6 +23,7 @@ import { MaterialstockForm } from './components/material/materialstock-form/mate
 import { MaterialstockDetail } from './components/material/materialstock-detail/materialstock-detail';
 import { UserList } from './components/admin/user/user-list/user-list';
 import { AcceptInvitation } from './features/auth/accept-invitation/accept-invitation';
+import { PieceVersions } from './components/piece-versions/piece-versions';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -52,5 +53,6 @@ export const routes: Routes = [
     { path: 'stock/:id', component: MaterialstockDetail, canActivate: [AuthGuard] },
     { path: 'stock/:id/edit', component: MaterialstockForm, canActivate: [AuthGuard] },
     { path: 'admin/users', component: UserList, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-    { path: 'accept-invitation', component: AcceptInvitation, canActivate: [AuthGuard] }
+    { path: 'accept-invitation', component: AcceptInvitation, canActivate: [AuthGuard] },
+    { path: 'pieces/:id/versions', component: PieceVersions, canActivate: [AuthGuard] }
 ];
