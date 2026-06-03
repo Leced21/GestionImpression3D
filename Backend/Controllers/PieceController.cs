@@ -1,5 +1,7 @@
 ﻿using Backend.Interface;
 using Backend.Models;
+using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
@@ -10,10 +12,12 @@ namespace Backend.Controllers
     {
         private readonly IPieceService _pieceService;
         private readonly IPdfExportService _pdfExportService;
-        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService)
+        private readonly IExcelExportService _excelExportService;
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService)
         {
             _pieceService = pieceService;
             _pdfExportService = pdfExportService;
+            _excelExportService = excelExportService;
         }
 
         [HttpGet]
@@ -198,6 +202,14 @@ namespace Backend.Controllers
 
             var pdfBytes = await _pdfExportService.ExportPieceToPdfAsync(piece);
             return File(pdfBytes, "application/pdf", $"Piece_{piece.Reference}.pdf");
+        }
+        [HttpGet("export/excel")]
+        [Authorize(Roles = "Admin,ProductionManager")]
+        public async Task<IActionResult> ExportToExcel()
+        {
+            var pieces = await _pieceService.GetAllAsync();
+            var excelBytes = await _excelExportService.ExportPiecesToExcelAsync();
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Pieces_{DateTime.Now:yyyyMMdd}.xlsx");
         }
     }
 }
