@@ -8,10 +8,12 @@ namespace Backend.Services
     {
         private readonly IPieceRepository _pieceRepository;
         private readonly IAuditLogger _auditLogger;
-        public PieceService(IPieceRepository pieceRepository, IAuditLogger auditLogger)
+        private readonly IPieceVersionRepository _pieceVersionRepository;
+        public PieceService(IPieceRepository pieceRepository, IAuditLogger auditLogger, IPieceVersionRepository pieceVersionRepository)
         {
             _pieceRepository = pieceRepository;
             _auditLogger = auditLogger;
+            _pieceVersionRepository = pieceVersionRepository;
         }
         public async Task<decimal> CalculerPrixRecommandéAsync(int id)
         {
@@ -20,13 +22,38 @@ namespace Backend.Services
 
         public async Task<Piece> CreateAsync(Piece piece)
         {
+            if (string.IsNullOrWhiteSpace(piece.Reference))
+            {
+                piece.Reference = $"P-{DateTime.Now.Ticks}";
+            }
+
+            piece.DateCreation = DateTime.Now;
+            piece.Statut = "Brouillon";
+
             var created = await _pieceRepository.CreateAsync(piece);
 
-            await _auditLogger.LogCreationAsync(
-                EntityType.Piece,
-                created.Id,
-                created.Nom
-            );
+            // Créer la version initiale directement via le repository
+            var nextVersion = await _pieceVersionRepository.GetNextVersionNumberAsync(created.Id);
+
+            var version = new PieceVersion
+            {
+                PieceId = created.Id,
+                VersionNumber = nextVersion,
+                Nom = created.Nom,
+                Description = created.Description,
+                CoutMatiere = created.CoutMatiere,
+                CoutMachine = created.CoutMachine,
+                CoutMainOeuvre = created.CoutMainOeuvre,
+                PrixVente = created.PrixVente,
+                StlFileName = created.StlFileName,
+                ChangeLog = "Version initiale",
+                CreatedBy = "System",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true,
+                IsPrototype = true
+            };
+
+            await _pieceVersionRepository.CreateAsync(version);
 
             return created;
         }

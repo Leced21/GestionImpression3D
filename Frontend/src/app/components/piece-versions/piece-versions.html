@@ -1,0 +1,86 @@
+<div class="versions-container">
+    <div class="header">
+        <h3>📦 Versions de la pièce</h3>
+        <button class="btn-new" (click)="showNewVersionModal = true">+ Nouvelle
+            version</button>
+    </div>
+
+    <!-- Timeline des versions -->
+    <div class="timeline">
+        <div class="timeline-item"
+            *ngFor="let version of versions; let i = index">
+            <div class="timeline-marker"
+                [class.prototype]="version.isPrototype">
+                <span class="version-number">v{{ version.versionNumber }}</span>
+            </div>
+            <div class="timeline-content">
+                <div class="version-header">
+                    <div class="version-title">
+                        <span class="version-name">{{ version.nom }}</span>
+                        <span class="version-badge"
+                            *ngIf="version.isPrototype">🔄 Prototype</span>
+                        <span class="version-badge production"
+                            *ngIf="!version.isPrototype">✅ Production</span>
+                    </div>
+                    <div class="version-date">
+                        {{ version.createdAt | date:'dd/MM/yyyy' }} par {{
+                        version.createdBy }}
+                    </div>
+                </div>
+
+                <div class="version-changes" *ngIf="version.changeLog">
+                    <strong>📝 Modifications:</strong>
+                    <p>{{ version.changeLog }}</p>
+                </div>
+
+                <div class="version-diff" *ngIf="i > 0">
+                    <button class="btn-compare"
+                        (click)="compareVersions(versions[i-1].id, version.id)">
+                        🔍 Comparer avec version précédente
+                    </button>
+                </div>
+
+                <div class="version-actions" *ngIf="version.isPrototype">
+                    <button class="btn-promote"
+                        (click)="promoteToProduction(version.id)">
+                        🚀 Promouvoir en production
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="versions.length === 0" class="empty-state">
+        <p>Aucune version enregistrée</p>
+    </div>
+
+    <!-- Modal nouvelle version -->
+    <div class="modal" [class.show]="showNewVersionModal"
+        (click)="closeModalOnOverlay($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nouvelle version</h3>
+                <button class="modal-close" (click)="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Change log</label>
+                    <textarea [(ngModel)]="changeLog" rows="4"
+                        placeholder="Décrivez les modifications apportées..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" [(ngModel)]="isPrototype">
+                        Version prototype (vs production)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary"
+                    (click)="closeModal()">Annuler</button>
+                <button class="btn-primary" (click)="createVersion()">Créer la
+                    version</button>
+            </div>
+        </div>
+    </div>
+</div>
