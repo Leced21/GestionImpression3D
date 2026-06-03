@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { AuditLogFilters } from '../../audit-log-filters/audit-log-filters/audit-log-filters';
 import { AuditLog, AuditLogFilter } from '../../../../models/audit-log.model';
 import { AuditLogApiService } from '../../../../services/audit-log-api.service';
@@ -21,6 +21,7 @@ export class AuditLogs {
   constructor(
     private auditLogApi: AuditLogApiService,
     public formatter: AuditLogFormatterService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -34,10 +35,12 @@ export class AuditLogs {
         this.logs = data;
         this.applyFilter();
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

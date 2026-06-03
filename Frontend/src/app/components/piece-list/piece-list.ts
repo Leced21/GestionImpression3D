@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // Indispensable pour le [(ngModel)] de ton HTML
 import { PieceService } from '../../services/piece.service';
 import { Piece } from '../../models/piece.model';
+import { ExportService } from '../../services/export.service';
 
 @Component({
   selector: 'app-piece-list',
@@ -29,6 +30,7 @@ export class PieceList implements OnInit {
 
   constructor(
     private pieceService: PieceService,
+    private exportService: ExportService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -79,7 +81,7 @@ export class PieceList implements OnInit {
         this.cdr.detectChanges(); // Force Angular à vérifier les changements
       },
       error: (err) => {
-        console.error('Error updating status:', err); 
+        console.error('Error updating status:', err);
         this.isLoading = false;
       }
     });
@@ -149,5 +151,14 @@ export class PieceList implements OnInit {
   getMargePourcentage(piece: Piece): number {
     const coutTotal = this.getCoutTotal(piece);
     return coutTotal > 0 ? (this.getMarge(piece) / coutTotal) * 100 : 0;
+  }
+
+  exportExcel(): void {
+    this.exportService.exportPiecesExcel().subscribe({
+      next: (blob) => {
+        this.exportService.downloadFile(blob, `pieces_${new Date().toISOString().split('T')[0]}.xlsx`);
+      },
+      error: (err) => console.error(err)
+    });
   }
 }
