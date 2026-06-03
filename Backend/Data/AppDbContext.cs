@@ -18,6 +18,9 @@ namespace Backend.Data
         public DbSet<Printer> Printers { get; set; }
         public DbSet<PrintJob> PrintJobs { get; set; }
         public DbSet<MaterialStock> MaterialStocks { get; set; }
+        public DbSet<Invitation> Invitations { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -127,6 +130,26 @@ namespace Backend.Data
                 entity.HasIndex(e => e.Type);
                 entity.HasIndex(e => e.IsActive);
                 entity.HasIndex(e => e.Quantity);
+            });
+            modelBuilder.Entity<Invitation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.Token).IsUnique();
+            });
+
+            modelBuilder.Entity<Permission>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Category).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<RolePermission>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Permission).WithMany().HasForeignKey(e => e.PermissionId);
             });
         }
     }

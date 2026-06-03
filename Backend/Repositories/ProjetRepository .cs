@@ -65,32 +65,32 @@ namespace Backend.Repositories
         public async Task<IEnumerable<Projet>> GetAllAsync()
         {
             return await _context.Projets
-    .Include(p => p.ProjetPieces)
-    .ThenInclude(pp => pp.Piece)
-    .OrderByDescending(p => p.DateCreation)
-    .ToListAsync();
+                .Include(p => p.ProjetPieces)
+                .ThenInclude(pp => pp.Piece)
+                .OrderByDescending(p => p.DateCreation)
+                .ToListAsync();
         }
 
         public async Task<Projet?> GetByIdAsync(int id)
         {
             return await _context.Projets
-    .Include(p => p.ProjetPieces)
-    .ThenInclude(pp => pp.Piece)
-    .FirstOrDefaultAsync(p => p.Id == id);
+                .Include(p => p.ProjetPieces)
+                .ThenInclude(pp => pp.Piece)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<IEnumerable<ProjetPiece>> GetPiecesByProjetAsync(int projetId)
         {
             return await _context.ProjetPieces
-            .Include(pp => pp.Piece)
-            .Where(pp => pp.ProjetId == projetId)
-            .ToListAsync();
+                .Include(pp => pp.Piece)
+                .Where(pp => pp.ProjetId == projetId)
+                .ToListAsync();
         }
 
         public async Task<bool> RemovePieceAsync(int projetId, int pieceId)
         {
             var projetPiece = await _context.ProjetPieces
-    .FirstOrDefaultAsync(pp => pp.ProjetId == projetId && pp.PieceId == pieceId);
+                    .FirstOrDefaultAsync(pp => pp.ProjetId == projetId && pp.PieceId == pieceId);
 
             if (projetPiece == null) return false;
 

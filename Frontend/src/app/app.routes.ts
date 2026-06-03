@@ -21,6 +21,8 @@ import { PrintJobDetail } from './components/printers/print-job-detail/print-job
 import { MaterialstockList } from './components/material/materialstock-list/materialstock-list';
 import { MaterialstockForm } from './components/material/materialstock-form/materialstock-form';
 import { MaterialstockDetail } from './components/material/materialstock-detail/materialstock-detail';
+import { UserList } from './components/admin/user/user-list/user-list';
+import { AcceptInvitation } from './features/auth/accept-invitation/accept-invitation';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -48,5 +50,7 @@ export const routes: Routes = [
     { path: 'stock', component: MaterialstockList, canActivate: [AuthGuard] },
     { path: 'stock/new', component: MaterialstockForm, canActivate: [AuthGuard] },
     { path: 'stock/:id', component: MaterialstockDetail, canActivate: [AuthGuard] },
-    { path: 'stock/:id/edit', component: MaterialstockForm, canActivate: [AuthGuard] }
+    { path: 'stock/:id/edit', component: MaterialstockForm, canActivate: [AuthGuard] },
+    { path: 'admin/users', component: UserList, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
+    { path: 'accept-invitation', component: AcceptInvitation, canActivate: [AuthGuard] }
 ];
