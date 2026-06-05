@@ -52,5 +52,18 @@ namespace Backend.Controllers
 
             return Ok(new { user.Id, user.Email, user.Nom, user.Prenom, user.Role });
         }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<AuthResponse>> Refresh(RefreshRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.RefreshToken))
+                return BadRequest(new { error = "Refresh token manquant" });
+
+            var response = await _authService.RefreshAsync(request.RefreshToken);
+            if (response == null)
+                return Unauthorized(new { error = "Refresh token invalide ou expiré" });
+
+            return Ok(response);
+        }
     }
 }

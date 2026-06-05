@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Backend.Data;
+using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 
@@ -25,7 +26,7 @@ namespace Backend.Repositories
         public async Task<Piece> CreateAsync(Piece piece)
         {
             piece.DateCreation = DateTime.UtcNow;
-            piece.Statut = "Brouillon"; // Statut par défaut
+            piece.Statut = PieceStatus.Brouillon; // Statut par défaut
             _context.Pieces.Add(piece);
             await _context.SaveChangesAsync();
             return piece;
@@ -75,17 +76,12 @@ namespace Backend.Repositories
             return existingPiece;
         }
 
-        public async Task<Piece?> UpdateStatutAsync(int id, string nouveauStatut)
+        public async Task<Piece?> UpdateStatutAsync(int id, PieceStatus nouveauStatut)
         {
             var piece = await _context.Pieces.FindAsync(id);
             if (piece == null)
             {
                 return null;
-            }
-            var statutsValides = new [] { "Brouillon", "Conception", "Prototypage", "Validation", "Production", "Commercialisable" };
-            if (!statutsValides.Contains(nouveauStatut))
-            {
-                throw new ArgumentException("Statut invalide");
             }
             piece.Statut = nouveauStatut;
             piece.DateModification = DateTime.UtcNow;

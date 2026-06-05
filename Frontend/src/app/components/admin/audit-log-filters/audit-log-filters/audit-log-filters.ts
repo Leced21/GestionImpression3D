@@ -8,7 +8,7 @@ import { ActionType, AuditLogFilter, EntityType } from '../../../../models/audit
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './audit-log-filters.html',
-  styleUrl: './audit-log-filters.css',
+  styleUrls: ['./audit-log-filters.css'],
 })
 export class AuditLogFilters {
   @Output() filtersChange = new EventEmitter<AuditLogFilter>();
@@ -27,3 +27,5 @@ export class AuditLogFilters {
     this.filtersChange.emit(this.filters);
   }
 }
+
+

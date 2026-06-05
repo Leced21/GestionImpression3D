@@ -4,13 +4,15 @@ import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { NotificationCenter } from '../notification-center/notification-center';
+import { NotificationBell } from '../notification-bell/notification-bell';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NotificationBell],
   templateUrl: './header.html',
-  styleUrl: './header.css',
+  styleUrls: ['./header.css'],
 })
 export class Header implements OnInit ,OnDestroy{
   currentUser:User | null = null;
@@ -44,3 +46,5 @@ export class Header implements OnInit ,OnDestroy{
     this.menuOpen = false;
   }
 }
+
+

@@ -1,9 +1,15 @@
+export enum ProjetStatus {
+  Brouillon = 'Brouillon',
+  EnCours = 'EnCours',
+  Termine = 'Termine'
+}
+
 export interface Projet {
   id: number;
   nom: string;
   reference: string;
   description: string;
-  statut: string;
+  statut: ProjetStatus;
   dateCreation: Date;
   dateLivraisonPrevue?: Date;
   clientNom: string;

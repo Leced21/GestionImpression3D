@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { catchError, throwError, Observable } from 'rxjs';
-import { Piece } from '../models/piece.model';
+import { Piece, PieceStatus } from '../models/piece.model';
 import { DashboardStat } from '../models/dashboardstat';
 import { API_BASE_URL } from '../config/api.config';
 
@@ -31,7 +31,7 @@ export class PieceService {
     return this.http.post<Piece>(this.apiUrl, piece).pipe(catchError(this.handleError));
   }
 
-  updateStatus(id: number, statut: string): Observable<Piece> {
+  updateStatus(id: number, statut: PieceStatus): Observable<Piece> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.patch<Piece>(`${this.apiUrl}/${id}/statut`, JSON.stringify(statut), { headers }).pipe(catchError(this.handleError));
   }

@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './commercial-catalog.html',
-  styleUrl: './commercial-catalog.css',
+  styleUrls: ['./commercial-catalog.css'],
 })
 export class CommercialCatalog implements OnInit {
 
@@ -134,3 +134,5 @@ export class CommercialCatalog implements OnInit {
     }
   }
 }
+
+

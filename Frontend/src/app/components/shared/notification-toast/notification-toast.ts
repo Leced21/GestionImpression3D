@@ -8,7 +8,7 @@ import { AppNotification } from '../../../models/notification.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './notification-toast.html',
-  styleUrl: './notification-toast.css',
+  styleUrls: ['./notification-toast.css'],
 })
 export class NotificationToast implements OnInit, OnDestroy{
   notifications: AppNotification[] = [];
@@ -41,3 +41,5 @@ export class NotificationToast implements OnInit, OnDestroy{
     if (this.interval) clearInterval(this.interval);
   }
 }
+
+

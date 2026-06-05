@@ -1,4 +1,5 @@
 ﻿using Backend.Data;
+using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -70,7 +71,7 @@ namespace Backend.Repositories
         public async Task<IEnumerable<CatalogueItem>> GetCatalogueAsync()
         {
             var pieces = await _context.Pieces
-                .Where(p => p.Statut == "Commercialisable" && p.PrixVente > 0 && p.EstDisponible && p.Stock > 0)
+                .Where(p => p.Statut == PieceStatus.Commercialisable && p.PrixVente > 0 && p.EstDisponible && p.Stock > 0)
                 .Select(p => new CatalogueItem
                 {
                     Id = p.Id,

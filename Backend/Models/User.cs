@@ -35,5 +35,10 @@ namespace Backend.Models
         public DateTime DateCreation { get; set; } = DateTime.UtcNow; // Standardisation UTC
 
         public bool IsActive { get; set; } = true;
+        // Refresh token fields for long-lived refresh
+        [MaxLength(512)]
+        public string? RefreshToken { get; set; }
+
+        public DateTime? RefreshTokenExpiry { get; set; }
     }
 }

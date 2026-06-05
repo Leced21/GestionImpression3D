@@ -1,0 +1,44 @@
+<div class="notification-center">
+    <div class="header">
+        <h3>🔔 Centre de notifications</h3>
+        <div class="actions">
+            <button class="btn-mark-all" (click)="markAllAsRead()"
+                *ngIf="hasUnread">Tout marquer lu</button>
+            <button class="btn-delete-all" (click)="deleteAll()"
+                *ngIf="notifications.length > 0">Tout supprimer</button>
+        </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement...</p>
+    </div>
+
+    <div class="notifications-list" *ngIf="!isLoading">
+        <div class="notification-item" *ngFor="let notif of notifications"
+            [class.unread]="!notif.isRead" [class]="notif.type">
+            <div class="notification-icon">
+                <span>{{ getNotificationIcon(notif.type) }}</span>
+            </div>
+            <div class="notification-content" (click)="openNotification(notif)">
+                <div class="notification-title">{{ notif.title }}</div>
+                <div class="notification-message">{{ notif.message }}</div>
+                <div class="notification-date">{{ formatDate(notif.createdAt)
+                    }}</div>
+            </div>
+            <div class="notification-actions">
+                <button class="btn-read"
+                    (click)="markAsRead(notif.id); $event.stopPropagation()"
+                    *ngIf="!notif.isRead" title="Marquer comme lu">🔵</button>
+                <button class="btn-delete"
+                    (click)="deleteNotification(notif.id); $event.stopPropagation()"
+                    title="Supprimer">🗑️</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="!isLoading && notifications.length === 0" class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <p>Aucune notification</p>
+    </div>
+</div>

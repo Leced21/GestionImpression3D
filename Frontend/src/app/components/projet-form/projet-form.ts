@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjetService } from '../../services/projet.service';
+import { ProjetStatus } from '../../models/projet.model';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -10,7 +11,7 @@ import { Subject, takeUntil } from 'rxjs';
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
   templateUrl: './projet-form.html',
-  styleUrl: './projet-form.css',
+  styleUrls: ['./projet-form.css'],
 })
 export class ProjetForm implements OnInit, OnDestroy {
 
@@ -47,7 +48,7 @@ export class ProjetForm implements OnInit, OnDestroy {
       clientEmail: ['', Validators.email],
       dateLivraisonPrevue: [''],
       budget: [0],
-      statut: ['Brouillon']
+      statut: [ProjetStatus.Brouillon]
     });
   }
 
@@ -114,3 +115,5 @@ export class ProjetForm implements OnInit, OnDestroy {
   }
 
 }
+
+

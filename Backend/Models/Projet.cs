@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Backend.Enums;
 
 namespace Backend.Models
 {
@@ -19,8 +20,7 @@ namespace Backend.Models
         public string? Description { get; set; }
 
         [Required]
-        [MaxLength(50)]
-        public string Statut { get; set; } = "Brouillon";
+        public ProjetStatus Statut { get; set; } = ProjetStatus.Brouillon;
 
         public DateTime? DateCreation { get; set; } = DateTime.Now;
         public DateTime? DateLivraisonPrevue { get; set; }

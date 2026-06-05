@@ -10,7 +10,7 @@ import { AuditLogFormatterService } from '../../../../services/audit-log-formatt
   standalone: true,
   imports: [CommonModule, AuditLogFilters],
   templateUrl: './audit-logs.html',
-  styleUrl: './audit-logs.css',
+  styleUrls: ['./audit-logs.css'],
 })
 export class AuditLogs {
   logs: AuditLog[] = [];
@@ -74,3 +74,5 @@ export class AuditLogs {
     this.filteredLogs = result;
   }
 }
+
+

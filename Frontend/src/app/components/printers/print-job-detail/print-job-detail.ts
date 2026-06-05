@@ -13,7 +13,7 @@ import { PrintJobService } from '../../../services/print-job.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './print-job-detail.html',
-  styleUrl: './print-job-detail.css',
+  styleUrls: ['./print-job-detail.css'],
 })
 export class PrintJobDetail implements OnInit {
 
@@ -218,3 +218,5 @@ export class PrintJobDetail implements OnInit {
     }
   }
 }
+
+

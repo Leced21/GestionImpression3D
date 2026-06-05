@@ -10,7 +10,7 @@ import { PieceVersionService } from '../../services/pieceversion.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './piece-versions.html',
-  styleUrl: './piece-versions.css',
+  styleUrls: ['./piece-versions.css'],
 })
 export class PieceVersions implements OnInit {
   @Input() pieceId!: number;
@@ -84,3 +84,5 @@ export class PieceVersions implements OnInit {
     }
   }
 }
+
+

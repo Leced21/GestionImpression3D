@@ -11,7 +11,7 @@ import { PrintJobService } from '../../../services/print-job.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './print-job-form.html',
-  styleUrl: './print-job-form.css',
+  styleUrls: ['./print-job-form.css'],
 })
 export class PrintJobForm implements OnInit {
   jobForm!: FormGroup;
@@ -66,5 +66,7 @@ export class PrintJobForm implements OnInit {
     });
   }
 }
+
+
 
 

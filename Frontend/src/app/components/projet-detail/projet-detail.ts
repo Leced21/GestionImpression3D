@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PieceService } from '../../services/piece.service';
-import { Piece } from '../../models/piece.model';
-import { Projet, ProjetPiece, ProjetStats } from '../../models/projet.model';
+import { Piece, PieceStatus } from '../../models/piece.model';
+import { Projet, ProjetPiece, ProjetStats, ProjetStatus } from '../../models/projet.model';
 import { ProjetService } from '../../services/projet.service';
 import { Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { ExportService } from '../../services/export.service';
   selector: 'app-projet-detail',
   imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
   templateUrl: './projet-detail.html',
-  styleUrl: './projet-detail.css',
+  styleUrls: ['./projet-detail.css'],
 })
 export class ProjetDetail implements OnInit, OnDestroy {
   projet!: Projet;
@@ -61,7 +61,7 @@ export class ProjetDetail implements OnInit, OnDestroy {
   loadAvailablePieces(): void {
     this.pieceService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
-        this.availablePieces = data.filter(p => p.statut === 'Commercialisable');
+        this.availablePieces = data.filter(p => p.statut === PieceStatus.Commercialisable);
       },
       error: (err) => console.error(err)
     });
@@ -106,16 +106,16 @@ export class ProjetDetail implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  getStatutLabel(statut: string): string {
-    const labels: Record<string, string> = {
-      'Brouillon': '📝 Brouillon',
-      'EnCours': '🔄 En cours',
-      'Termine': '✅ Terminé'
+  getStatutLabel(statut: ProjetStatus): string {
+    const labels: Record<ProjetStatus, string> = {
+      [ProjetStatus.Brouillon]: '📝 Brouillon',
+      [ProjetStatus.EnCours]: '🔄 En cours',
+      [ProjetStatus.Termine]: '✅ Terminé'
     };
     return labels[statut] || statut;
   }
 
-  getBadgeClass(statut: string): string {
+  getBadgeClass(statut: ProjetStatus): string {
     return `badge-${statut}`;
   }
 
@@ -144,3 +144,5 @@ export class ProjetDetail implements OnInit, OnDestroy {
     });
   }
 }
+
+
