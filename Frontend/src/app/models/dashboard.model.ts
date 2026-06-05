@@ -32,9 +32,11 @@ export interface MaterialConsumption {
   unit: string;
 }
 
+import { PrinterStatus } from './printer.model';
+
 export interface PrinterActivity {
   nom: string;
-  status: string;
+  status: PrinterStatus;
   totalPrintJobs: number;
   totalPrintHours: number;
   lastPrint: Date;

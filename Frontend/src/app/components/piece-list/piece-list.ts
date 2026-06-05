@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // Indispensable pour le [(ngModel)] de ton HTML
 import { PieceService } from '../../services/piece.service';
-import { Piece } from '../../models/piece.model';
+import { Piece, PieceStatus } from '../../models/piece.model';
 import { ExportService } from '../../services/export.service';
 
 @Component({
@@ -17,7 +17,7 @@ import { ExportService } from '../../services/export.service';
 export class PieceList implements OnInit {
   pieces: Piece[] = [];
   searchTerm: string = '';
-  statutFiltre: string = '';
+  statutFiltre: PieceStatus | '' = '';
 
   // Variables nécessaires pour ton HTML
   isLoading: boolean = false;
@@ -58,16 +58,16 @@ export class PieceList implements OnInit {
   // Logique pour les cartes de statistiques en haut de ton HTML
   calculateStats() {
     this.stats = {
-      enConception: this.pieces.filter(p => p.statut === 'Conception').length,
-      enPrototypage: this.pieces.filter(p => p.statut === 'Prototypage').length,
-      enProduction: this.pieces.filter(p => p.statut === 'Production').length,
-      commercialisables: this.pieces.filter(p => p.statut === 'Commercialisable').length,
+      enConception: this.pieces.filter(p => p.statut === PieceStatus.Conception).length,
+      enPrototypage: this.pieces.filter(p => p.statut === PieceStatus.Prototypage).length,
+      enProduction: this.pieces.filter(p => p.statut === PieceStatus.Production).length,
+      commercialisables: this.pieces.filter(p => p.statut === PieceStatus.Commercialisable).length,
       chiffreAffaires: this.pieces.reduce((acc, p) => acc + (p.prixVente || 0), 0)
     };
   }
 
   nextStatus(piece: Piece): void {
-    const statuts = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
+    const statuts = Object.values(PieceStatus);
     const currentIndex = statuts.indexOf(piece.statut);
     if (currentIndex === -1 || currentIndex === statuts.length - 1) return;
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { API_BASE_URL } from '../config/api.config';
-import { Observable } from 'rxjs/internal/Observable';
+import { Observable } from 'rxjs';
 import { Invitation, Permission, User } from '../models/user.model';
 import { HttpClient } from '@angular/common/http';
 

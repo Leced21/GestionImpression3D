@@ -70,6 +70,14 @@ namespace Backend.Repositories
             return await _context.Users.FindAsync(id);
         }
 
+        public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+        {
+            if (string.IsNullOrEmpty(refreshToken)) return null;
+
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        }
+
         public async Task<User> UpdateAsync(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));

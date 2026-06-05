@@ -5,12 +5,13 @@ import { CommonModule } from '@angular/common';
 import { Header } from './components/header/header';
 import { AuthService } from './services/auth.service';
 import { User } from './models/user.model';
+import { Toasts } from './components/toast/toast';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterModule, Header, Sidebar, CommonModule],
+  imports: [RouterOutlet, RouterModule, Header, Sidebar, CommonModule, Toasts],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: ['./app.css']
 })
 export class App {
   protected readonly title = signal('Frontend');
@@ -32,3 +33,5 @@ export class App {
     this.authService.logout();
   }
 }
+
+

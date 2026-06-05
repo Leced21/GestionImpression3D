@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './materialstock-list.html',
-  styleUrl: './materialstock-list.css',
+  styleUrls: ['./materialstock-list.css'],
 })
 export class MaterialstockList implements OnInit {
   materials: MaterialStock[] = [];
@@ -182,3 +182,5 @@ export class MaterialstockList implements OnInit {
     }
   }
 }
+
+

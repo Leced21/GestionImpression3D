@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     // Évite les boucles infinies de sérialisation JSON si vos entités ont des relations bidirectionnelles
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
 });
 
 // Récupération et validation stricte de la clé JWT
@@ -75,6 +78,9 @@ builder.Services.AddScoped<IExcelExportService, ExcelExportService>();
 builder.Services.AddScoped<IExcelExportRepository, ExcelExportRepository>();
 builder.Services.AddScoped<IPieceVersionRepository, PieceVersionRepository>();
 builder.Services.AddScoped<IPieceVersionService, PieceVersionService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationManagerService, NotificationManagerService>();
+
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
 builder.Services.AddScoped<IProjetService, ProjetService>();

@@ -42,6 +42,12 @@ namespace Backend.Services
             var expirationTime = DateTime.UtcNow.AddHours(24);
             var token = GenerateJwtToken(user, expirationTime);
 
+            // generate refresh token
+            var refreshToken = GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userRepository.UpdateAsync(user);
+
             return new AuthResponse
             {
                 Id = user.Id,
@@ -50,7 +56,8 @@ namespace Backend.Services
                 Prenom = user.Prenom,
                 Role = user.Role,
                 Token = token,
-                Expiration = expirationTime
+                Expiration = expirationTime,
+                RefreshToken = refreshToken
             };
         }
 
@@ -81,6 +88,11 @@ namespace Backend.Services
 
             var expirationTime = DateTime.UtcNow.AddHours(24);
             var token = GenerateJwtToken(user, expirationTime);
+            // generate refresh token
+            var refreshToken = GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userRepository.UpdateAsync(user);
 
             return new AuthResponse
             {
@@ -90,7 +102,38 @@ namespace Backend.Services
                 Prenom = user.Prenom,
                 Role = user.Role,
                 Token = token,
-                Expiration = expirationTime
+                Expiration = expirationTime,
+                RefreshToken = refreshToken
+            };
+        }
+
+        public async Task<AuthResponse?> RefreshAsync(string refreshToken)
+        {
+            if (string.IsNullOrEmpty(refreshToken)) return null;
+
+            var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+            if (user == null) return null;
+            if (!user.RefreshTokenExpiry.HasValue || user.RefreshTokenExpiry.Value < DateTime.UtcNow) return null;
+
+            var expirationTime = DateTime.UtcNow.AddHours(24);
+            var token = GenerateJwtToken(user, expirationTime);
+
+            // rotate refresh token
+            var newRefresh = GenerateRefreshToken();
+            user.RefreshToken = newRefresh;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userRepository.UpdateAsync(user);
+
+            return new AuthResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Nom = user.Nom,
+                Prenom = user.Prenom,
+                Role = user.Role,
+                Token = token,
+                Expiration = expirationTime,
+                RefreshToken = newRefresh
             };
         }
 
@@ -130,6 +173,16 @@ namespace Backend.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var random = new byte[64];
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(random);
+            }
+            return Convert.ToBase64String(random);
         }
     }
 }

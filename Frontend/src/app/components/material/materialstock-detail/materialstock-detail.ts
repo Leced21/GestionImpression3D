@@ -10,7 +10,7 @@ import { MaterialStock } from '../../../models/material-stock.model';
   standalone: true,
   imports: [CommonModule,RouterModule,FormsModule],
   templateUrl: './materialstock-detail.html',
-  styleUrl: './materialstock-detail.css',
+  styleUrls: ['./materialstock-detail.css'],
 })
 export class MaterialstockDetail implements OnInit {
   material: MaterialStock | null = null;
@@ -182,3 +182,5 @@ export class MaterialstockDetail implements OnInit {
     }
   }
 }
+
+

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { take } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,7 +10,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './register.html',
-  styleUrl: './register.css',
+  styleUrls: ['./register.css'],
 })
 export class Register {
   email: string = '';
@@ -25,11 +26,10 @@ export class Register {
 
   constructor(
     private authService: AuthService,
-    private router: Router,
-    private auth?: AuthService
+    private router: Router
   ) {
     // Vérifier si l'utilisateur connecté est admin (pour afficher le sélecteur de rôle)
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
       this.isAdminCreating = user?.role === 'Admin';
     });
   }
@@ -75,3 +75,5 @@ export class Register {
     });
   }
 }
+
+

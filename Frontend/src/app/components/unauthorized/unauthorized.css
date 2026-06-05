@@ -1,0 +1,23 @@
+.unauthorized-page {
+  padding: 2rem;
+  text-align: center;
+}
+
+.unauthorized-page h1 {
+  color: #c02f2f;
+  margin-bottom: 1rem;
+}
+
+.unauthorized-page p {
+  margin-bottom: 1.5rem;
+}
+
+.unauthorized-page a {
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.unauthorized-page a:hover {
+  text-decoration: underline;
+}
