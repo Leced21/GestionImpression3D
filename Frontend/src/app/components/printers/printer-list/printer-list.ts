@@ -10,7 +10,7 @@ import { PrinterService } from '../../../services/printer.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './printer-list.html',
-  styleUrl: './printer-list.css',
+  styleUrls: ['./printer-list.css'],
 })
 export class PrinterList implements OnInit {
   printers: Printer[] = [];
@@ -116,3 +116,5 @@ export class PrinterList implements OnInit {
     }
   }
 }
+
+

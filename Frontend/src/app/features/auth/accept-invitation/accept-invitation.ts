@@ -10,7 +10,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule,FormsModule],
   templateUrl: './accept-invitation.html',
-  styleUrl: './accept-invitation.css',
+  styleUrls: ['./accept-invitation.css'],
 })
 export class AcceptInvitation implements OnInit{
   token = '';
@@ -71,3 +71,5 @@ export class AcceptInvitation implements OnInit{
     });
   }
 }
+
+

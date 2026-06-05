@@ -8,5 +8,6 @@ namespace Backend.Interface
         Task<AuthResponse?> RegisterAsync(RegisterRequest request);
         Task<User?> GetUserByIdAsync(int id);
         Task<bool> UserExistsAsync(string email);
+        Task<AuthResponse?> RefreshAsync(string refreshToken);
     }
 }

@@ -1,9 +1,18 @@
+export enum PieceStatus {
+  Brouillon = 'Brouillon',
+  Conception = 'Conception',
+  Prototypage = 'Prototypage',
+  Validation = 'Validation',
+  Production = 'Production',
+  Commercialisable = 'Commercialisable'
+}
+
 export interface Piece {
   id: number;
   nom: string;
   reference: string;
   description: string;
-  statut: string;
+  statut: PieceStatus;
   coutMatiere: number;
   coutMachine: number;
   coutMainOeuvre: number;

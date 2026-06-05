@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-login',
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrls: ['./login.css'],
 })
 export class Login {
   email: string = '';
@@ -37,3 +37,5 @@ export class Login {
     });
   }
 }
+
+

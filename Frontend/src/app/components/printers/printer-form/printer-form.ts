@@ -9,7 +9,7 @@ import { PrinterService } from '../../../services/printer.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './printer-form.html',
-  styleUrl: './printer-form.css',
+  styleUrls: ['./printer-form.css'],
 })
 export class PrinterForm implements OnInit {
 
@@ -69,3 +69,5 @@ export class PrinterForm implements OnInit {
     }
   }
 }
+
+

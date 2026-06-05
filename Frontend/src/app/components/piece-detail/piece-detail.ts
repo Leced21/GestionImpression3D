@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Piece } from '../../models/piece.model';
+import { Piece, PieceStatus } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
 import { Subject, takeUntil } from 'rxjs';
 import * as THREE from 'three';
@@ -16,13 +16,13 @@ import { PieceVersions } from '../piece-versions/piece-versions';
   imports: [CommonModule, RouterModule, ThreeDViewer, PieceVersions],
   standalone: true,
   templateUrl: './piece-detail.html',
-  styleUrl: './piece-detail.css',
+  styleUrls: ['./piece-detail.css'],
 })
 export class PieceDetail implements OnInit, OnDestroy {
   piece: Piece | null = null;
   prixRecommande: number = 0;
   activeTab: string = 'general';
-  statuts: string[] = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
+  statuts: PieceStatus[] = Object.values(PieceStatus);
   versionNumber: number = 1;
   private destroy$ = new Subject<void>();
   @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -139,10 +139,10 @@ export class PieceDetail implements OnInit, OnDestroy {
     return classes[statut] || 'badge-Brouillon';
   }
 
-  isStepCompleted(step: string): boolean {
+  isStepCompleted(step: PieceStatus | string): boolean {
     if (!this.piece) return false;
     const currentIndex = this.statuts.indexOf(this.piece.statut);
-    const stepIndex = this.statuts.indexOf(step);
+    const stepIndex = this.statuts.indexOf(step as PieceStatus);
     return stepIndex < currentIndex;
   }
 
@@ -202,7 +202,7 @@ export class PieceDetail implements OnInit, OnDestroy {
       coutMatiere: this.piece.coutMatiere,
       coutMachine: this.piece.coutMachine,
       coutMainOeuvre: this.piece.coutMainOeuvre,
-      statut: 'Brouillon'
+      statut: PieceStatus.Brouillon
     };
 
     this.pieceService.create(newPiece).subscribe({
@@ -418,7 +418,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   }
   previousStatus(): void {
     if (!this.piece) return;
-    const statuts = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
+    const statuts = Object.values(PieceStatus);
     const index = statuts.indexOf(this.piece.statut);
     if (index > 0) {
       this.pieceService.updateStatus(this.piece.id, statuts[index - 1]).subscribe({
@@ -428,7 +428,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   }
   rendreCommercialisable(): void {
     if (!this.piece) return;
-    this.pieceService.updateStatus(this.piece.id, 'Commercialisable').subscribe({
+    this.pieceService.updateStatus(this.piece.id, PieceStatus.Commercialisable).subscribe({
       next: (updated) => { this.piece = updated; }
     });
   }
@@ -482,3 +482,5 @@ export class PieceDetail implements OnInit, OnDestroy {
     });
   }
 }
+
+
