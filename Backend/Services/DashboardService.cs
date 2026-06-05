@@ -34,26 +34,26 @@ namespace Backend.Services
 
             return new
             {
-                TotalPieces = piecesCount,
-                TotalProjets = projetsCount,
-                TotalPrinters = printersCount,
-                ActivePrinters = activePrinters,
-                PrintJobs = new
+                totalPieces = piecesCount,
+                totalProjets = projetsCount,
+                totalPrinters = printersCount,
+                activePrinters = activePrinters,
+                printJobs = new
                 {
-                    TotalJobs = totalJobs,
-                    CompletedJobs = completedJobs,
-                    FailedJobs = failedJobs,
-                    PendingJobs = pendingJobs,
-                    PrintingJobs = printingJobs,
-                    SuccessRate = Math.Round(successRate, 1)
+                    totalJobs = totalJobs,
+                    completedJobs = completedJobs,
+                    failedJobs = failedJobs,
+                    pendingJobs = pendingJobs,
+                    printingJobs = printingJobs,
+                    successRate = Math.Round(successRate, 1)
                 },
-                MaterialStock = new
+                materialStock = new
                 {
-                    TotalMaterials = await _context.MaterialStocks.CountAsync(m => m.IsActive),
-                    LowStockMaterials = lowStockMaterials,
-                    TotalValue = totalStockValue
+                    totalMaterials = await _context.MaterialStocks.CountAsync(m => m.IsActive),
+                    lowStockMaterials = lowStockMaterials,
+                    totalValue = totalStockValue
                 },
-                LastUpdated = DateTime.UtcNow
+                lastUpdated = DateTime.UtcNow
             };
         }
 
@@ -84,10 +84,10 @@ namespace Backend.Services
                 .Where(m => m.LastUsedAt.HasValue && m.LastUsedAt >= startDate && m.IsActive)
                 .Select(m => new
                 {
-                    m.Name,
-                    Type = m.Type.ToString(),
-                    Quantity = m.Quantity,
-                    Unit = m.Unit.ToString()
+                    name = m.Name,
+                    type = m.Type.ToString(),
+                    quantity = m.Quantity,
+                    unit = m.Unit.ToString()
                 })
                 .ToListAsync();
 
@@ -99,11 +99,11 @@ namespace Backend.Services
             var printers = await _context.Printers
                 .Select(p => new
                 {
-                    p.Nom,
-                    Status = p.Status.ToString(),
-                    p.TotalPrintJobs,
-                    p.TotalPrintHours,
-                    LastPrint = p.LastPrint
+                    nom = p.Nom,
+                    status = p.Status.ToString(),
+                    totalPrintJobs = p.TotalPrintJobs,
+                    totalPrintHours = p.TotalPrintHours,
+                    lastPrint = p.LastPrint
                 })
                 .ToListAsync();
 

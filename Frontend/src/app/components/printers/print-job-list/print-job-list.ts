@@ -9,7 +9,7 @@ import { PrintJobService } from '../../../services/print-job.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './print-job-list.html',
-  styleUrl: './print-job-list.css',
+  styleUrls: ['./print-job-list.css'],
 })
 export class PrintJobList implements OnInit {
   jobs: PrintJob[] = [];
@@ -98,3 +98,5 @@ export class PrintJobList implements OnInit {
     }
   }
 }
+
+

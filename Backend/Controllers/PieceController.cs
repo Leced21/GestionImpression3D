@@ -1,4 +1,5 @@
-﻿using Backend.Interface;
+﻿using Backend.Enums;
+using Backend.Interface;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -51,7 +52,7 @@ namespace Backend.Controllers
             
         }
         [HttpPatch("{id}/statut")]
-        public async Task<IActionResult> UpdateStatut(int id, [FromBody] string statut)
+        public async Task<IActionResult> UpdateStatut(int id, [FromBody] PieceStatus statut)
         {
             try
             {
@@ -130,11 +131,11 @@ namespace Backend.Controllers
             var stats = new DashboardStat
             {
                 TotalPieces = pieces.Count(),
-                EnConception = pieces.Count(p => p.Statut == "Conception"),
-                EnPrototypage = pieces.Count(p => p.Statut == "Prototypage"),
-                EnProduction = pieces.Count(p => p.Statut == "Production"),
-                Commercialisables = pieces.Count(p => p.Statut == "Commercialisable"),
-                ChiffreAffaires = pieces.Where(p => p.Statut == "Commercialisable").Sum(p => p.PrixVente)
+                EnConception = pieces.Count(p => p.Statut == PieceStatus.Conception),
+                EnPrototypage = pieces.Count(p => p.Statut == PieceStatus.Prototypage),
+                EnProduction = pieces.Count(p => p.Statut == PieceStatus.Production),
+                Commercialisables = pieces.Count(p => p.Statut == PieceStatus.Commercialisable),
+                ChiffreAffaires = pieces.Where(p => p.Statut == PieceStatus.Commercialisable).Sum(p => p.PrixVente)
             };
 
             return Ok(stats);

@@ -28,7 +28,7 @@ namespace Backend.Services
             }
 
             piece.DateCreation = DateTime.Now;
-            piece.Statut = "Brouillon";
+            piece.Statut = PieceStatus.Brouillon;
 
             var created = await _pieceRepository.CreateAsync(piece);
 
@@ -122,7 +122,7 @@ namespace Backend.Services
             return await _pieceRepository.UpdateAsync(id, piece);
         }
 
-        public async Task<Piece?> UpdateStatutAsync(int id, string nouveauStatut)
+        public async Task<Piece?> UpdateStatutAsync(int id, PieceStatus nouveauStatut)
         {
             var existing = await _pieceRepository.GetByIdAsync(id);
             if (existing == null) return null;
@@ -130,7 +130,7 @@ namespace Backend.Services
             var oldStatut = existing.Statut;
             existing.Statut = nouveauStatut;
             await _pieceRepository.UpdateStatutAsync(id, nouveauStatut);
-            await _auditLogger.LogStatusChangeAsync(EntityType.Piece, id, oldStatut, nouveauStatut);
+            await _auditLogger.LogStatusChangeAsync(EntityType.Piece, id, oldStatut.ToString(), nouveauStatut.ToString());
             return existing;
         }
     }

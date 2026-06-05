@@ -9,7 +9,7 @@ import { Printer } from '../../../models/printer.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './printer-detail.html',
-  styleUrl: './printer-detail.css',
+  styleUrls: ['./printer-detail.css'],
 })
 export class PrinterDetail implements OnInit {
   printer : Printer | null = null;
@@ -81,3 +81,5 @@ export class PrinterDetail implements OnInit {
     }
   }
 }
+
+

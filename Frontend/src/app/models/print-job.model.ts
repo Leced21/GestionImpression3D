@@ -27,8 +27,8 @@ export interface PrintJob {
   operatorName?: string;
   quantity: number;
   quantityCompleted: number;
-  status: string;
-  priority: string;
+  status: PrintJobStatus;
+  priority: PrintJobPriority;
   createdAt: Date;
   startedAt?: Date;
   completedAt?: Date;
@@ -59,7 +59,7 @@ export interface PrintJobStatistics {
 export interface CreatePrintJobRequest {
   pieceId: number;
   quantity: number;
-  priority: string;
+  priority: PrintJobPriority;
   estimatedDurationMinutes: number;
   estimatedMaterialGrams: number;
   notes?: string;

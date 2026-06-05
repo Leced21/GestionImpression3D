@@ -9,7 +9,7 @@ import {
   moveItemInArray,
   transferArrayItem
 } from '@angular/cdk/drag-drop';
-import { Piece } from '../../models/piece.model';
+import { Piece, PieceStatus } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
 
 @Component({
@@ -17,12 +17,12 @@ import { PieceService } from '../../services/piece.service';
   standalone: true,
   imports: [CommonModule, RouterModule, CdkDropListGroup, CdkDropList, CdkDrag],
   templateUrl: './piece-kanban.html',
-  styleUrl: './piece-kanban.css',
+  styleUrls: ['./piece-kanban.css'],
 })
 export class PieceKanban implements OnInit {
   allPieces: Piece[] = [];
   isLoading: boolean = true;
-  private statutOrder = ['Brouillon', 'Conception', 'Prototypage', 'Validation', 'Production', 'Commercialisable'];
+  private statutOrder = Object.values(PieceStatus);
 
   contextMenuVisible: boolean = false;
   contextMenuX: number = 0;
@@ -53,11 +53,11 @@ export class PieceKanban implements OnInit {
     });
   }
 
-  getPiecesByStatut(statut: string): Piece[] {
+  getPiecesByStatut(statut: PieceStatus | string): Piece[] {
     return this.allPieces.filter(p => p.statut === statut);
   }
 
-  getCountByStatut(statut: string): number {
+  getCountByStatut(statut: PieceStatus | string): number {
     return this.getPiecesByStatut(statut).length;
   }
 
@@ -107,17 +107,17 @@ export class PieceKanban implements OnInit {
     }
   }
 
-  private getStatutFromContainerId(containerId: string): string | null {
+  private getStatutFromContainerId(containerId: string): PieceStatus | null {
     const match = containerId.match(/cdk-drop-list-(.+)/);
     if (match) {
-      const statut = match[1];
+      const statut = match[1] as PieceStatus;
       if (this.statutOrder.includes(statut)) {
         return statut;
       }
     }
     return null;
   }
-  isValidTransition(currentStatut: string, newStatut: string): boolean {
+  isValidTransition(currentStatut: PieceStatus, newStatut: PieceStatus): boolean {
     const currentIndex = this.statutOrder.indexOf(currentStatut);
     const newIndex = this.statutOrder.indexOf(newStatut);
 
@@ -145,9 +145,9 @@ export class PieceKanban implements OnInit {
     document.removeEventListener('click', this.closeContextMenu.bind(this));
   }
 
-  quickChangeStatus(newStatut: string): void {
+  quickChangeStatus(newStatut: PieceStatus | string): void {
     if (this.selectedPiece) {
-      this.pieceService.updateStatus(this.selectedPiece.id, newStatut).subscribe({
+      this.pieceService.updateStatus(this.selectedPiece.id, newStatut as PieceStatus).subscribe({
         next: (updatedPiece) => {
           this.loadPieces();
           this.closeContextMenu();
@@ -169,3 +169,5 @@ export class PieceKanban implements OnInit {
     }
   }
 }
+
+

@@ -4,6 +4,10 @@
     </div>
 
     <div class="header-right">
+        <!-- Notification Bell en haut -->
+        <div class="notification-area">
+            <app-notification-bell></app-notification-bell>
+        </div>
         <div class="user-menu" (click)="toggleMenu()">
             <div class="user-avatar">{{ getUserInitials() }}</div>
             <span class="user-name">{{ currentUser?.prenom }} {{

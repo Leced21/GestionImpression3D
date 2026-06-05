@@ -9,7 +9,7 @@ import { MaterialStockService } from '../../../services/material-stock.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './materialstock-form.html',
-  styleUrl: './materialstock-form.css',
+  styleUrls: ['./materialstock-form.css'],
 })
 export class MaterialstockForm implements OnInit {
   materialForm!: FormGroup;
@@ -83,3 +83,5 @@ export class MaterialstockForm implements OnInit {
     }
   }
 }
+
+

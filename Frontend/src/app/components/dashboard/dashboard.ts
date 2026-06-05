@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
 import { GlobalStats, PrinterActivity, ProductionTrend } from '../../models/dashboard.model';
+import { PrinterStatus } from '../../models/printer.model';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { DashboardService } from '../../services/dashboard.service';
 import { PrintJobService } from '../../services/print-job.service';
@@ -12,7 +13,7 @@ import { PrintJobService } from '../../services/print-job.service';
   standalone: true,
   imports: [CommonModule, RouterModule, BaseChartDirective],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css',
+  styleUrls: ['./dashboard.css'],
 })
 export class Dashboard implements OnInit, OnDestroy {
   stats?: GlobalStats;
@@ -63,13 +64,14 @@ export class Dashboard implements OnInit, OnDestroy {
     this.loadGlobalStats();
     this.loadProductionTrend();
     this.loadPrintersActivity();
+    this.loadMaterialConsumption();
     this.loadRecentJobs();
   }
 
   loadGlobalStats(): void {
     this.dashboardService.getGlobalStats().subscribe({
       next: (data) => {
-        this.stats = data,
+        this.stats = data;
         this.cdr.detectChanges();
       },
       error: (err) => console.error(err)
@@ -96,12 +98,16 @@ export class Dashboard implements OnInit, OnDestroy {
   loadPrintersActivity(): void {
     this.dashboardService.getPrintersActivity().subscribe({
       next: (data) => {
-        this.printersActivity = data;
+        this.printersActivity = data.map(printer => ({
+          ...printer,
+          status: this.normalizePrinterStatus(printer.status)
+        } as PrinterActivity));
+
         const statusCount = {
-          Available: data.filter(p => p.status === 'Available').length,
-          Printing: data.filter(p => p.status === 'Printing').length,
-          Maintenance: data.filter(p => p.status === 'Maintenance').length,
-          Offline: data.filter(p => p.status === 'Offline').length
+          Available: this.printersActivity.filter(p => p.status === 'Available').length,
+          Printing: this.printersActivity.filter(p => p.status === 'Printing').length,
+          Maintenance: this.printersActivity.filter(p => p.status === 'Maintenance').length,
+          Offline: this.printersActivity.filter(p => p.status === 'Offline').length
         };
         this.printerStatusChartData = {
           labels: ['Disponibles', 'En impression', 'Maintenance', 'Hors ligne'],
@@ -112,6 +118,25 @@ export class Dashboard implements OnInit, OnDestroy {
       error: (err) => {
         console.error(err);
         this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadMaterialConsumption(): void {
+    this.dashboardService.getMaterialConsumption(30).subscribe({
+      next: (data) => {
+        this.materialChartData = {
+          labels: data.map(item => item.name),
+          datasets: [{
+            label: 'Consommation (unit�s)',
+            data: data.map(item => item.quantity),
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#22c55e']
+          }]
+        };
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
       }
     });
   }
@@ -135,6 +160,15 @@ export class Dashboard implements OnInit, OnDestroy {
     return `status-${status}`;
   }
 
+  private normalizePrinterStatus(status?: string): PrinterStatus {
+    const normalized = status?.toString().trim().toLowerCase() ?? '';
+    if (['available', 'disponible'].includes(normalized)) return PrinterStatus.Available;
+    if (['printing', 'en impression'].includes(normalized)) return PrinterStatus.Printing;
+    if (['maintenance'].includes(normalized)) return PrinterStatus.Maintenance;
+    if (['offline', 'hors ligne'].includes(normalized)) return PrinterStatus.Offline;
+    return PrinterStatus.Offline;
+  }
+
   getDurationString(minutes?: number): string {
     if (!minutes) return '-';
     const hours = Math.floor(minutes / 60);
@@ -142,3 +176,7 @@ export class Dashboard implements OnInit, OnDestroy {
     return hours > 0 ? `${hours}h${mins.toString().padStart(2, '0')}` : `${mins}min`;
   }
 }
+
+
+
+

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Backend.Enums;
 
 namespace Backend.Models
 {
@@ -8,7 +9,7 @@ namespace Backend.Models
         public string Nom { get; set; } = string.Empty;
         public string Reference { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Statut { get; set; } = "Brouillon";
+        public PieceStatus Statut { get; set; } = PieceStatus.Brouillon;
         public decimal CoutMatiere { get; set; }
         public decimal CoutMachine { get; set; }
         public decimal CoutMainOeuvre { get; set; }

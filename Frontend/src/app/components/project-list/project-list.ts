@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ProjetService } from '../../services/projet.service';
-import { Projet } from '../../models/projet.model';
+import { Projet, ProjetStatus } from '../../models/projet.model';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -10,7 +10,7 @@ import { Subject, takeUntil } from 'rxjs';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './project-list.html',
-  styleUrl: './project-list.css',
+  styleUrls: ['./project-list.css'],
 })
 export class ProjectList implements OnInit, OnDestroy {
   projets: Projet[] = [];
@@ -40,17 +40,17 @@ export class ProjectList implements OnInit, OnDestroy {
     });
   }
 
-  getProjetsByStatus(status: string): Projet[] {
+  getProjetsByStatus(status: ProjetStatus | string): Projet[] {
     return this.projets.filter(p => p.statut === status);
   }
 
-  getStatusLabel(statut: string): string {
-    const labels: Record<string, string> = {
-      'Brouillon': '📝 Brouillon',
-      'EnCours': '🔄 En cours',
-      'Termine': '✅ Terminé'
+  getStatusLabel(statut: ProjetStatus | string): string {
+    const labels: Record<ProjetStatus, string> = {
+      [ProjetStatus.Brouillon]: '📝 Brouillon',
+      [ProjetStatus.EnCours]: '🔄 En cours',
+      [ProjetStatus.Termine]: '✅ Terminé'
     };
-    return labels[statut] || statut;
+    return labels[statut as ProjetStatus] || statut;
   }
   getBadgeClass(statut: string): string {
     return `badge-${statut}`;
@@ -67,3 +67,5 @@ export class ProjectList implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 }
+
+

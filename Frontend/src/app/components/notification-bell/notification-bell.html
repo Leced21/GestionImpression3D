@@ -1,0 +1,10 @@
+<div class="notification-bell" (click)="togglePanel()">
+    <span class="bell-icon">🔔</span>
+    <span class="bell-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+'
+        : unreadCount }}</span>
+
+    <div class="notification-panel" *ngIf="isOpen"
+        (click)="$event.stopPropagation()">
+        <app-notification-center></app-notification-center>
+    </div>
+</div>

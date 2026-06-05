@@ -9,7 +9,7 @@ import { AdminService } from '../../../../services/admin.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './user-list.html',
-  styleUrl: './user-list.css',
+  styleUrls: ['./user-list.css'],
 })
 export class UserList implements OnInit {
   activeTab = 'users';
@@ -63,9 +63,10 @@ export class UserList implements OnInit {
   }
 
   get filteredUsers(): User[] {
+    const searchTerm = this.searchTerm.toLowerCase();
     return this.users.filter(u =>
-      u.fullName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(this.searchTerm.toLowerCase())
+      (u.fullName?.toLowerCase() ?? '').includes(searchTerm) ||
+      (u.email?.toLowerCase() ?? '').includes(searchTerm)
     );
   }
   get permissionCategories(): { name: string; permissions: Permission[] }[] {
@@ -144,3 +145,5 @@ export class UserList implements OnInit {
     }
   }
 }
+
+

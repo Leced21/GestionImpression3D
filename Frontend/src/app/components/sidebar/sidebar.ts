@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css',
+  styleUrls: ['./sidebar.css'],
 })
 export class Sidebar implements OnInit, OnDestroy {
   recentProjets: Projet[] = [];
@@ -22,9 +22,11 @@ export class Sidebar implements OnInit, OnDestroy {
     private projetService: ProjetService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {this.authService.currentUser$.subscribe(user => {
-      this.isAdmin = user?.role === 'Admin';
-    });}
+  ) {
+    this.authService.currentUser$.subscribe(user => {
+      this.isAdmin = user?.role?.toLowerCase() === 'admin';
+    });
+  }
 
   ngOnInit(): void {
     this.projetService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
@@ -42,3 +44,5 @@ export class Sidebar implements OnInit, OnDestroy {
   }
   
 }
+
+

@@ -22,6 +22,7 @@ namespace Backend.Data
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<PieceVersion> PieceVersions { get; set; }
+        public DbSet<AppNotification> AppNotifications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -165,6 +166,22 @@ namespace Backend.Data
                       .HasForeignKey(e => e.PieceId);
 
                 entity.HasIndex(e => new { e.PieceId, e.VersionNumber }).IsUnique();
+            });
+            modelBuilder.Entity<AppNotification>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Type).HasMaxLength(20);
+                entity.Property(e => e.Title).HasMaxLength(100);
+                entity.Property(e => e.Message).HasMaxLength(500);
+                entity.Property(e => e.ReferenceType).HasMaxLength(50);
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId);
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.IsRead);
+                entity.HasIndex(e => e.CreatedAt);
             });
         }
     }
