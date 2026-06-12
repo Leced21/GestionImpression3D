@@ -81,54 +81,96 @@ namespace Backend.Controllers
         [Authorize(Roles = "Admin,ProductionManager,Operator")]
         public async Task<IActionResult> Start(int id)
         {
-            var job = await _printJobService.StartAsync(id);
-            if (job == null) return NotFound();
-            return Ok(job);
+            try
+            {
+                var job = await _printJobService.StartAsync(id);
+                if (job == null) return NotFound();
+                return Ok(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/pause")]
         [Authorize(Roles = "Admin,ProductionManager,Operator")]
         public async Task<IActionResult> Pause(int id)
         {
-            var job = await _printJobService.PauseAsync(id);
-            if (job == null) return NotFound();
-            return Ok(job);
+            try
+            {
+                var job = await _printJobService.PauseAsync(id);
+                if (job == null) return NotFound();
+                return Ok(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/resume")]
         [Authorize(Roles = "Admin,ProductionManager,Operator")]
         public async Task<IActionResult> Resume(int id)
         {
-            var job = await _printJobService.ResumeAsync(id);
-            if (job == null) return NotFound();
-            return Ok(job);
+            try
+            {
+                var job = await _printJobService.ResumeAsync(id);
+                if (job == null) return NotFound();
+                return Ok(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/complete")]
         [Authorize(Roles = "Admin,ProductionManager,Operator")]
         public async Task<IActionResult> Complete(int id, [FromBody] UpdatePrintJobStatusRequest request)
         {
-            var job = await _printJobService.CompleteAsync(id, request);
-            if (job == null) return NotFound();
-            return Ok(job);
+            try
+            {
+                var job = await _printJobService.CompleteAsync(id, request);
+                if (job == null) return NotFound();
+                return Ok(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/fail")]
         [Authorize(Roles = "Admin,ProductionManager,Operator")]
         public async Task<IActionResult> Fail(int id, [FromBody] string reason)
         {
-            var job = await _printJobService.FailAsync(id, reason);
-            if (job == null) return NotFound();
-            return Ok(job);
+            try
+            {
+                var job = await _printJobService.FailAsync(id, reason);
+                if (job == null) return NotFound();
+                return Ok(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/cancel")]
         [Authorize(Roles = "Admin,ProductionManager")]
         public async Task<IActionResult> Cancel(int id)
         {
-            var job = await _printJobService.CancelAsync(id);
-            if (job == null) return NotFound();
-            return Ok(job);
+            try
+            {
+                var job = await _printJobService.CancelAsync(id);
+                if (job == null) return NotFound();
+                return Ok(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

@@ -16,7 +16,8 @@ namespace Backend.Services
         }
         public async Task<PrinterDto> CreateAsync(CreatePrinterRequest request)
         {
-            var type = Enum.Parse<PrinterType>(request.Type);
+            if (!Enum.TryParse<PrinterType>(request.Type, true, out var type))
+                throw new ArgumentException($"Type d'imprimante invalide: {request.Type}");
 
             var printer = Printer.Create(
                 request.Nom,
@@ -32,7 +33,7 @@ namespace Backend.Services
 
             var created = await _printerRepository.CreateAsync(printer);
 
-            await _auditLogger.LogCreationAsync(EntityType.PrintJob, created.Id, created.Nom);
+            await _auditLogger.LogCreationAsync(EntityType.Printer, created.Id, created.Nom);
 
             return MapToDto(created);
         }
@@ -46,7 +47,7 @@ namespace Backend.Services
 
             if (result)
             {
-                await _auditLogger.LogDeletionAsync(EntityType.PrintJob, id, printer.Nom);
+                await _auditLogger.LogDeletionAsync(EntityType.Printer, id, printer.Nom);
             }
 
             return result;
@@ -104,7 +105,7 @@ namespace Backend.Services
 
             if (oldNom != request.Nom)
             {
-                await _auditLogger.LogUpdateAsync(EntityType.PrintJob, id, "Nom", oldNom, request.Nom);
+                await _auditLogger.LogUpdateAsync(EntityType.Printer, id, "Nom", oldNom, request.Nom);
             }
 
             return MapToDto(updated);
@@ -115,7 +116,8 @@ namespace Backend.Services
             var printer = await _printerRepository.GetByIdAsync(id);
             if (printer == null) return null;
 
-            var newStatus = Enum.Parse<PrinterStatus>(status);
+            if (!Enum.TryParse<PrinterStatus>(status, true, out var newStatus))
+                throw new ArgumentException($"Statut d'imprimante invalide: {status}");
             var oldStatus = printer.Status.ToString();
 
             switch (newStatus)
@@ -133,7 +135,7 @@ namespace Backend.Services
 
             var updated = await _printerRepository.UpdateAsync(printer);
 
-            await _auditLogger.LogStatusChangeAsync(EntityType.PrintJob, id, oldStatus, status);
+            await _auditLogger.LogStatusChangeAsync(EntityType.Printer, id, oldStatus, status);
 
             return MapToDto(updated);
         }

@@ -27,6 +27,12 @@ import { PieceVersions } from './components/piece-versions/piece-versions';
 import { NotificationCenter } from './components/notification-center/notification-center';
 import { Unauthorized } from './components/unauthorized/unauthorized';
 import { NotFound } from './components/not-found/not-found';
+import { OrdreForm } from './components/ordres-fabrication/ordre-form/ordre-form';
+import { OrdreList } from './components/ordres-fabrication/ordre-list/ordre-list';
+import { OrdreDetail } from './components/ordres-fabrication/ordre-detail/ordre-detail';
+import { ProfileList } from './components/print-profiles/profile-list/profile-list';
+import { ProfileForm } from './components/print-profiles/profile-form/profile-form';
+import { ProfileDetail } from './components/print-profiles/profile-detail/profile-detail';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -60,5 +66,13 @@ export const routes: Routes = [
     { path: 'pieces/:id/versions', component: PieceVersions, canActivate: [AuthGuard] },
     { path: 'notifications', component: NotificationCenter, canActivate: [AuthGuard] },
     { path: 'unauthorized', component: Unauthorized },
+    { path: 'ordres', component: OrdreList, canActivate: [AuthGuard] },
+    { path: 'ordres/nouveau', component: OrdreForm, canActivate: [AuthGuard] },
+    { path: 'ordres/:id', component: OrdreDetail, canActivate: [AuthGuard] },
+    { path: 'ordres/:id/edit', component: OrdreForm, canActivate: [AuthGuard] },
+    { path: 'profils-impression', component: ProfileList, canActivate: [AuthGuard] },
+    { path: 'profils-impression/nouveau', component: ProfileForm, canActivate: [AuthGuard] },
+    { path: 'profils-impression/:id', component: ProfileDetail, canActivate: [AuthGuard] },
+    { path: 'profils-impression/:id/edit', component: ProfileForm, canActivate: [AuthGuard] },
     { path: '**', component: NotFound }
 ];

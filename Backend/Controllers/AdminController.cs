@@ -27,6 +27,11 @@ namespace Backend.Controllers
             // Si des filtres de recherche sont fournis dans l'URL, on les applique
             if (entityId.HasValue || !string.IsNullOrEmpty(entityType))
             {
+                if (!entityId.HasValue || string.IsNullOrEmpty(entityType))
+                {
+                    return BadRequest("Les paramètres entityId et entityType doivent être fournis ensemble.");
+                }
+
                 if (!Enum.TryParse<EntityType>(entityType, true, out var type))
                 {
                     return BadRequest("Type d'entité invalide.");

@@ -23,6 +23,7 @@ export class PieceKanban implements OnInit {
   allPieces: Piece[] = [];
   isLoading: boolean = true;
   private statutOrder = Object.values(PieceStatus);
+  PieceStatus = PieceStatus;
 
   contextMenuVisible: boolean = false;
   contextMenuX: number = 0;

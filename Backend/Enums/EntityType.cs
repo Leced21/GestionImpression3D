@@ -7,6 +7,8 @@
         PrintJob = 3,
         User = 4,
         Printer = 5,
-        MaterialStock = 6
+        MaterialStock = 6,
+        OrdreFabrication = 7,
+        PrintProfile = 8
     }
 }

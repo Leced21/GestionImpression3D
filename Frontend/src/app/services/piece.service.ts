@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { catchError, throwError, Observable } from 'rxjs';
+import { catchError, map, throwError, Observable } from 'rxjs';
 import { Piece, PieceStatus } from '../models/piece.model';
 import { DashboardStat } from '../models/dashboardstat';
 import { API_BASE_URL } from '../config/api.config';
@@ -20,20 +20,32 @@ export class PieceService {
   constructor(private http: HttpClient) { }
 
   getAll(): Observable<Piece[]> {
-    return this.http.get<Piece[]>(this.apiUrl).pipe(catchError(this.handleError));
+    return this.http.get<Piece[]>(this.apiUrl).pipe(
+      map(pieces => pieces.map(piece => this.normalizePiece(piece))),
+      catchError(this.handleError)
+    );
   }
 
   getById(id: number): Observable<Piece> {
-    return this.http.get<Piece>(`${this.apiUrl}/${id}`).pipe(catchError(this.handleError));
+    return this.http.get<Piece>(`${this.apiUrl}/${id}`).pipe(
+      map(piece => this.normalizePiece(piece)),
+      catchError(this.handleError)
+    );
   }
 
   create(piece: Partial<Piece>): Observable<Piece> {
-    return this.http.post<Piece>(this.apiUrl, piece).pipe(catchError(this.handleError));
+    return this.http.post<Piece>(this.apiUrl, piece).pipe(
+      map(piece => this.normalizePiece(piece)),
+      catchError(this.handleError)
+    );
   }
 
   updateStatus(id: number, statut: PieceStatus): Observable<Piece> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.patch<Piece>(`${this.apiUrl}/${id}/statut`, JSON.stringify(statut), { headers }).pipe(catchError(this.handleError));
+    return this.http.patch<Piece>(`${this.apiUrl}/${id}/statut`, JSON.stringify(statut), { headers }).pipe(
+      map(piece => this.normalizePiece(piece)),
+      catchError(this.handleError)
+    );
   }
 
   update(id: number, piece: Piece): Observable<void> {
@@ -67,4 +79,28 @@ export class PieceService {
     const message = error.error?.error || error.message || 'Une erreur réseau est survenue';
     return throwError(() => new Error(message));
   }
-}
+
+  private normalizePiece(piece: Piece): Piece {
+    return {
+      ...piece,
+      statut: this.normalizeStatus(piece.statut)
+    };
+  }
+
+  private normalizeStatus(statut: unknown): PieceStatus {
+    const statuses = Object.values(PieceStatus);
+
+    if (typeof statut === 'number') {
+      return statuses[statut] ?? PieceStatus.Brouillon;
+    }
+
+    if (typeof statut === 'string' && /^\d+$/.test(statut)) {
+      return statuses[Number(statut)] ?? PieceStatus.Brouillon;
+    }
+
+    if (statuses.includes(statut as PieceStatus)) {
+      return statut as PieceStatus;
+    }
+
+    return PieceStatus.Brouillon;
+  }}

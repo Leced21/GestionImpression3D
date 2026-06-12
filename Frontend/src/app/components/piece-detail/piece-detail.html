@@ -188,7 +188,7 @@
                     <button class="btn-primary"
                         style="width:100%; margin-top:1rem"
                         (click)="rendreCommercialisable()"
-                        *ngIf="piece.statut === 'Production'">
+                        *ngIf="piece.statut === PieceStatus.Production">
                         Rendre commercialisable
                     </button>
                 </div>
@@ -259,10 +259,10 @@
                 <h3>⚡ Actions rapides</h3>
                 <div class="quick-actions">
                     <button class="action-btn" (click)="nextStatus()"
-                        *ngIf="piece.statut !== 'Commercialisable'">⏩ Passer à
+                        *ngIf="piece.statut !== PieceStatus.Commercialisable">⏩ Passer à
                         l'étape suivante</button>
                     <button class="action-btn" (click)="previousStatus()"
-                        *ngIf="piece.statut !== 'Brouillon'">⏪ Revenir à l'étape
+                        *ngIf="piece.statut !== PieceStatus.Brouillon">⏪ Revenir à l'étape
                         précédente</button>
                     <button class="action-btn delete"
                         (click)="deletePiece()">🗑️ Supprimer la pièce</button>
