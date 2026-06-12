@@ -151,7 +151,7 @@ namespace Backend.Services
                                     });
 
                                     table.Cell().Text("Statut:").Bold();
-                                    table.Cell().Text(piece.Statut);
+                                    table.Cell().Text(piece.Statut.ToString());
 
                                     table.Cell().Text("Description:").Bold();
                                     table.Cell().Text(string.IsNullOrEmpty(piece.Description) ? "Aucune description" : piece.Description);
@@ -268,7 +268,7 @@ namespace Backend.Services
                                     table.Cell().Text(projet.Reference);
 
                                     table.Cell().Text("Statut:").Bold();
-                                    table.Cell().Text(projet.Statut);
+                                    table.Cell().Text(projet.Statut.ToString());
 
                                     table.Cell().Text("Date création:").Bold();
                                     table.Cell().Text(projet.DateCreation?.ToString("dd/MM/yyyy") ?? "");

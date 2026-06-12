@@ -34,8 +34,11 @@ namespace Backend.Services
 
         public async Task<MaterialStockDto> CreateAsync(CreateMaterialStockRequest request)
         {
-            var type = Enum.Parse<MaterialType>(request.Type);
-            var unit = Enum.Parse<MaterialUnit>(request.Unit);
+            if (!Enum.TryParse<MaterialType>(request.Type, true, out var type))
+                throw new ArgumentException($"Type de matériau invalide: {request.Type}");
+
+            if (!Enum.TryParse<MaterialUnit>(request.Unit, true, out var unit))
+                throw new ArgumentException($"Unité de matériau invalide: {request.Unit}");
 
             var material = MaterialStock.Create(
                 request.Name,

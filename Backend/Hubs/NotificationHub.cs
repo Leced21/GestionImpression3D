@@ -1,5 +1,6 @@
-ï»¿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Collections.Concurrent;
 using System.Security.Claims;
 
 namespace Backend.Hubs
@@ -7,8 +8,8 @@ namespace Backend.Hubs
     [Authorize]
     public class NotificationHub:Hub
     {
-        private static readonly Dictionary<string, string> _userConnections = new();
-        private static readonly Dictionary<string, List<string>> _userGroups = new();
+        private static readonly ConcurrentDictionary<string, string> _userConnections = new();
+        private static readonly ConcurrentDictionary<string, HashSet<string>> _userGroups = new();
 
         public override async Task OnConnectedAsync()
         {
@@ -26,7 +27,7 @@ namespace Backend.Hubs
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
-                _userConnections.Remove(userId);
+                _userConnections.TryRemove(userId, out _);
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -39,11 +40,11 @@ namespace Backend.Hubs
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
-                if (!_userGroups.ContainsKey(userId))
-                    _userGroups[userId] = new List<string>();
-
-                if (!_userGroups[userId].Contains(groupName))
-                    _userGroups[userId].Add(groupName);
+                var groups = _userGroups.GetOrAdd(userId, _ => new HashSet<string>());
+                lock (groups)
+                {
+                    groups.Add(groupName);
+                }
             }
         }
 
@@ -52,15 +53,18 @@ namespace Backend.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
 
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userId) && _userGroups.ContainsKey(userId))
+            if (!string.IsNullOrEmpty(userId) && _userGroups.TryGetValue(userId, out var groups))
             {
-                _userGroups[userId].Remove(groupName);
+                lock (groups)
+                {
+                    groups.Remove(groupName);
+                }
             }
         }
-        // Classe statique pour les mÃ©thodes d'envoi
+        // Classe statique pour les méthodes d'envoi
         public static class NotificationHubExtensions
         {
-            // MÃ©thodes pour envoyer des notifications Ã  des groupes spÃ©cifiques
+            // Méthodes pour envoyer des notifications à des groupes spécifiques
             public static async Task NotifyPrintJobStarted(IHubContext<NotificationHub> hubContext, int printJobId, string jobNumber)
             {
                 await hubContext.Clients.Group("production").SendAsync("PrintJobStarted", new
@@ -74,8 +78,8 @@ namespace Backend.Hubs
                 await hubContext.Clients.All.SendAsync("NotificationReceived", new
                 {
                     Type = "info",
-                    Title = "Impression dÃ©marrÃ©e",
-                    Message = $"Le job {jobNumber} a dÃ©marrÃ©",
+                    Title = "Impression démarrée",
+                    Message = $"Le job {jobNumber} a démarré",
                     Timestamp = DateTime.UtcNow
                 });
             }
@@ -93,8 +97,8 @@ namespace Backend.Hubs
                 await hubContext.Clients.All.SendAsync("NotificationReceived", new
                 {
                     Type = "success",
-                    Title = "Impression terminÃ©e",
-                    Message = $"Le job {jobNumber} est terminÃ©",
+                    Title = "Impression terminée",
+                    Message = $"Le job {jobNumber} est terminé",
                     Timestamp = DateTime.UtcNow
                 });
             }
@@ -113,8 +117,8 @@ namespace Backend.Hubs
                 await hubContext.Clients.All.SendAsync("NotificationReceived", new
                 {
                     Type = "error",
-                    Title = "Ã‰chec d'impression",
-                    Message = $"Le job {jobNumber} a Ã©chouÃ©: {reason}",
+                    Title = "Échec d'impression",
+                    Message = $"Le job {jobNumber} a échoué: {reason}",
                     Timestamp = DateTime.UtcNow
                 });
             }
@@ -133,7 +137,7 @@ namespace Backend.Hubs
                 {
                     Type = "warning",
                     Title = "Stock bas",
-                    Message = $"Le matÃ©riau {materialName} atteint un niveau bas ({quantity})",
+                    Message = $"Le matériau {materialName} atteint un niveau bas ({quantity})",
                     Timestamp = DateTime.UtcNow
                 });
             }

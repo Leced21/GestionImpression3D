@@ -22,6 +22,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 // Récupération et validation stricte de la clé JWT
@@ -80,6 +81,11 @@ builder.Services.AddScoped<IPieceVersionRepository, PieceVersionRepository>();
 builder.Services.AddScoped<IPieceVersionService, PieceVersionService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationManagerService, NotificationManagerService>();
+builder.Services.AddScoped<IOrdreFabricationRepository, OrdreFabricationRepository>();
+builder.Services.AddScoped<IOrdreFabricationService, OrdreFabricationService>();
+builder.Services.AddScoped<IPrintProfileRepository, PrintProfileRepository>();
+builder.Services.AddScoped<IPrintProfileService, PrintProfileService>();
+builder.Services.AddScoped<ISTLAnalyzerService, STLAnalyzerService>();
 
 // Métier : Projets et Exports
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();

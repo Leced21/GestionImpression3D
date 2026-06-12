@@ -1,0 +1,34 @@
+<div class="profiles-container">
+    <div class="header">
+        <h1>⚙️ Profils d'impression</h1>
+        <button class="btn-primary" routerLink="/profils-impression/nouveau">+
+            Nouveau profil</button>
+    </div>
+
+    <div class="profiles-grid">
+        <div class="profile-card" *ngFor="let profile of profiles">
+            <div class="profile-header">
+                <h3>{{ profile.nom }}</h3>
+                <span class="default-badge" *ngIf="profile.isDefault">⭐
+                    Défaut</span>
+            </div>
+            <div class="profile-printer">{{ profile.printerNom }}</div>
+            <div class="profile-params">
+                <span>🌡️ {{ profile.nozzleTemp }}°C / {{ profile.bedTemp
+                    }}°C</span>
+                <span>📏 {{ profile.layerHeight }}mm</span>
+                <span>💨 {{ profile.speed }}mm/s</span>
+                <span>🧩 Remplissage {{ profile.infill }}%</span>
+            </div>
+            <div class="profile-actions">
+                <button class="btn-sm"
+                    [routerLink]="['/profils-impression', profile.id]">🔍
+                    Détail</button>
+                <button class="btn-sm" (click)="setDefault(profile)"
+                    *ngIf="!profile.isDefault">⭐ Défaut</button>
+                <button class="btn-sm danger"
+                    (click)="deleteProfile(profile.id)">🗑️</button>
+            </div>
+        </div>
+    </div>
+</div>

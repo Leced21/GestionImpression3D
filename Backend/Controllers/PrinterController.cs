@@ -7,7 +7,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class PrinterController: ControllerBase
     {
         private readonly IPrinterService _printerService;
@@ -38,7 +38,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreatePrinterRequest request)
         {
             try

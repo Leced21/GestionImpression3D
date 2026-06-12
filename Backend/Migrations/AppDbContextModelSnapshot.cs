@@ -202,9 +202,6 @@ namespace Backend.Migrations
                     b.Property<int>("CommandeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CommandeId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Nom")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -225,8 +222,6 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CommandeId");
-
-                    b.HasIndex("CommandeId1");
 
                     b.HasIndex("PieceId");
 
@@ -395,6 +390,68 @@ namespace Backend.Migrations
                     b.ToTable("MaterialStocks");
                 });
 
+            modelBuilder.Entity("Backend.Models.OrdreFabrication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDebut")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateEcheance")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PieceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Priorite")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("ProjetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantite")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantiteProduite")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Statut")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PieceId");
+
+                    b.HasIndex("ProjetId");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.ToTable("OrdresFabrication");
+                });
+
             modelBuilder.Entity("Backend.Models.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -478,7 +535,8 @@ namespace Backend.Migrations
 
                     b.Property<string>("Statut")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("StlFileName")
                         .IsRequired()
@@ -604,6 +662,9 @@ namespace Backend.Migrations
                     b.Property<int?>("OperatorId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("OrdreFabricationId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PieceId")
                         .HasColumnType("int");
 
@@ -634,6 +695,8 @@ namespace Backend.Migrations
 
                     b.HasIndex("OperatorId");
 
+                    b.HasIndex("OrdreFabricationId");
+
                     b.HasIndex("PieceId");
 
                     b.HasIndex("PrinterId");
@@ -641,6 +704,76 @@ namespace Backend.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("PrintJobs");
+                });
+
+            modelBuilder.Entity("Backend.Models.PrintProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BedTemp")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Infill")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InfillPattern")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("LayerHeight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MaterialMultiplier")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Materiau")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("NozzleTemp")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PrinterId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Speed")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SupportType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Supports")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrinterId");
+
+                    b.ToTable("PrintProfiles");
                 });
 
             modelBuilder.Entity("Backend.Models.Printer", b =>
@@ -820,6 +953,70 @@ namespace Backend.Migrations
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("Backend.Models.STLMetadata", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AnalyzedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("BoundingBoxX")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BoundingBoxY")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BoundingBoxZ")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Errors")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("EstimatedPrintTime")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EstimatedWeight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("HasErrors")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsWatertight")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PieceId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SurfaceArea")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TriangleCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Volume")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PieceId")
+                        .IsUnique();
+
+                    b.ToTable("STLMetadata");
+                });
+
             modelBuilder.Entity("Backend.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -888,14 +1085,10 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.CommandeLigne", b =>
                 {
                     b.HasOne("Backend.Models.Commande", "Commande")
-                        .WithMany()
+                        .WithMany("Lignes")
                         .HasForeignKey("CommandeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Backend.Models.Commande", null)
-                        .WithMany("Lignes")
-                        .HasForeignKey("CommandeId1");
 
                     b.HasOne("Backend.Models.Piece", "Piece")
                         .WithMany()
@@ -906,6 +1099,25 @@ namespace Backend.Migrations
                     b.Navigation("Commande");
 
                     b.Navigation("Piece");
+                });
+
+            modelBuilder.Entity("Backend.Models.OrdreFabrication", b =>
+                {
+                    b.HasOne("Backend.Models.Piece", "Piece")
+                        .WithMany()
+                        .HasForeignKey("PieceId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Projet", "Projet")
+                        .WithMany()
+                        .HasForeignKey("ProjetId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Piece");
+
+                    b.Navigation("Projet");
                 });
 
             modelBuilder.Entity("Backend.Models.PieceVersion", b =>
@@ -925,6 +1137,11 @@ namespace Backend.Migrations
                         .WithMany()
                         .HasForeignKey("OperatorId");
 
+                    b.HasOne("Backend.Models.OrdreFabrication", "OrdreFabrication")
+                        .WithMany("PrintJobs")
+                        .HasForeignKey("OrdreFabricationId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Backend.Models.Piece", "Piece")
                         .WithMany()
                         .HasForeignKey("PieceId")
@@ -937,7 +1154,20 @@ namespace Backend.Migrations
 
                     b.Navigation("Operator");
 
+                    b.Navigation("OrdreFabrication");
+
                     b.Navigation("Piece");
+
+                    b.Navigation("Printer");
+                });
+
+            modelBuilder.Entity("Backend.Models.PrintProfile", b =>
+                {
+                    b.HasOne("Backend.Models.Printer", "Printer")
+                        .WithMany()
+                        .HasForeignKey("PrinterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Printer");
                 });
@@ -972,9 +1202,25 @@ namespace Backend.Migrations
                     b.Navigation("Permission");
                 });
 
+            modelBuilder.Entity("Backend.Models.STLMetadata", b =>
+                {
+                    b.HasOne("Backend.Models.Piece", "Piece")
+                        .WithMany()
+                        .HasForeignKey("PieceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Piece");
+                });
+
             modelBuilder.Entity("Backend.Models.Commande", b =>
                 {
                     b.Navigation("Lignes");
+                });
+
+            modelBuilder.Entity("Backend.Models.OrdreFabrication", b =>
+                {
+                    b.Navigation("PrintJobs");
                 });
 
             modelBuilder.Entity("Backend.Models.Piece", b =>

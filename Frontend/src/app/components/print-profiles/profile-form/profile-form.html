@@ -1,0 +1,94 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/profils-impression">←
+            Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier le profil' :
+            '➕ Nouveau profil d\'impression' }}</h1>
+    </div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Informations générales</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nom *</label>
+                    <input type="text" formControlName="nom"
+                        placeholder="Ex: PLA Standard">
+                </div>
+                <div class="form-group">
+                    <label>Imprimante *</label>
+                    <select formControlName="printerId">
+                        <option value>-- Sélectionner --</option>
+                        <option *ngFor="let printer of printers"
+                            [value]="printer.id">{{ printer.nom }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea formControlName="description" rows="2"></textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🌡️ Températures</h3>
+            <div class="form-row">
+                <div class="form-group"><label>Température buse
+                        (°C)</label><input type="number"
+                        formControlName="nozzleTemp"></div>
+                <div class="form-group"><label>Température plateau
+                        (°C)</label><input type="number"
+                        formControlName="bedTemp"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>⚙️ Paramètres d'impression</h3>
+            <div class="form-row">
+                <div class="form-group"><label>Hauteur de couche
+                        (mm)</label><input type="number" step="0.01"
+                        formControlName="layerHeight"></div>
+                <div class="form-group"><label>Vitesse (mm/s)</label><input
+                        type="number" formControlName="speed"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Remplissage (%)</label><input
+                        type="number" formControlName="infill"></div>
+                <div class="form-group"><label>Motif remplissage</label><select
+                        formControlName="infillPattern"><option>Gyroid</option><option>Grid</option><option>Triangles</option><option>Lines</option></select></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🔧 Supports</h3>
+            <div class="form-row">
+                <div class="form-group"><label><input type="checkbox"
+                            formControlName="supports"> Activer les
+                        supports</label></div>
+                <div class="form-group"
+                    *ngIf="profileForm.get('supports')?.value"><label>Type de
+                        support</label><select
+                        formControlName="supportType"><option>Tree</option><option>Normal</option><option>Snug</option></select></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>⭐ Options</h3>
+            <div class="form-row">
+                <div class="form-group"><label><input type="checkbox"
+                            formControlName="isDefault"> Profil par
+                        défaut</label></div>
+                <div class="form-group"><label><input type="checkbox"
+                            formControlName="isActive"> Actif</label></div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/profils-impression">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>

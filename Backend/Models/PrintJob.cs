@@ -23,11 +23,13 @@ namespace Backend.Models
         public string? GCodeFileName { get; private set; }
         public string? FailureReason { get; private set; }
         public string? Notes { get; private set; }
+        public int? OrdreFabricationId { get; set; }
 
         // Navigation properties
         public Piece Piece { get; private set; } = null!;
         public Printer? Printer { get; private set; }
         public User? Operator { get; private set; }
+        public OrdreFabrication? OrdreFabrication { get; set; }
 
         private PrintJob() { }
 
@@ -130,7 +132,7 @@ namespace Backend.Models
 
         private static string GenerateJobNumber()
         {
-            return $"JOB-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+            return $"JOB-{DateTime.UtcNow:yyyyMMddHHmmssfff}-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000, 10000)}";
         }
     }
 }
