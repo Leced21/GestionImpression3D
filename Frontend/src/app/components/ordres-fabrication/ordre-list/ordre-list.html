@@ -1,0 +1,102 @@
+<div class="ordres-container">
+    <div class="header">
+        <h1>📋 Ordres de fabrication</h1>
+        <button class="btn-primary" routerLink="/ordres/nouveau">+ Nouvel
+            ordre</button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalOrdres }}</div>
+            <div class="stat-label">Total ordres</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ statistics.enAttente }}</div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ statistics.enCours }}</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ statistics.termines }}</div>
+            <div class="stat-label">Terminés</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ statistics.enRetard }}</div>
+            <div class="stat-label">En retard</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.tauxAvancement |
+                number:'1.0-0' }}%</div>
+            <div class="stat-label">Avancement</div>
+        </div>
+    </div>
+
+    <!-- Liste des ordres -->
+    <div class="ordres-list">
+        <div class="ordre-card" *ngFor="let ordre of ordres">
+            <div class="ordre-header">
+                <div class="ordre-info">
+                    <span class="ordre-ref">{{ ordre.reference }}</span>
+                    <span class="ordre-piece">{{ ordre.pieceNom }}</span>
+                </div>
+                <div class="ordre-status">
+                    <span class="status-badge"
+                        [class]="getStatusClass(ordre.statut)">
+                        {{ ordre.statut }}
+                    </span>
+                    <span class="priority-badge"
+                        [class]="getPriorityClass(ordre.priorite)">
+                        {{ ordre.priorite }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="ordre-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"
+                        [style.width.%]="ordre.progression"></div>
+                </div>
+                <div class="progress-text">{{ ordre.quantiteProduite }}/{{
+                    ordre.quantite }} pièces</div>
+            </div>
+
+            <div class="ordre-details">
+                <div class="detail-item">
+                    <span>📅 Création:</span>
+                    <span>{{ ordre.dateCreation | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="detail-item" *ngIf="ordre.dateEcheance">
+                    <span>📆 Échéance:</span>
+                    <span [class.retard]="ordre.estEnRetard">{{
+                        ordre.dateEcheance | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span>📦 Quantité:</span>
+                    <span>{{ ordre.quantite }}</span>
+                </div>
+            </div>
+
+            <div class="ordre-actions">
+                <button class="btn-sm" [routerLink]="['/ordres', ordre.id]">🔍
+                    Détail</button>
+                <button class="btn-sm" (click)="startProduction(ordre)"
+                    *ngIf="ordre.statut === OrdreStatus.EnAttente">▶️ Démarrer</button>
+                <button class="btn-sm success"
+                    (click)="completeProduction(ordre)"
+                    *ngIf="ordre.statut === OrdreStatus.EnCours">✅ Terminer</button>
+                <button class="btn-sm danger" (click)="deleteOrdre(ordre.id)"
+                    *ngIf="ordre.statut !== OrdreStatus.EnCours">🗑️</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="ordres.length === 0" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>Aucun ordre de fabrication</h3>
+        <button class="btn-primary" routerLink="/ordres/nouveau">+ Créer un
+            ordre</button>
+    </div>
+</div>

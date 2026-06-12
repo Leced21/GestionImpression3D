@@ -1,9 +1,10 @@
 ﻿using Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Backend.Data
 {
-    public class AppDbContext: DbContext
+    public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -23,9 +24,14 @@ namespace Backend.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<PieceVersion> PieceVersions { get; set; }
         public DbSet<AppNotification> AppNotifications { get; set; }
+        public DbSet<OrdreFabrication> OrdresFabrication { get; set; }
+        public DbSet<PrintProfile> PrintProfiles { get; set; }
+        public DbSet<STLMetadata> STLMetadata { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Piece>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -34,11 +40,17 @@ namespace Backend.Data
                 entity.Property(e => e.Categorie).HasMaxLength(50);
                 entity.Property(e => e.Materiau).HasMaxLength(50);
 
+                // 💡 FIX CATALOGUE : On force l'enum PieceStatus à s'enregistrer en texte
+                entity.Property(e => e.Statut)
+                      .HasConversion<string>()
+                      .HasMaxLength(30);
+
                 // Ignorer les propriétés calculées
                 entity.Ignore(e => e.CoutTotal);
                 entity.Ignore(e => e.Marge);
                 entity.Ignore(e => e.MargePourcentage);
             });
+
             modelBuilder.Entity<Commande>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -51,20 +63,27 @@ namespace Backend.Data
             modelBuilder.Entity<CommandeLigne>(entity =>
             {
                 entity.HasKey(e => e.Id);
+
+                // 💡 FIX CLÉ ÉTRANGÈRE FANTÔME : On lie explicitement la navigation inverse
                 entity.HasOne(e => e.Commande)
-                      .WithMany()
+                      .WithMany(c => c.Lignes) // Assure-toi d'avoir 'public List<CommandeLigne> CommandeLignes { get; set; }' dans Commande.cs
                       .HasForeignKey(e => e.CommandeId);
+
                 entity.HasOne(e => e.Piece)
                       .WithMany()
                       .HasForeignKey(e => e.PieceId);
             });
-            
+
             modelBuilder.Entity<Projet>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Nom).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Reference).HasMaxLength(50);
-                entity.Property(e => e.Statut).HasMaxLength(50);
+
+                // 💡 FIX PROJET STATUT : Si c'est un enum, on le convertit en string aussi
+                entity.Property(e => e.Statut)
+                      .HasConversion<string>()
+                      .HasMaxLength(50);
             });
 
             modelBuilder.Entity<ProjetPiece>(entity =>
@@ -77,7 +96,6 @@ namespace Backend.Data
                       .WithMany(p => p.ProjetPieces)
                       .HasForeignKey(e => e.PieceId);
 
-                // Unicité ProjetId + PieceId pour éviter les doublons
                 entity.HasIndex(e => new { e.ProjetId, e.PieceId }).IsUnique();
             });
 
@@ -96,6 +114,7 @@ namespace Backend.Data
                 entity.HasIndex(e => e.Timestamp);
                 entity.HasIndex(e => e.UserId);
             });
+
             modelBuilder.Entity<Printer>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -106,6 +125,7 @@ namespace Backend.Data
                 entity.Property(e => e.IpAddress).HasMaxLength(50);
                 entity.Property(e => e.ApiKey).HasMaxLength(200);
             });
+
             modelBuilder.Entity<PrintJob>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -117,7 +137,14 @@ namespace Backend.Data
                 entity.HasIndex(e => e.JobNumber).IsUnique();
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.CreatedAt);
+
+                // 🚀 Sécurité anti-cycle validée !
+                entity.HasOne(e => e.OrdreFabrication)
+                      .WithMany(o => o.PrintJobs)
+                      .HasForeignKey(e => e.OrdreFabricationId)
+                      .OnDelete(DeleteBehavior.NoAction);
             });
+
             modelBuilder.Entity<MaterialStock>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -133,6 +160,7 @@ namespace Backend.Data
                 entity.HasIndex(e => e.IsActive);
                 entity.HasIndex(e => e.Quantity);
             });
+
             modelBuilder.Entity<Invitation>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -153,6 +181,7 @@ namespace Backend.Data
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Permission).WithMany().HasForeignKey(e => e.PermissionId);
             });
+
             modelBuilder.Entity<PieceVersion>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -167,6 +196,7 @@ namespace Backend.Data
 
                 entity.HasIndex(e => new { e.PieceId, e.VersionNumber }).IsUnique();
             });
+
             modelBuilder.Entity<AppNotification>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -183,6 +213,57 @@ namespace Backend.Data
                 entity.HasIndex(e => e.IsRead);
                 entity.HasIndex(e => e.CreatedAt);
             });
+
+            modelBuilder.Entity<OrdreFabrication>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Reference).IsRequired().HasMaxLength(20);
+
+                // Enums convertis en string pour la lisibilité en BDD
+                entity.Property(e => e.Statut).HasConversion<string>().HasMaxLength(20);
+                entity.Property(e => e.Priorite).HasConversion<string>().HasMaxLength(20);
+
+                entity.HasIndex(e => e.Reference).IsUnique();
+
+                // 💡 FIX CASCADE MULTIPLE : L'Ordre de Fabrication est lié à la fois à une Pièce et un Projet.
+                // On désactive la cascade ici pour éviter que la suppression d'un Projet ou d'une Pièce 
+                // ne crée des conflits de suppression sur les PrintJobs rattachés.
+                entity.HasOne(e => e.Piece)
+                      .WithMany()
+                      .HasForeignKey(e => e.PieceId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Projet)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProjetId)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<PrintProfile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nom).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Materiau).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<STLMetadata>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FileName).HasMaxLength(255);
+                entity.Property(e => e.Errors).HasMaxLength(500);
+                entity.HasIndex(e => e.PieceId).IsUnique();
+            });
+
+            // 🚀 BUCKET MAGIQUE : Configure globalement tous les types decimal à (18,2)
+            // Éteint instantanément les 25 avertissements de troncature de tes logs !
+            var decimalProperties = modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetProperties())
+                .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?));
+
+            foreach (var property in decimalProperties)
+            {
+                property.SetColumnType("decimal(18,2)");
+            }
         }
     }
 }

@@ -1,0 +1,56 @@
+<div class="detail-container" *ngIf="profile; else loading">
+    <div class="detail-header">
+        <button class="btn-back" routerLink="/profils-impression">←
+            Retour</button>
+        <h1>{{ profile.nom }}</h1>
+        <div class="actions">
+            <button class="btn-edit"
+                [routerLink]="['/profils-impression', profile.id, 'edit']">✏️
+                Modifier</button>
+            <button class="btn-delete" (click)="deleteProfile()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="info-card"><h3>📋 Général</h3>
+            <div class="info-row"><span>Imprimante</span><strong>{{
+                    profile.printerNom }}</strong></div>
+            <div class="info-row"><span>Description</span><span>{{
+                    profile.description || '-' }}</span></div>
+            <div class="info-row"><span>Défaut</span><span>{{ profile.isDefault
+                    ? '✅ Oui' : '❌ Non' }}</span></div>
+        </div>
+
+        <div class="info-card"><h3>🌡️ Températures</h3>
+            <div class="info-row"><span>Buse</span><strong>{{ profile.nozzleTemp
+                    }}°C</strong></div>
+            <div class="info-row"><span>Plateau</span><strong>{{ profile.bedTemp
+                    }}°C</strong></div>
+        </div>
+
+        <div class="info-card"><h3>⚙️ Paramètres</h3>
+            <div class="info-row"><span>Hauteur couche</span><strong>{{
+                    profile.layerHeight }} mm</strong></div>
+            <div class="info-row"><span>Vitesse</span><strong>{{ profile.speed
+                    }} mm/s</strong></div>
+            <div class="info-row"><span>Remplissage</span><strong>{{
+                    profile.infill }}% ({{ profile.infillPattern
+                    }})</strong></div>
+        </div>
+
+        <div class="info-card"><h3>🔧 Supports</h3>
+            <div class="info-row"><span>Actifs</span><strong>{{ profile.supports
+                    ? 'Oui' : 'Non' }}</strong></div>
+            <div class="info-row"
+                *ngIf="profile.supports"><span>Type</span><strong>{{
+                    profile.supportType }}</strong></div>
+        </div>
+    </div>
+
+    <div class="actions-card" *ngIf="!profile.isDefault">
+        <button class="action-btn" (click)="setDefault()">⭐ Définir comme profil
+            par défaut</button>
+    </div>
+</div>
+<ng-template #loading><div class="loading">Chargement...</div></ng-template>

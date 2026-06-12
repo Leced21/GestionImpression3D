@@ -87,7 +87,7 @@
                         ⋮⋮
                     </div>
                 </div>
-                <div *ngIf="getPiecesByStatut('Brouillon').length === 0"
+                <div *ngIf="getPiecesByStatut(PieceStatus.Brouillon).length === 0"
                     class="empty-column">
                     Aucune pièce
                 </div>
@@ -140,7 +140,7 @@
                         ⋮⋮
                     </div>
                 </div>
-                <div *ngIf="getPiecesByStatut('Conception').length === 0"
+                <div *ngIf="getPiecesByStatut(PieceStatus.Conception).length === 0"
                     class="empty-column">
                     Aucune pièce
                 </div>
@@ -193,7 +193,7 @@
                         ⋮⋮
                     </div>
                 </div>
-                <div *ngIf="getPiecesByStatut('Prototypage').length === 0"
+                <div *ngIf="getPiecesByStatut(PieceStatus.Prototypage).length === 0"
                     class="empty-column">
                     Aucune pièce
                 </div>
@@ -247,7 +247,7 @@
                         ⋮⋮
                     </div>
                 </div>
-                <div *ngIf="getPiecesByStatut('Validation').length === 0"
+                <div *ngIf="getPiecesByStatut(PieceStatus.Validation).length === 0"
                     class="empty-column">
                     Aucune pièce
                 </div>
@@ -299,7 +299,7 @@
                         ⋮⋮
                     </div>
                 </div>
-                <div *ngIf="getPiecesByStatut('Production').length === 0"
+                <div *ngIf="getPiecesByStatut(PieceStatus.Production).length === 0"
                     class="empty-column">
                     Aucune pièce
                 </div>
@@ -348,7 +348,7 @@
                         ⋮⋮
                     </div>
                 </div>
-                <div *ngIf="getPiecesByStatut('Commercialisable').length === 0"
+                <div *ngIf="getPiecesByStatut(PieceStatus.Commercialisable).length === 0"
                     class="empty-column">
                     Aucune pièce
                 </div>

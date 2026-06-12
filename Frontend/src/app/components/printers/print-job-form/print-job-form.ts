@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Piece } from '../../../models/piece.model';
+import { Piece, PieceStatus } from '../../../models/piece.model';
 import { PieceService } from '../../../services/piece.service';
 import { PrintJobService } from '../../../services/print-job.service';
 
@@ -41,7 +41,7 @@ export class PrintJobForm implements OnInit {
   loadPieces(): void {
     this.pieceService.getAll().subscribe({
       next: (data) => {
-        this.pieces = data.filter(p => p.statut === 'Commercialisable');
+        this.pieces = data.filter(p => p.statut === PieceStatus.Commercialisable);
       }
     });
   }

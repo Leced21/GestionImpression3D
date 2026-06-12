@@ -30,8 +30,16 @@
         <div class="nav-item" routerLink="/stock" routerLinkActive="active">
             📦 Stocks
         </div>
-        <div class="nav-item" routerLink="/admin/users" routerLinkActive="active" *ngIf="isAdmin">
+        <div class="nav-item" routerLink="/admin/users"
+            routerLinkActive="active" *ngIf="isAdmin">
             👥 Utilisateurs
+        </div>
+        <div class="nav-item" routerLink="/ordres" routerLinkActive="active">
+            📋 Ordres de fabrication
+        </div>
+        <div class="nav-item" routerLink="/profils-impression"
+            routerLinkActive="active">
+            ⚙️ Profils d'impression
         </div>
         <div class="nav-item">⚙️ Paramètres</div>
     </nav>

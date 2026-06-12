@@ -57,7 +57,7 @@ namespace Backend.Services
             if (job == null) return null;
 
             var actualDuration = request.ActualDurationMinutes ??
-                (DateTime.UtcNow - job.StartedAt)?.Minutes ?? 0;
+                (int?)Math.Round((DateTime.UtcNow - job.StartedAt)?.TotalMinutes ?? 0) ?? 0;
 
             var actualMaterial = request.ActualMaterialGrams ?? job.EstimatedMaterialGrams;
 
@@ -71,8 +71,11 @@ namespace Backend.Services
             if (job.PrinterId.HasValue)
             {
                 var printer = await _printerRepository.GetByIdAsync(job.PrinterId.Value);
-                printer?.CompletePrint(actualDuration);
-                await _printerRepository.UpdateAsync(printer!);
+                if (printer != null)
+                {
+                    printer.CompletePrint(actualDuration);
+                    await _printerRepository.UpdateAsync(printer);
+                }
             }
 
             return MapToDto(updated);
@@ -84,7 +87,8 @@ namespace Backend.Services
             if (piece == null)
                 throw new InvalidOperationException("Pièce non trouvée");
 
-            var priority = Enum.Parse<PrintJobPriority>(request.Priority);
+            if (!Enum.TryParse<PrintJobPriority>(request.Priority, true, out var priority))
+                throw new InvalidOperationException($"Priorité invalide: {request.Priority}");
 
             var job = PrintJob.Create(
                 request.PieceId,
@@ -208,8 +212,11 @@ namespace Backend.Services
             if (job.PrinterId.HasValue)
             {
                 var printer = await _printerRepository.GetByIdAsync(job.PrinterId.Value);
-                printer?.StartPrint();
-                await _printerRepository.UpdateAsync(printer!);
+                if (printer != null)
+                {
+                    printer.StartPrint();
+                    await _printerRepository.UpdateAsync(printer);
+                }
             }
 
             return MapToDto(updated);
