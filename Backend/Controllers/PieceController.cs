@@ -14,11 +14,13 @@ namespace Backend.Controllers
         private readonly IPieceService _pieceService;
         private readonly IPdfExportService _pdfExportService;
         private readonly IExcelExportService _excelExportService;
-        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService)
+        private readonly ISTLAnalyzerService _stlAnalyzerService;
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService)
         {
             _pieceService = pieceService;
             _pdfExportService = pdfExportService;
             _excelExportService = excelExportService;
+            _stlAnalyzerService = stlAnalyzerService;
         }
 
         [HttpGet]
@@ -211,6 +213,26 @@ namespace Backend.Controllers
             var pieces = await _pieceService.GetAllAsync();
             var excelBytes = await _excelExportService.ExportPiecesToExcelAsync();
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Pieces_{DateTime.Now:yyyyMMdd}.xlsx");
+        }
+        [HttpPost("{id}/analyze-stl")]
+        [Authorize(Roles = "Admin,Designer")]
+        public async Task<IActionResult> AnalyzeSTL(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "Aucun fichier fourni" });
+
+            var metadata = await _pieceService.AnalyzeSTLAsync(id, file);
+            if (metadata == null) return NotFound();
+
+            return Ok(metadata);
+        }
+
+        [HttpGet("{id}/stl-metadata")]
+        public async Task<IActionResult> GetSTLMetadata(int id)
+        {
+            var metadata = await _stlAnalyzerService.GetMetadataByPieceAsync(id);
+            if (metadata == null) return NotFound();
+            return Ok(metadata);
         }
     }
 }

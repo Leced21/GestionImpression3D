@@ -45,7 +45,7 @@ namespace Backend.Repositories
         {
             if (string.IsNullOrEmpty(projet.Reference))
             {
-                projet.Reference = $"PRJ-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+                projet.Reference = $"PRJ-{DateTime.UtcNow:yyyyMMddHHmmssfff}-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000, 10000)}";
             }
 
             _context.Projets.Add(projet);

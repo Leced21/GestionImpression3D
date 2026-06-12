@@ -132,7 +132,7 @@ namespace Backend.Services
         // Méthodes privées
         private string GenererNumeroCommande()
         {
-            return $"CMD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+            return $"CMD-{DateTime.UtcNow:yyyyMMddHHmmssfff}-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000, 10000)}";
         }
 
         private async Task<decimal> GetChiffreAffairesMoisAsync()

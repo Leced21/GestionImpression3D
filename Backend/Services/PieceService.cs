@@ -1,6 +1,8 @@
-﻿using Backend.Enums;
+﻿using Backend.Data;
+using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services
 {
@@ -9,11 +11,15 @@ namespace Backend.Services
         private readonly IPieceRepository _pieceRepository;
         private readonly IAuditLogger _auditLogger;
         private readonly IPieceVersionRepository _pieceVersionRepository;
-        public PieceService(IPieceRepository pieceRepository, IAuditLogger auditLogger, IPieceVersionRepository pieceVersionRepository)
+        private readonly ISTLAnalyzerService _stlAnalyzerService;
+        private readonly IServiceProvider _serviceProvider;
+        public PieceService(IPieceRepository pieceRepository, IAuditLogger auditLogger, IPieceVersionRepository pieceVersionRepository, ISTLAnalyzerService stlAnalyzerService, IServiceProvider serviceProvider)
         {
             _pieceRepository = pieceRepository;
             _auditLogger = auditLogger;
             _pieceVersionRepository = pieceVersionRepository;
+            _stlAnalyzerService = stlAnalyzerService;
+            _serviceProvider = serviceProvider;
         }
         public async Task<decimal> CalculerPrixRecommandéAsync(int id)
         {
@@ -84,7 +90,7 @@ namespace Backend.Services
             return await _pieceRepository.GetByIdAsync(id);
         }
 
-        public async Task<Piece> UpdateAsync(int id, Piece piece)
+        public async Task<Piece?> UpdateAsync(int id, Piece piece)
         {
             var existingPiece = await _pieceRepository.GetByIdAsync(id);
             if (existingPiece == null)
@@ -132,6 +138,29 @@ namespace Backend.Services
             await _pieceRepository.UpdateStatutAsync(id, nouveauStatut);
             await _auditLogger.LogStatusChangeAsync(EntityType.Piece, id, oldStatut.ToString(), nouveauStatut.ToString());
             return existing;
+        }
+        public async Task<STLMetadata?> AnalyzeSTLAsync(int pieceId, IFormFile file)
+        {
+            var piece = await _pieceRepository.GetByIdAsync(pieceId);
+            if (piece == null) return null;
+
+            using var stream = file.OpenReadStream();
+            var metadata = await _stlAnalyzerService.AnalyzeAsync(stream, file.FileName, pieceId);
+
+            // Sauvegarder les métadonnées
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var existing = await context.STLMetadata.FirstOrDefaultAsync(m => m.PieceId == pieceId);
+            if (existing != null)
+            {
+                context.STLMetadata.Remove(existing);
+            }
+
+            context.STLMetadata.Add(metadata);
+            await context.SaveChangesAsync();
+
+            return metadata;
         }
     }
 }

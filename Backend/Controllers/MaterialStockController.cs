@@ -7,7 +7,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class MaterialStockController: ControllerBase
     {
         private readonly IMaterialStockService _materialStockService;

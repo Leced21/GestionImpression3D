@@ -23,6 +23,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   prixRecommande: number = 0;
   activeTab: string = 'general';
   statuts: PieceStatus[] = Object.values(PieceStatus);
+  PieceStatus = PieceStatus;
   versionNumber: number = 1;
   private destroy$ = new Subject<void>();
   @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;

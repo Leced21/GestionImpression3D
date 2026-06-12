@@ -1,0 +1,70 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/ordres">← Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier l\'ordre' :
+            '➕ Nouvel ordre de fabrication' }}</h1>
+    </div>
+
+    <form [formGroup]="ordreForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Informations générales</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Projet *</label>
+                    <select formControlName="projetId"
+                        (change)="onProjetChange()">
+                        <option value>-- Sélectionner un projet --</option>
+                        <option *ngFor="let projet of projets"
+                            [value]="projet.id">
+                            {{ projet.nom }} ({{ projet.reference }})
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Pièce *</label>
+                    <select formControlName="pieceId">
+                        <option value>-- Sélectionner une pièce --</option>
+                        <option *ngFor="let piece of pieces" [value]="piece.id">
+                            {{ piece.nom }} ({{ piece.reference }})
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quantité *</label>
+                    <input type="number" formControlName="quantite" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Priorité</label>
+                    <select formControlName="priorite">
+                        <option value="Basse">Basse</option>
+                        <option value="Normale">Normale</option>
+                        <option value="Haute">Haute</option>
+                        <option value="Urgente">Urgente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Date d'échéance</label>
+                <input type="date" formControlName="dateEcheance">
+            </div>
+
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea formControlName="notes" rows="3"></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/ordres">Annuler</button>
+            <button type="submit" class="btn-primary"
+                [disabled]="ordreForm.invalid">Enregistrer</button>
+        </div>
+    </form>
+</div>

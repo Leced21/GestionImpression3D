@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { Piece } from '../../models/piece.model';
+import { Piece, PieceStatus } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
 import { CartItem } from '../../models/cart.model';
 import { CommonModule } from '@angular/common';
@@ -35,7 +35,7 @@ export class CommercialCatalog implements OnInit {
   loadPieces(): void {
     this.pieceService.getAll().subscribe({
       next: (data) => {
-        this.pieces = data.filter(p => p.statut === 'Commercialisable' && p.prixVente > 0);
+        this.pieces = data.filter(p => p.statut === PieceStatus.Commercialisable && p.prixVente > 0);
         this.filteredPieces = [...this.pieces];
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
         console.log('Pieces loaded:', this.pieces);
