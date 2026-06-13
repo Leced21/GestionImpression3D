@@ -9,6 +9,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CommercialController:ControllerBase
     {
         private readonly ICommercialService _commercialService;
@@ -26,6 +27,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("commande")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> CreerCommande([FromBody] CommandeRequest request)
         {
             try
@@ -45,6 +47,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("commandes")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> GetCommandes()
         {
             var commandes = await _commercialService.GetAllCommandesAsync();
@@ -52,6 +55,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("commandes/{id}")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> GetCommande(int id)
         {
             var commande = await _commercialService.GetCommandeAsync(id);
@@ -62,6 +66,7 @@ namespace Backend.Controllers
         }
 
         [HttpPatch("commandes/{id}/statut")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> UpdateStatut(int id, [FromBody] string statut)
         {
             try
@@ -79,6 +84,7 @@ namespace Backend.Controllers
         }
 
         [HttpDelete("commandes/{id}")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> AnnulerCommande(int id)
         {
             try
@@ -96,6 +102,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("dashboard/stats")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> GetDashboardStats()
         {
             var stats = await _commercialService.GetDashboardStatsAsync();
@@ -103,6 +110,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("chiffre-affaires")]
+        [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> GetChiffreAffaires()
         {
             var ca = await _commercialService.GetChiffreAffairesAsync();

@@ -9,8 +9,11 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PieceController:ControllerBase
     {
+        private const long MaxUploadSizeBytes = 100 * 1024 * 1024;
+
         private readonly IPieceService _pieceService;
         private readonly IPdfExportService _pdfExportService;
         private readonly IExcelExportService _excelExportService;
@@ -40,6 +43,7 @@ namespace Backend.Controllers
             return Ok(piece);
         }
         [HttpPost]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
         public async Task<ActionResult<Piece>> Create(Piece piece)
         {
             try
@@ -54,6 +58,7 @@ namespace Backend.Controllers
             
         }
         [HttpPatch("{id}/statut")]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
         public async Task<IActionResult> UpdateStatut(int id, [FromBody] PieceStatus statut)
         {
             try
@@ -75,6 +80,7 @@ namespace Backend.Controllers
             }
         }
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
         public async Task<IActionResult> Update(int id, Piece piece)
         {
             if (id != piece.Id)
@@ -107,6 +113,7 @@ namespace Backend.Controllers
             return Ok(prix);
         }
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -143,12 +150,19 @@ namespace Backend.Controllers
             return Ok(stats);
         }
         [HttpPost("{id}/upload-stl")]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
         public async Task<IActionResult> UploadStl (int id,  IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
                 return BadRequest(new { error = "Aucun fichier fourni" });
             }
+
+            if (file.Length > MaxUploadSizeBytes)
+            {
+                return BadRequest(new { error = "Fichier trop volumineux. Taille maximale: 100 Mo" });
+            }
+
             var piece = await _pieceService.GetByIdAsync(id);
             if (piece == null) 
             {
@@ -164,7 +178,13 @@ namespace Backend.Controllers
             if (!Directory.Exists(uploadDir))
                 Directory.CreateDirectory(uploadDir);
 
-            var fileName = $"{piece.Reference}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+            var safeReference = new string(piece.Reference.Where(char.IsLetterOrDigit).ToArray());
+            if (string.IsNullOrWhiteSpace(safeReference))
+            {
+                safeReference = $"piece{id}";
+            }
+
+            var fileName = $"{safeReference}_{Guid.NewGuid():N}{extension}";
             var filePath = Path.Combine(uploadDir, fileName);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {

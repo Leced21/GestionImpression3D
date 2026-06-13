@@ -33,6 +33,11 @@ import { OrdreDetail } from './components/ordres-fabrication/ordre-detail/ordre-
 import { ProfileList } from './components/print-profiles/profile-list/profile-list';
 import { ProfileForm } from './components/print-profiles/profile-form/profile-form';
 import { ProfileDetail } from './components/print-profiles/profile-detail/profile-detail';
+import { ConsumptionList } from './features/consumption/consumption-list/consumption-list';
+import { ConsumptionForm } from './features/consumption/consumption-form/consumption-form';
+import { MaintenanceList } from './features/maintenance/maintenance-list/maintenance-list';
+import { MaintenanceForm } from './features/maintenance/maintenance-form/maintenance-form';
+import { MaintenanceDetail } from './features/maintenance/maintenance-detail/maintenance-detail';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -49,7 +54,7 @@ export const routes: Routes = [
     { path: 'projets/nouveau', component: ProjetForm, canActivate: [AuthGuard] },
     { path: 'projets/:id', component: ProjetDetail, canActivate: [AuthGuard] },
     { path: 'projets/:id/edit', component: ProjetForm, canActivate: [AuthGuard] },
-    { path: 'admin/audit-logs', component: AuditLogs, canActivate: [AuthGuard], data: { roles: ['admin'] } },
+    { path: 'admin/audit-logs', component: AuditLogs, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
     { path: 'printers', component: PrinterList, canActivate: [AuthGuard] },
     { path: 'printers/new', component: PrinterForm, canActivate: [AuthGuard] },
     { path: 'printers/:id', component: PrinterDetail, canActivate: [AuthGuard] },
@@ -62,7 +67,7 @@ export const routes: Routes = [
     { path: 'stock/:id', component: MaterialstockDetail, canActivate: [AuthGuard] },
     { path: 'stock/:id/edit', component: MaterialstockForm, canActivate: [AuthGuard] },
     { path: 'admin/users', component: UserList, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-    { path: 'accept-invitation', component: AcceptInvitation, canActivate: [AuthGuard] },
+    { path: 'accept-invitation', component: AcceptInvitation },
     { path: 'pieces/:id/versions', component: PieceVersions, canActivate: [AuthGuard] },
     { path: 'notifications', component: NotificationCenter, canActivate: [AuthGuard] },
     { path: 'unauthorized', component: Unauthorized },
@@ -74,5 +79,11 @@ export const routes: Routes = [
     { path: 'profils-impression/nouveau', component: ProfileForm, canActivate: [AuthGuard] },
     { path: 'profils-impression/:id', component: ProfileDetail, canActivate: [AuthGuard] },
     { path: 'profils-impression/:id/edit', component: ProfileForm, canActivate: [AuthGuard] },
+    { path: 'consommations', component: ConsumptionList, canActivate: [AuthGuard] },
+    { path: 'consommations/nouveau', component: ConsumptionForm, canActivate: [AuthGuard] },
+    { path: 'maintenances', component: MaintenanceList, canActivate: [AuthGuard] },
+    { path: 'maintenances/nouveau', component: MaintenanceForm, canActivate: [AuthGuard] },
+    { path: 'maintenances/:id/edit', component: MaintenanceForm, canActivate: [AuthGuard] },
+    { path: 'maintenances/:id', component: MaintenanceDetail, canActivate: [AuthGuard] },
     { path: '**', component: NotFound }
 ];

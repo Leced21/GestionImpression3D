@@ -1,0 +1,71 @@
+<div class="detail-container" *ngIf="maintenance; else loading">
+    <div class="detail-header">
+        <button class="btn-back" routerLink="/maintenances">← Retour</button>
+        <h1>{{ maintenance.title }}</h1>
+        <div class="actions">
+            <button class="btn-edit"
+                [routerLink]="['/maintenances', maintenance.id, 'edit']"
+                *ngIf="maintenance.status === 'Scheduled'">✏️ Modifier</button>
+            <button class="btn-delete" (click)="deleteMaintenance()"
+                *ngIf="maintenance.status !== 'Completed'">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="info-card">
+            <h3>🔧 Informations</h3>
+            <div class="info-row"><span>Imprimante</span><strong>{{
+                    maintenance.printerName }}</strong></div>
+            <div class="info-row"><span>Type</span><span class="type-badge"
+                    [class]="maintenance.type">{{ maintenance.type
+                    }}</span></div>
+            <div class="info-row"><span>Statut</span><span class="status-badge"
+                    [class]="maintenance.status">{{
+                    getStatusLabel(maintenance.status) }}</span></div>
+            <div class="info-row"><span>Description</span><span>{{
+                    maintenance.description || '-' }}</span></div>
+        </div>
+
+        <div class="info-card">
+            <h3>📅 Dates</h3>
+            <div class="info-row"><span>Planifiée le</span><strong>{{
+                    maintenance.scheduledDate | date:'dd/MM/yyyy HH:mm'
+                    }}</strong></div>
+            <div class="info-row"
+                *ngIf="maintenance.completedDate"><span>Réalisée
+                    le</span><strong>{{ maintenance.completedDate |
+                    date:'dd/MM/yyyy HH:mm' }}</strong></div>
+            <div class="info-row"><span>Créée le</span><span>{{
+                    maintenance.createdAt | date:'dd/MM/yyyy HH:mm'
+                    }}</span></div>
+        </div>
+
+        <div class="info-card">
+            <h3>⏱️ Durée & Coût</h3>
+            <div class="info-row"><span>Durée estimée</span><strong>{{
+                    maintenance.durationMinutes }} minutes</strong></div>
+            <div class="info-row"><span>Coût</span><strong>{{ maintenance.cost |
+                    number:'1.2-2' }} €</strong></div>
+            <div class="info-row" *ngIf="maintenance.performedBy"><span>Réalisée
+                    par</span><strong>{{ maintenance.performedBy
+                    }}</strong></div>
+        </div>
+
+        <div class="info-card" *ngIf="maintenance.notes">
+            <h3>📝 Notes</h3>
+            <p>{{ maintenance.notes }}</p>
+        </div>
+    </div>
+
+    <div class="actions-card" *ngIf="maintenance.status === 'Scheduled'">
+        <button class="action-btn success" (click)="completeMaintenance()">✅
+            Marquer comme terminée</button>
+        <button class="action-btn warning" (click)="cancelMaintenance()">❌
+            Annuler la maintenance</button>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading">Chargement...</div>
+</ng-template>
