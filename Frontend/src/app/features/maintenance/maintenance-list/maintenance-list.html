@@ -1,0 +1,83 @@
+<div class="maintenance-container">
+    <div class="header">
+        <h1>🔧 Maintenances des imprimantes</h1>
+        <button class="btn-primary" routerLink="/maintenances/nouveau">+
+            Nouvelle maintenance</button>
+    </div>
+
+    <!-- Onglets -->
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'all'"
+            (click)="activeTab = 'all'">Toutes</button>
+        <button class="tab" [class.active]="activeTab === 'upcoming'"
+            (click)="activeTab = 'upcoming'">À venir</button>
+        <button class="tab" [class.active]="activeTab === 'completed'"
+            (click)="activeTab = 'completed'">Terminées</button>
+    </div>
+
+    <!-- Liste des maintenances -->
+    <div class="maintenances-list">
+        <div class="maintenance-card"
+            *ngFor="let maintenance of filteredMaintenances">
+            <div class="maintenance-header">
+                <div class="maintenance-title">
+                    <span class="maintenance-type"
+                        [class]="getTypeClass(maintenance.type)">
+                        {{ getTypeIcon(maintenance.type) }} {{ maintenance.type
+                        }}
+                    </span>
+                    <h3>{{ maintenance.title }}</h3>
+                </div>
+                <div class="maintenance-status"
+                    [class]="getStatusClass(maintenance.status)">
+                    {{ getStatusLabel(maintenance.status) }}
+                </div>
+            </div>
+
+            <div class="maintenance-printer">
+                🖨️ {{ maintenance.printerName }}
+            </div>
+
+            <div class="maintenance-dates">
+                <div class="date-item">
+                    <span>📅 Planifiée:</span>
+                    <strong>{{ maintenance.scheduledDate | date:'dd/MM/yyyy'
+                        }}</strong>
+                </div>
+                <div class="date-item" *ngIf="maintenance.completedDate">
+                    <span>✅ Réalisée:</span>
+                    <strong>{{ maintenance.completedDate | date:'dd/MM/yyyy'
+                        }}</strong>
+                </div>
+            </div>
+
+            <div class="maintenance-details">
+                <span>⏱️ Durée: {{ maintenance.durationMinutes }} min</span>
+                <span>💰 Coût: {{ maintenance.cost | number:'1.2-2' }} €</span>
+            </div>
+
+            <div class="maintenance-actions">
+                <button class="btn-sm"
+                    [routerLink]="['/maintenances', maintenance.id]">🔍
+                    Détail</button>
+                <button class="btn-sm success"
+                    (click)="completeMaintenance(maintenance)"
+                    *ngIf="maintenance.status === 'Scheduled'">
+                    ✅ Terminer
+                </button>
+                <button class="btn-sm warning"
+                    (click)="cancelMaintenance(maintenance)"
+                    *ngIf="maintenance.status === 'Scheduled'">
+                    ❌ Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="filteredMaintenances.length === 0" class="empty-state">
+        <div class="empty-icon">🔧</div>
+        <h3>Aucune maintenance</h3>
+        <button class="btn-primary" routerLink="/maintenances/nouveau">+
+            Planifier une maintenance</button>
+    </div>
+</div>

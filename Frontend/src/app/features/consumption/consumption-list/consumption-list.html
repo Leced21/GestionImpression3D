@@ -1,0 +1,80 @@
+<div class="consumption-container">
+    <div class="header">
+        <h1>📊 Consommation matière</h1>
+        <button class="btn-primary" routerLink="/consommations/nouveau">+
+            Nouvelle consommation</button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+        <input type="date" [(ngModel)]="startDate" placeholder="Date début"
+            (change)="loadStatistics()">
+        <input type="date" [(ngModel)]="endDate" placeholder="Date fin"
+            (change)="loadStatistics()">
+        <button class="btn-refresh" (click)="refresh()">🔄</button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalConsumption |
+                number:'1.2-2' }} g</div>
+            <div class="stat-label">Total consommé</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ statistics.productionConsumption |
+                number:'1.2-2' }} g</div>
+            <div class="stat-label">Production</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ statistics.wasteConsumption |
+                number:'1.2-2' }} g</div>
+            <div class="stat-label">Pertes</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ statistics.testConsumption |
+                number:'1.2-2' }} g</div>
+            <div class="stat-label">Tests</div>
+        </div>
+    </div>
+
+    <!-- Graphique consommation par matériau -->
+    <div class="chart-card">
+        <h3>📊 Consommation par matériau</h3>
+        <div class="material-bars">
+            <div class="material-bar"
+                *ngFor="let item of consumptionByMaterial | keyvalue">
+                <div class="material-name">{{ item.key }}</div>
+                <div class="bar-container">
+                    <div class="bar-fill"
+                        [style.width.%]="getBarPercentage(item.value)"></div>
+                    <span class="bar-value">{{ item.value | number:'1.2-2' }}
+                        g</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des consommations -->
+    <div class="consumptions-list">
+        <div class="consumption-card" *ngFor="let consumption of consumptions">
+            <div class="consumption-header">
+                <span class="consumption-date">{{ consumption.consumedAt |
+                    date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="consumption-badge"
+                    [class]="getTypeClass(consumption.type)">{{ consumption.type
+                    }}</span>
+            </div>
+            <div class="consumption-content">
+                <div class="consumption-material">{{ consumption.materialName
+                    }}</div>
+                <div class="consumption-quantity">{{ consumption.quantity }} {{
+                    consumption.unit }}</div>
+            </div>
+            <div class="consumption-footer"
+                *ngIf="consumption.reason || consumption.notes">
+                <span>{{ consumption.reason || consumption.notes }}</span>
+            </div>
+        </div>
+    </div>
+</div>
