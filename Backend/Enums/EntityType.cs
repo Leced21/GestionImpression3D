@@ -9,6 +9,8 @@
         Printer = 5,
         MaterialStock = 6,
         OrdreFabrication = 7,
-        PrintProfile = 8
+        PrintProfile = 8,
+        PrinterMaintenance = 9,  // ← AJOUTER
+        MaterialConsumption = 10   // ← AJOUTER
     }
 }

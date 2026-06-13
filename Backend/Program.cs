@@ -3,6 +3,7 @@ using Backend.Helpers;
 using Backend.Hubs;
 using Backend.Interface;
 using Backend.Mappers;
+using Backend.Middleware;
 using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -100,6 +101,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IAuditLogger, AuditLogger>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IMaterialConsumptionRepository, MaterialConsumptionRepository>();
+builder.Services.AddScoped<IPrinterMaintenanceRepository, PrinterMaintenanceRepository>();
+builder.Services.AddScoped<IMaterialConsumptionService, MaterialConsumptionService>();
+builder.Services.AddScoped<IPrinterMaintenanceService, PrinterMaintenanceService>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();
@@ -119,6 +124,7 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // --- 6. Pipeline des Middlewares (L'ordre est TRÈS important) ---
 

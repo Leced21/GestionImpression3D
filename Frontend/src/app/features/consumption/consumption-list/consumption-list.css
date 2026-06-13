@@ -1,0 +1,174 @@
+.consumption-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+}
+
+.filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.material-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.material-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.material-name {
+    width: 120px;
+    font-weight: 500;
+}
+
+.bar-container {
+    flex: 1;
+    position: relative;
+    height: 30px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: #3b82f6;
+    transition: width 0.3s;
+}
+
+.bar-value {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #475569;
+}
+
+.consumptions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.consumption-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.consumption-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.consumption-date {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.consumption-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+}
+
+.consumption-badge.Production {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.consumption-badge.Perte {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.consumption-badge.Test {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.consumption-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.consumption-material {
+    font-weight: 500;
+}
+
+.consumption-quantity {
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.consumption-footer {
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.btn-refresh {
+    background: #f1f5f9;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}

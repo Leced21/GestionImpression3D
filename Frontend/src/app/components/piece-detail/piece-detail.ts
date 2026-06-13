@@ -297,6 +297,17 @@ export class PieceDetail implements OnInit, OnDestroy {
     const url = this.pieceService.getStlUrl(this.piece.id);
 
     console.log("URL envoyée au STLLoader :", url);
+    // 💡 RÉCUPÉRATION DU TOKEN : À adapter selon ta méthode de stockage (localStorage, injecté via AuthService, etc.)
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    console.log("Token récupéré pour Three.js :", token);
+    // 💡 INJECTION DU TOKEN : Si le token existe, on l'ajoute aux en-têtes de Three.js
+    if (token) {
+      loader.setRequestHeader({
+        'Authorization': `Bearer ${token}`
+      });
+    } else {
+      console.warn("Aucun token trouvé pour l'authentification Three.js");
+    }
 
     loader.load(url, (geometry) => {
       // Supprimer l'ancien mesh
