@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { HttpClient } from '@angular/common/http';
 
 
 type ViewType = 'perspective' | 'face' | 'dessus' | 'profil' | 'isometrique';
@@ -46,6 +47,11 @@ export class ThreeDViewer implements OnInit, AfterViewInit, OnChanges, OnDestroy
 
   private viewInitialized = false;
 
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
+  ) {}
+  
   ngOnInit(): void {
     // Le canvas n'est pas encore disponible ici.
   }
@@ -129,63 +135,74 @@ export class ThreeDViewer implements OnInit, AfterViewInit, OnChanges, OnDestroy
 
   private loadStl(): void {
     if (!this.stlUrl) return;
+    console.log("Téléchargement sécurisé via HttpClient :", this.stlUrl);
+    this.http.get(this.stlUrl, { responseType: 'arraybuffer' }).subscribe({
+      next: (buffer: ArrayBuffer) => {
 
     const loader = new STLLoader();
+        
+        // On demande à Three.js de parser les données déjà présentes en mémoire vive
+        const geometry = loader.parse(buffer);
 
-    loader.load(this.stlUrl, (geometry) => {
-      // Supprimer l'ancien mesh
-      if (this.currentMesh) {
-        this.scene.remove(this.currentMesh);
+        // Supprimer l'ancien mesh s'il y en a un
+        if (this.currentMesh) {
+          this.scene.remove(this.currentMesh);
+        }
+
+        // Calculer les dimensions
+        geometry.computeBoundingBox();
+        this.boundingBox = geometry.boundingBox!;
+        const size = this.boundingBox.getSize(new THREE.Vector3());
+
+        // Centrer la géométrie
+        const center = this.boundingBox.getCenter(new THREE.Vector3());
+        geometry.translate(-center.x, -center.y, -center.z);
+
+        // Calculer les dimensions en mm
+        const longueur = Math.round(size.x * 100) / 100;
+        const largeur = Math.round(size.y * 100) / 100;
+        const hauteur = Math.round(size.z * 100) / 100;
+        const volume = Math.round((longueur * largeur * hauteur) / 1000 * 100) / 100;
+        const poids = Math.round(volume * 1.2 * 100) / 100; // Densité PLA ~1.2 g/cm³
+
+        this.dimensions = { longueur, largeur, hauteur, volume, poids };
+
+        // Créer le matériau
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x3b82f6,
+          roughness: 0.3,
+          metalness: 0.7,
+          flatShading: false,
+          side: THREE.DoubleSide,
+          wireframe: this.wireframeMode // Conserve l'état du mode fil de fer au rechargement
+        });
+
+        this.currentMesh = new THREE.Mesh(geometry, material);
+        this.scene.add(this.currentMesh);
+
+        // Ajuster la caméra à la taille de l'objet
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const distance = maxDim * 1.5;
+
+        // Mettre à jour les positions des vues
+        this.viewPositions = {
+          perspective: new THREE.Vector3(distance, distance * 0.8, distance),
+          face: new THREE.Vector3(0, 0, distance),
+          dessus: new THREE.Vector3(0, distance, 0),
+          profil: new THREE.Vector3(distance, 0, 0),
+          isometrique: new THREE.Vector3(distance, distance, distance)
+        };
+
+        // Appliquer la vue actuelle
+        this.setView(this.currentView);
+        
+        // Déclencher le rafraîchissement d'Angular pour l'affichage des calculs dans le HTML
+        this.cdr.detectChanges();
+        console.log("Fichier STL chargé et rendu avec succès !");
+      },
+      error: (error) => {
+        console.error('Erreur lors du téléchargement sécurisé du STL :', error);
       }
-
-      // Calculer les dimensions
-      geometry.computeBoundingBox();
-      this.boundingBox = geometry.boundingBox!;
-      const size = this.boundingBox.getSize(new THREE.Vector3());
-
-      // Centrer la géométrie
-      const center = this.boundingBox.getCenter(new THREE.Vector3());
-      geometry.translate(-center.x, -center.y, -center.z);
-
-      // Calculer les dimensions en mm
-      const longueur = Math.round(size.x * 100) / 100;
-      const largeur = Math.round(size.y * 100) / 100;
-      const hauteur = Math.round(size.z * 100) / 100;
-      const volume = Math.round((longueur * largeur * hauteur) / 1000 * 100) / 100;
-      const poids = Math.round(volume * 1.2 * 100) / 100; // Densité PLA ~1.2 g/cm³
-
-      this.dimensions = { longueur, largeur, hauteur, volume, poids };
-
-      // Créer le matériau
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x3b82f6,
-        roughness: 0.3,
-        metalness: 0.7,
-        flatShading: false,
-        side: THREE.DoubleSide
-      });
-
-      this.currentMesh = new THREE.Mesh(geometry, material);
-      this.scene.add(this.currentMesh);
-
-      // Ajuster la caméra à la taille de l'objet
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const distance = maxDim * 1.5;
-
-      // Mettre à jour les positions des vues
-      this.viewPositions = {
-        perspective: new THREE.Vector3(distance, distance * 0.8, distance),
-        face: new THREE.Vector3(0, 0, distance),
-        dessus: new THREE.Vector3(0, distance, 0),
-        profil: new THREE.Vector3(distance, 0, 0),
-        isometrique: new THREE.Vector3(distance, distance, distance)
-      };
-
-      // Appliquer la vue actuelle
-      this.setView(this.currentView);
-
-    }, undefined, (error) => {
-      console.error('Erreur chargement STL:', error);
     });
   }
 

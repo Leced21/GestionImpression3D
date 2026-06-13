@@ -27,6 +27,8 @@ namespace Backend.Data
         public DbSet<OrdreFabrication> OrdresFabrication { get; set; }
         public DbSet<PrintProfile> PrintProfiles { get; set; }
         public DbSet<STLMetadata> STLMetadata { get; set; }
+        public DbSet<MaterialConsumption> MaterialConsumptions { get; set; }
+        public DbSet<PrinterMaintenance> PrinterMaintenances { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -252,6 +254,54 @@ namespace Backend.Data
                 entity.Property(e => e.FileName).HasMaxLength(255);
                 entity.Property(e => e.Errors).HasMaxLength(500);
                 entity.HasIndex(e => e.PieceId).IsUnique();
+            });
+            modelBuilder.Entity<MaterialConsumption>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Unit).HasMaxLength(10);
+                entity.Property(e => e.Type).HasMaxLength(30);
+                entity.Property(e => e.Reason).HasMaxLength(200);
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                entity.HasOne(e => e.MaterialStock)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaterialStockId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.PrintJob)
+                      .WithMany()
+                      .HasForeignKey(e => e.PrintJobId);
+
+                entity.HasOne(e => e.OrdreFabrication)
+                      .WithMany()
+                      .HasForeignKey(e => e.OrdreFabricationId);
+
+                entity.HasOne(e => e.ConsumedByUser)
+                      .WithMany()
+                      .HasForeignKey(e => e.ConsumedBy)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(e => e.ConsumedAt);
+                entity.HasIndex(e => e.Type);
+            });
+
+            modelBuilder.Entity<PrinterMaintenance>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Type).HasMaxLength(30);
+                entity.Property(e => e.Title).HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Status).HasMaxLength(30);
+                entity.Property(e => e.PerformedBy).HasMaxLength(100);
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                entity.HasOne(e => e.Printer)
+                      .WithMany()
+                      .HasForeignKey(e => e.PrinterId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.ScheduledDate);
+                entity.HasIndex(e => e.Status);
             });
 
             // 🚀 BUCKET MAGIQUE : Configure globalement tous les types decimal à (18,2)
