@@ -1,0 +1,61 @@
+<div class="detail-container" *ngIf="devis; else loading">
+    <div class="detail-header">
+        <button class="btn-back" routerLink="/devis">← Retour</button>
+        <h1>{{ devis.numeroDevis }}</h1>
+        <div class="actions">
+            <button class="btn-pdf" (click)="generatePdf()">📄 PDF</button>
+            <button class="btn-edit"
+                [routerLink]="['/devis', devis.id, 'edit']">✏️ Modifier</button>
+            <button class="btn-delete" (click)="deleteDevis()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <div class="status-actions">
+        <button class="status-btn" (click)="updateStatut(DevisStatus.Envoye)"
+            *ngIf="devis.statut === 'Brouillon'">📧 Marquer comme
+            envoyé</button>
+        <button class="status-btn success" (click)="updateStatut(DevisStatus.Accepte)"
+            *ngIf="devis.statut === 'Envoyé'">✅ Accepter le devis</button>
+        <button class="status-btn danger" (click)="updateStatut(DevisStatus.Refuse)"
+            *ngIf="devis.statut === 'Envoyé'">❌ Refuser le devis</button>
+    </div>
+
+    <div class="grid-2">
+        <div class="info-card"><h3>📋 Informations</h3><div
+                class="info-row"><span>Client</span><strong>{{ devis.clientNom
+                    }}</strong></div><div
+                class="info-row"><span>Statut</span><span class="status-badge"
+                    [class]="devis.statut">{{ devis.statut }}</span></div><div
+                class="info-row"><span>Date émission</span><strong>{{
+                    devis.dateEmission | date:'dd/MM/yyyy' }}</strong></div><div
+                class="info-row"><span>Validité</span><strong>{{
+                    devis.dateValidite | date:'dd/MM/yyyy'
+                    }}</strong></div></div>
+        <div class="info-card" *ngIf="devis.notes || devis.conditions"><h3>📝
+                Notes & Conditions</h3><div
+                *ngIf="devis.notes"><strong>Notes:</strong><p>{{ devis.notes
+                    }}</p></div><div
+                *ngIf="devis.conditions"><strong>Conditions:</strong><p>{{
+                    devis.conditions }}</p></div></div>
+    </div>
+
+    <div class="info-card"><h3>📦 Lignes du devis</h3><table
+            class="lignes-table"><thead><tr><th>Description</th><th>Qté</th><th>Prix
+                        unit.</th><th>Total</th></tr></thead><tbody><tr
+                    *ngFor="let ligne of devis.lignes"><td>{{ ligne.description
+                        }}</td><td>{{ ligne.quantite }}</td><td>{{
+                        ligne.prixUnitaire | number:'1.2-2' }} €</td><td>{{
+                        ligne.total | number:'1.2-2' }} €</td></tr><tr
+                    class="total-row"><td colspan="3"><strong>Total
+                            HT</strong></td><td><strong>{{ devis.totalHT |
+                            number:'1.2-2' }} €</strong></td></tr><tr
+                    class="total-row"><td colspan="3">TVA ({{ devis.tva
+                        }}%)</td><td>{{ getTVA() | number:'1.2-2' }}
+                        €</td></tr><tr class="grand-total"><td
+                        colspan="3"><strong>Total
+                            TTC</strong></td><td><strong>{{ devis.totalTTC |
+                            number:'1.2-2' }}
+                            €</strong></td></tr></tbody></table></div>
+</div>
+<ng-template #loading><div class="loading">Chargement...</div></ng-template>
