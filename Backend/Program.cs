@@ -105,6 +105,12 @@ builder.Services.AddScoped<IMaterialConsumptionRepository, MaterialConsumptionRe
 builder.Services.AddScoped<IPrinterMaintenanceRepository, PrinterMaintenanceRepository>();
 builder.Services.AddScoped<IMaterialConsumptionService, MaterialConsumptionService>();
 builder.Services.AddScoped<IPrinterMaintenanceService, PrinterMaintenanceService>();
+builder.Services.AddScoped<IPrintIncidentRepository, PrintIncidentRepository>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IDevisRepository, DevisRepository>();
+builder.Services.AddScoped<IPrintIncidentService, PrintIncidentService>();
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IDevisService, DevisService>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();

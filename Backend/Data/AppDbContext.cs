@@ -29,6 +29,10 @@ namespace Backend.Data
         public DbSet<STLMetadata> STLMetadata { get; set; }
         public DbSet<MaterialConsumption> MaterialConsumptions { get; set; }
         public DbSet<PrinterMaintenance> PrinterMaintenances { get; set; }
+        public DbSet<PrintIncident> PrintIncidents { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<Devis> Devis { get; set; }
+        public DbSet<DevisLigne> DevisLignes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -302,6 +306,42 @@ namespace Backend.Data
 
                 entity.HasIndex(e => e.ScheduledDate);
                 entity.HasIndex(e => e.Status);
+            });
+            modelBuilder.Entity<PrintIncident>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.Severity).HasMaxLength(20);
+                entity.Property(e => e.Status).HasMaxLength(20);
+                entity.Property(e => e.Resolution).HasMaxLength(500);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.OccurredAt);
+            });
+
+            modelBuilder.Entity<Client>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nom).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Telephone).HasMaxLength(20);
+                entity.Property(e => e.Adresse).HasMaxLength(500);
+                entity.Property(e => e.Siret).HasMaxLength(14);
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            modelBuilder.Entity<Devis>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.NumeroDevis).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Statut).HasMaxLength(20);
+                entity.HasIndex(e => e.NumeroDevis).IsUnique();
+            });
+
+            modelBuilder.Entity<DevisLigne>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Description).HasMaxLength(500);
             });
 
             // 🚀 BUCKET MAGIQUE : Configure globalement tous les types decimal à (18,2)

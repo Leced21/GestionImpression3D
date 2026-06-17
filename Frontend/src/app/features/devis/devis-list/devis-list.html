@@ -1,0 +1,79 @@
+<div class="devis-container">
+    <div class="header">
+        <h1>📄 Devis</h1>
+        <button class="btn-primary" routerLink="/devis/nouveau">+ Nouveau
+            devis</button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalDevis }}</div>
+            <div class="stat-label">Total devis</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ statistics.brouillonCount }}</div>
+            <div class="stat-label">Brouillons</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ statistics.envoyesCount }}</div>
+            <div class="stat-label">Envoyés</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ statistics.acceptesCount }}</div>
+            <div class="stat-label">Acceptés</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ statistics.refusesCount }}</div>
+            <div class="stat-label">Refusés</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ statistics.totalAmountAccepted |
+                number:'1.2-2' }} €</div>
+            <div class="stat-label">CA accepté</div>
+        </div>
+    </div>
+
+    <!-- Liste des devis -->
+    <div class="devis-list">
+        <div class="devis-card" *ngFor="let devis of devisList">
+            <div class="devis-header">
+                <div class="devis-number">{{ devis.numeroDevis }}</div>
+                <div class="devis-status"
+                    [class]="getStatusClass(devis.statut)">
+                    {{ getStatusLabel(devis.statut) }}
+                </div>
+            </div>
+            <div class="devis-client">{{ devis.clientNom }}</div>
+            <div class="devis-dates">
+                <span>📅 Émis: {{ devis.dateEmission | date:'dd/MM/yyyy'
+                    }}</span>
+                <span>⏰ Validité: {{ devis.dateValidite | date:'dd/MM/yyyy'
+                    }}</span>
+            </div>
+            <div class="devis-total">{{ devis.totalTTC | number:'1.2-2' }} €
+                TTC</div>
+            <div class="devis-actions">
+                <button class="btn-sm" [routerLink]="['/devis', devis.id]">🔍
+                    Détail</button>
+                <button class="btn-sm" (click)="updateStatut(devis, DevisStatus.Envoye)"
+                    *ngIf="devis.statut === DevisStatus.Brouillon">📧 Envoyer</button>
+                <button class="btn-sm success"
+                    (click)="updateStatut(devis, DevisStatus.Accepte)"
+                    *ngIf="devis.statut === DevisStatus.Envoye">✅ Accepter</button>
+                <button class="btn-sm danger"
+                    (click)="updateStatut(devis, DevisStatus.Refuse)"
+                    *ngIf="devis.statut === DevisStatus.Refuse">❌ Refuser</button>
+                <button class="btn-sm" (click)="generatePdf(devis)">📄
+                    PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="devisList.length === 0" class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h3>Aucun devis</h3>
+        <button class="btn-primary" routerLink="/devis/nouveau">+ Créer un
+            devis</button>
+    </div>
+</div>

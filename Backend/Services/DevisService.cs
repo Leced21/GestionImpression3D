@@ -1,0 +1,135 @@
+﻿using Backend.DTOs;
+using Backend.Enums;
+using Backend.Interface;
+using Backend.Models;
+
+namespace Backend.Services
+{
+    public class DevisService : IDevisService
+    {
+        private readonly IDevisRepository _devisRepository;
+        private readonly IClientRepository _clientRepository;
+        private readonly IPieceRepository _pieceRepository;
+        private readonly IAuditLogger _auditLogger;
+        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IAuditLogger auditLogger)
+        {
+            _devisRepository = devisRepository;
+            _clientRepository = clientRepository;
+            _pieceRepository = pieceRepository;
+            _auditLogger = auditLogger;
+        }
+        public async Task<Devis> CreateAsync(CreateDevisRequest request)
+        {
+            var client = await _clientRepository.GetByIdAsync(request.ClientId);
+            if (client == null)
+                throw new InvalidOperationException("Client non trouvé");
+
+            var lignes = new List<DevisLigne>();
+            decimal totalHT = 0;
+
+            foreach (var ligneReq in request.Lignes)
+            {
+                decimal prixUnitaire = ligneReq.PrixUnitaire;
+                string description = ligneReq.Description;
+
+                if (ligneReq.PieceId.HasValue)
+                {
+                    var piece = await _pieceRepository.GetByIdAsync(ligneReq.PieceId.Value);
+                    if (piece != null)
+                    {
+                        prixUnitaire = piece.PrixVente;
+                        description = piece.Nom;
+                    }
+                }
+
+                var ligne = new DevisLigne
+                {
+                    PieceId = ligneReq.PieceId,
+                    Description = description,
+                    Quantite = ligneReq.Quantite,
+                    PrixUnitaire = prixUnitaire
+                };
+                lignes.Add(ligne);
+                totalHT += ligne.Total;
+            }
+
+            var totalTTC = totalHT * (1 + request.TVA / 100);
+
+            var devis = new Devis
+            {
+                ClientId = request.ClientId,
+                ProjetId = request.ProjetId,
+                DateEmission = DateTime.UtcNow,
+                DateValidite = request.DateValidite,
+                TotalHT = totalHT,
+                TVA = request.TVA,
+                TotalTTC = totalTTC,
+                Statut = DevisStatus.Brouillon,
+                Notes = request.Notes,
+                Conditions = request.Conditions,
+                Lignes = lignes
+            };
+
+            var created = await _devisRepository.CreateAsync(devis);
+
+            await _auditLogger.LogCreationAsync(EntityType.Devis, created.Id, created.NumeroDevis);
+
+            return created;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var devis = await _devisRepository.GetByIdAsync(id);
+            if (devis == null) return false;
+
+            var result = await _devisRepository.DeleteAsync(id);
+
+            if (result)
+                await _auditLogger.LogDeletionAsync(EntityType.Devis, id, devis.NumeroDevis);
+
+            return result;
+        }
+
+        public async Task<byte[]> GeneratePdfAsync(int id)
+        {
+            var devis = await GetByIdAsync(id);
+            if (devis == null) return Array.Empty<byte>();
+
+            // À implémenter avec une librairie PDF
+            return Array.Empty<byte>();
+        }
+
+        public async Task<IEnumerable<Devis>> GetAllAsync()
+        {
+            return await _devisRepository.GetAllAsync();
+        }
+
+        public async Task<IEnumerable<Devis>> GetByClientAsync(int clientId)
+        {
+            return await _devisRepository.GetByClientAsync(clientId);
+        }
+
+        public async Task<Devis?> GetByIdAsync(int id)
+        {
+            return await _devisRepository.GetByIdAsync(id);
+        }
+
+        public async Task<DevisStatisticsDto> GetStatisticsAsync()
+        {
+            return await _devisRepository.GetStatisticsAsync();
+        }
+
+        public async Task<Devis?> UpdateStatutAsync(int id, DevisStatus statut)
+        {
+            var devis = await _devisRepository.GetByIdAsync(id);
+            if (devis == null) return null;
+
+            var oldStatut = devis.Statut;
+            var updated = await _devisRepository.UpdateStatutAsync(id, statut);
+
+            await _auditLogger.LogStatusChangeAsync(EntityType.Devis, id, oldStatut.ToString(), statut.ToString());
+
+            return updated;
+        }
+    }
+}

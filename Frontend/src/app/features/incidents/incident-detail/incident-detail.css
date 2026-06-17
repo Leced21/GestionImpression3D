@@ -1,0 +1,117 @@
+.detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+}
+
+h1 {
+    flex: 1;
+    font-size: 1.5rem;
+}
+
+.btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.severity-badge,
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+}
+
+.severity-badge.Critique {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.severity-badge.Haute {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.severity-badge.Moyenne {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.status-badge.Ouvert {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-badge.En-cours {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.status-badge.Résolu {
+    background: #dcfce7;
+    color: #10b981;
+}
+
+.actions-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.action-btn.success {
+    background: #10b981;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+}
