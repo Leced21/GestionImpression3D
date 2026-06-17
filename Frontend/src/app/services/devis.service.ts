@@ -8,7 +8,7 @@ import { Devis, DevisStatistics, DevisStatus } from '../models/devis.model';
   providedIn: 'root',
 })
 export class DevisService {
-  private apiUrl = `${API_BASE_URL}/devis`;
+  private apiUrl = `${API_BASE_URL}/Devis`;
   constructor(
     private http: HttpClient
   ) { }

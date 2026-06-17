@@ -8,7 +8,7 @@ import { IncidentStatistics, IncidentStatus, PrintIncident } from '../models/pri
   providedIn: 'root',
 })
 export class PrintIncidentService {
-  private apiUrl = `${API_BASE_URL}/printincident`;
+  private apiUrl = `${API_BASE_URL}/PrintIncident`;
   constructor(
     private http: HttpClient
   ) { }

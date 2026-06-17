@@ -8,7 +8,7 @@ import { Client } from '../models/client.model';
   providedIn: 'root',
 })
 export class ClientService {
-  private apiUrl = `${API_BASE_URL}/client`;
+  private apiUrl = `${API_BASE_URL}/Client`;
   constructor(
     private http: HttpClient
   ) { }
