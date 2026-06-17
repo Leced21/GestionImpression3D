@@ -1,0 +1,59 @@
+<div class="detail-container" *ngIf="client; else loading">
+    <div class="detail-header">
+        <button class="btn-back" routerLink="/clients">← Retour</button>
+        <h1>{{ client.nom }}</h1>
+        <div class="actions">
+            <button class="btn-edit"
+                [routerLink]="['/clients', client.id, 'edit']">✏️
+                Modifier</button>
+            <button class="btn-delete" (click)="deleteClient()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="info-card">
+            <h3>📋 Informations</h3>
+            <div class="info-row"><span>Email</span><strong>{{ client.email
+                    }}</strong></div>
+            <div class="info-row"><span>Téléphone</span><strong>{{
+                    client.telephone || 'Non renseigné' }}</strong></div>
+            <div class="info-row"><span>Statut</span><span class="status-badge"
+                    [class.active]="client.isActive">{{ client.isActive ?
+                    'Actif' : 'Inactif' }}</span></div>
+        </div>
+
+        <div class="info-card">
+            <h3>📍 Adresse</h3>
+            <div class="info-row"><span>Adresse</span><strong>{{ client.adresse
+                    || '-' }}</strong></div>
+            <div class="info-row"><span>Code postal</span><strong>{{
+                    client.codePostal || '-' }}</strong></div>
+            <div class="info-row"><span>Ville</span><strong>{{ client.ville ||
+                    '-' }}</strong></div>
+            <div class="info-row"><span>Pays</span><strong>{{ client.pays ||
+                    'France' }}</strong></div>
+        </div>
+
+        <div class="info-card" *ngIf="client.siret || client.tvaIntra">
+            <h3>🏢 Informations fiscales</h3>
+            <div class="info-row"
+                *ngIf="client.siret"><span>SIRET</span><strong>{{ client.siret
+                    }}</strong></div>
+            <div class="info-row" *ngIf="client.tvaIntra"><span>TVA
+                    Intra</span><strong>{{ client.tvaIntra }}</strong></div>
+        </div>
+
+        <div class="info-card" *ngIf="client.notes">
+            <h3>📝 Notes</h3>
+            <p>{{ client.notes }}</p>
+        </div>
+    </div>
+
+    <div class="actions-card">
+        <button class="action-btn" [routerLink]="['/devis/nouveau']"
+            [queryParams]="{ clientId: client.id }">📄 Créer un devis</button>
+    </div>
+</div>
+
+<ng-template #loading><div class="loading">Chargement...</div></ng-template>

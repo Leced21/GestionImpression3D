@@ -1,0 +1,93 @@
+<div class="incident-container">
+    <div class="header">
+        <h1>🚨 Gestion des incidents</h1>
+        <button class="btn-primary" routerLink="/incidents/nouveau">+ Nouvel
+            incident</button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+        <select [(ngModel)]="statusFilter" (change)="filterIncidents()">
+            <option value>Tous les statuts</option>
+            <option value="Ouvert">Ouvert</option>
+            <option value="En cours">En cours</option>
+            <option value="Résolu">Résolu</option>
+            <option value="Fermé">Fermé</option>
+        </select>
+        <select [(ngModel)]="severityFilter" (change)="filterIncidents()">
+            <option value>Toutes sévérités</option>
+            <option value="Critique">Critique</option>
+            <option value="Haute">Haute</option>
+            <option value="Moyenne">Moyenne</option>
+            <option value="Basse">Basse</option>
+        </select>
+        <button class="btn-refresh" (click)="refresh()">🔄</button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card danger">
+            <div class="stat-value">{{ statistics.openIncidents }}</div>
+            <div class="stat-label">Ouverts</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ statistics.inProgressIncidents }}</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ statistics.resolvedIncidents }}</div>
+            <div class="stat-label">Résolus</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-value">{{ statistics.averageResolutionTimeHours
+                }}h</div>
+            <div class="stat-label">Temps moy. résolution</div>
+        </div>
+    </div>
+
+    <!-- Liste des incidents -->
+    <div class="incidents-list">
+        <div class="incident-card" *ngFor="let incident of filteredIncidents">
+            <div class="incident-header">
+                <div class="incident-title">
+                    <span class="severity-badge"
+                        [class]="getSeverityClass(incident.severity)">
+                        {{ incident.severity }}
+                    </span>
+                    <h3>{{ incident.title }}</h3>
+                </div>
+                <div class="incident-status"
+                    [class]="getStatusClass(incident.status)">
+                    {{ incident.status }}
+                </div>
+            </div>
+            <div class="incident-info">
+                <span>🖨️ {{ incident.printerName || 'Imprimante inconnue'
+                    }}</span>
+                <span>📅 {{ incident.occurredAt | date:'dd/MM/yyyy HH:mm'
+                    }}</span>
+            </div>
+            <div class="incident-description">{{ incident.description |
+                slice:0:100 }}...</div>
+            <div class="incident-actions">
+                <button class="btn-sm"
+                    [routerLink]="['/incidents', incident.id]">🔍
+                    Détail</button>
+                <button class="btn-sm warning"
+                    (click)="updateStatus(incident, IncidentStatus.EnCours)"
+                    *ngIf="incident.status === IncidentStatus.Ouvert">🔄 Prendre en
+                    charge</button>
+                <button class="btn-sm success"
+                    (click)="resolveIncident(incident)"
+                    *ngIf="incident.status === IncidentStatus.EnCours">✅ Résoudre</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="filteredIncidents.length === 0" class="empty-state">
+        <div class="empty-icon">🚨</div>
+        <h3>Aucun incident</h3>
+        <button class="btn-primary" routerLink="/incidents/nouveau">+ Signaler
+            un incident</button>
+    </div>
+</div>

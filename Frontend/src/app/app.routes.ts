@@ -38,6 +38,15 @@ import { ConsumptionForm } from './features/consumption/consumption-form/consump
 import { MaintenanceList } from './features/maintenance/maintenance-list/maintenance-list';
 import { MaintenanceForm } from './features/maintenance/maintenance-form/maintenance-form';
 import { MaintenanceDetail } from './features/maintenance/maintenance-detail/maintenance-detail';
+import { IncidentList } from './features/incidents/incident-list/incident-list';
+import { IncidentForm } from './features/incidents/incident-form/incident-form';
+import { IncidentDetail } from './features/incidents/incident-detail/incident-detail';
+import { ClientList } from './features/clients/client-list/client-list';
+import { ClientForm } from './features/clients/client-form/client-form';
+import { ClientDetail } from './features/clients/client-detail/client-detail';
+import { DevisList } from './features/devis/devis-list/devis-list';
+import { DevisForm } from './features/devis/devis-form/devis-form';
+import { DevisDetail } from './features/devis/devis-detail/devis-detail';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -85,5 +94,15 @@ export const routes: Routes = [
     { path: 'maintenances/nouveau', component: MaintenanceForm, canActivate: [AuthGuard] },
     { path: 'maintenances/:id/edit', component: MaintenanceForm, canActivate: [AuthGuard] },
     { path: 'maintenances/:id', component: MaintenanceDetail, canActivate: [AuthGuard] },
+    { path: 'incidents', component: IncidentList, canActivate: [AuthGuard] },
+    { path: 'incidents/nouveau', component: IncidentForm, canActivate: [AuthGuard] },
+    { path: 'incidents/:id', component: IncidentDetail, canActivate: [AuthGuard] },
+    { path: 'clients', component: ClientList, canActivate: [AuthGuard] },
+    { path: 'clients/nouveau', component: ClientForm, canActivate: [AuthGuard] },
+    { path: 'clients/:id', component: ClientDetail, canActivate: [AuthGuard] },
+    { path: 'clients/:id/edit', component: ClientForm, canActivate: [AuthGuard] },
+    { path: 'devis', component: DevisList, canActivate: [AuthGuard] },
+    { path: 'devis/nouveau', component: DevisForm, canActivate: [AuthGuard] },
+    { path: 'devis/:id', component: DevisDetail, canActivate: [AuthGuard] },
     { path: '**', component: NotFound }
 ];

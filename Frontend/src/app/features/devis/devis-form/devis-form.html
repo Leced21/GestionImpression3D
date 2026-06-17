@@ -1,0 +1,84 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/devis">← Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier le devis' : '➕ Nouveau devis' }}</h1>
+    </div>
+
+    <form [formGroup]="devisForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Informations</h3>
+            <div class="form-row">
+                <div class="form-group"><label>Client *</label><select
+                        formControlName="clientId"><option value>-- Sélectionner
+                            --</option><option *ngFor="let client of clients"
+                            [value]="client.id">{{ client.nom
+                            }}</option></select></div>
+                <div class="form-group"><label>Validité *</label><input
+                        type="date" formControlName="dateValidite"></div>
+            </div>
+            <div class="form-group"><label>TVA (%)</label><input type="number"
+                    formControlName="tva" step="0.1"></div>
+        </div>
+
+        <div class="form-section">
+            <h3>📦 Lignes de devis</h3>
+            <div formArrayName="lignes">
+                <div class="ligne-item"
+                    *ngFor="let ligne of lignes.controls; let i=index"
+                    [formGroupName]="i">
+                    <div class="form-row">
+                        <div class="form-group"><label>Pièce</label><select
+                                formControlName="pieceId"
+                                (change)="onPieceSelect(i)"><option value>--
+                                    Sélectionner --</option><option
+                                    *ngFor="let piece of pieces"
+                                    [value]="piece.id">{{ piece.nom }} - {{
+                                    piece.prixVente }} €</option></select></div>
+                        <div class="form-group"><label>Description</label><input
+                                type="text" formControlName="description"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Quantité</label><input
+                                type="number" formControlName="quantite"
+                                min="1"></div>
+                        <div class="form-group"><label>Prix unitaire
+                                (€)</label><input type="number"
+                                formControlName="prixUnitaire"
+                                step="0.01"></div>
+                        <div class="ligne-total">Total: {{ getLigneTotal(i) |
+                            number:'1.2-2' }} €</div>
+                        <button type="button" class="btn-remove"
+                            (click)="removeLigne(i)">🗑️</button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-add" (click)="addLigne()">+ Ajouter
+                une ligne</button>
+        </div>
+
+        <div class="form-section">
+            <h3>💰 Totaux</h3>
+            <div class="total-row">Total HT: <strong>{{ getTotalHT() |
+                    number:'1.2-2' }} €</strong></div>
+            <div class="total-row">TVA ({{ devisForm.get('tva')?.value || 0
+                }}%): <strong>{{ getTVA() | number:'1.2-2' }} €</strong></div>
+            <div class="total-row grand-total">Total TTC: <strong>{{
+                    getTotalTTC() | number:'1.2-2' }} €</strong></div>
+        </div>
+
+        <div class="form-section">
+            <h3>📝 Notes et conditions</h3>
+            <div class="form-group"><label>Notes</label><textarea
+                    formControlName="notes" rows="2"></textarea></div>
+            <div class="form-group"><label>Conditions</label><textarea
+                    formControlName="conditions" rows="2"
+                    placeholder="Conditions de vente, délais..."></textarea></div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/devis">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>

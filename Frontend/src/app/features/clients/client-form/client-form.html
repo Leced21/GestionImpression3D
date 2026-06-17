@@ -1,0 +1,54 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/clients">← Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier le client' : '➕ Nouveau client' }}</h1>
+    </div>
+
+    <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Identité</h3>
+            <div class="form-group"><label>Nom *</label><input type="text"
+                    formControlName="nom"></div>
+            <div class="form-group"><label>Email *</label><input type="email"
+                    formControlName="email"></div>
+            <div class="form-group"><label>Téléphone</label><input type="tel"
+                    formControlName="telephone"></div>
+        </div>
+
+        <div class="form-section">
+            <h3>📍 Adresse</h3>
+            <div class="form-group"><label>Adresse</label><input type="text"
+                    formControlName="adresse"></div>
+            <div class="form-row"><div class="form-group"><label>Code
+                        postal</label><input type="text"
+                        formControlName="codePostal"></div><div
+                    class="form-group"><label>Ville</label><input type="text"
+                        formControlName="ville"></div></div>
+            <div class="form-group"><label>Pays</label><input type="text"
+                    formControlName="pays"></div>
+        </div>
+
+        <div class="form-section">
+            <h3>🏢 Informations fiscales</h3>
+            <div class="form-row"><div
+                    class="form-group"><label>SIRET</label><input type="text"
+                        formControlName="siret"></div><div
+                    class="form-group"><label>TVA
+                        Intracommunautaire</label><input type="text"
+                        formControlName="tvaIntra"></div></div>
+        </div>
+
+        <div class="form-section">
+            <h3>📝 Notes</h3>
+            <textarea formControlName="notes" rows="3"></textarea>
+            <div class="form-group"><label><input type="checkbox"
+                        formControlName="isActive"> Client actif</label></div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/clients">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>
