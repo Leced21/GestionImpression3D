@@ -11,6 +11,9 @@
         OrdreFabrication = 7,
         PrintProfile = 8,
         PrinterMaintenance = 9,  // ← AJOUTER
-        MaterialConsumption = 10   // ← AJOUTER
+        MaterialConsumption = 10,   // ← AJOUTER
+        PrintIncident = 11,
+        Client = 12,
+        Devis = 13
     }
 }

@@ -1,0 +1,48 @@
+<div class="client-container">
+    <div class="header">
+        <h1>👥 Clients</h1>
+        <button class="btn-primary" routerLink="/clients/nouveau">+ Nouveau
+            client</button>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" placeholder="Rechercher par nom, email..."
+            [(ngModel)]="searchTerm" (input)="search()">
+    </div>
+
+    <div class="clients-grid">
+        <div class="client-card" *ngFor="let client of clients">
+            <div class="client-header">
+                <h3>{{ client.nom }}</h3>
+                <span class="status-badge"
+                    [class]="client.isActive ? 'active' : 'inactive'">
+                    {{ client.isActive ? 'Actif' : 'Inactif' }}
+                </span>
+            </div>
+            <div class="client-contact">
+                <div>📧 {{ client.email }}</div>
+                <div>📞 {{ client.telephone || 'Non renseigné' }}</div>
+            </div>
+            <div class="client-address" *ngIf="client.adresse">
+                📍 {{ client.adresse }}, {{ client.codePostal }} {{ client.ville
+                }}
+            </div>
+            <div class="client-actions">
+                <button class="btn-sm" [routerLink]="['/clients', client.id]">🔍
+                    Détail</button>
+                <button class="btn-sm"
+                    [routerLink]="['/clients', client.id, 'edit']">✏️
+                    Modifier</button>
+                <button class="btn-sm danger" (click)="deleteClient(client)">🗑️
+                    Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="clients.length === 0" class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>Aucun client</h3>
+        <button class="btn-primary" routerLink="/clients/nouveau">+ Ajouter un
+            client</button>
+    </div>
+</div>
