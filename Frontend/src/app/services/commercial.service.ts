@@ -19,7 +19,9 @@ export class CommercialService {
   }
 
   updateCommandeStatut(id: number, statut: string): Observable<Commande> {
-    return this.http.patch<Commande>(`${this.apiUrl}/commandes/${id}/statut`, { statut }).pipe(catchError(this.handleError));
+    return this.http.patch<Commande>(`${this.apiUrl}/commandes/${id}/statut`, JSON.stringify(statut), {
+      headers: { 'Content-Type': 'application/json' },
+    }).pipe(catchError(this.handleError));
   }
 
   getChiffreAffaires(): Observable<{ total: number; mois: number; annee: number }> {

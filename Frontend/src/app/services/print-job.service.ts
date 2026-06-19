@@ -50,7 +50,9 @@ export class PrintJobService {
   }
 
   fail(id: number, reason: string): Observable<PrintJob> {
-    return this.http.post<PrintJob>(`${this.apiUrl}/${id}/fail`, { reason });
+    return this.http.post<PrintJob>(`${this.apiUrl}/${id}/fail`, JSON.stringify(reason), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
   cancel(id: number): Observable<PrintJob> {
     return this.http.post<PrintJob>(`${this.apiUrl}/${id}/cancel`, {});

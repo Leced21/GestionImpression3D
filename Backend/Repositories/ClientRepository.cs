@@ -61,7 +61,7 @@ namespace Backend.Repositories
             return await _context.Clients
                         .Where(c => c.Nom.Contains(searchTerm) ||
                                     c.Email.Contains(searchTerm) ||
-                                    c.Siret.Contains(searchTerm))
+                                    (c.Siret != null && c.Siret.Contains(searchTerm)))
                         .ToListAsync();
         }
 
