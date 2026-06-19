@@ -1,108 +1,278 @@
 import { Routes } from '@angular/router';
-import { PieceList } from './components/piece-list/piece-list';
-import { PieceForm } from './components/piece-form/piece-form';
-import { PieceDetail } from './components/piece-detail/piece-detail';
-import { PieceKanban } from './components/piece-kanban/piece-kanban';
-import { CommercialCatalog } from './components/commercial-catalog/commercial-catalog';
-import { Dashboard } from './components/dashboard/dashboard';
-import { Login } from './components/login/login';
-import { Register } from './components/register/register';
 import { AuthGuard } from './guards/auth.guard';
-import { ProjectList } from './components/project-list/project-list';
-import { ProjetForm } from './components/projet-form/projet-form';
-import { ProjetDetail } from './components/projet-detail/projet-detail';
-import { AuditLogs } from './components/admin/audit-log/audit-logs/audit-logs';
-import { PrinterList } from './components/printers/printer-list/printer-list';
-import { PrinterForm } from './components/printers/printer-form/printer-form';
-import { PrinterDetail } from './components/printers/printer-detail/printer-detail';
-import { PrintJobList } from './components/printers/print-job-list/print-job-list';
-import { PrintJobForm } from './components/printers/print-job-form/print-job-form';
-import { PrintJobDetail } from './components/printers/print-job-detail/print-job-detail';
-import { MaterialstockList } from './components/material/materialstock-list/materialstock-list';
-import { MaterialstockForm } from './components/material/materialstock-form/materialstock-form';
-import { MaterialstockDetail } from './components/material/materialstock-detail/materialstock-detail';
-import { UserList } from './components/admin/user/user-list/user-list';
-import { AcceptInvitation } from './features/auth/accept-invitation/accept-invitation';
-import { PieceVersions } from './components/piece-versions/piece-versions';
-import { NotificationCenter } from './components/notification-center/notification-center';
-import { Unauthorized } from './components/unauthorized/unauthorized';
-import { NotFound } from './components/not-found/not-found';
-import { OrdreForm } from './components/ordres-fabrication/ordre-form/ordre-form';
-import { OrdreList } from './components/ordres-fabrication/ordre-list/ordre-list';
-import { OrdreDetail } from './components/ordres-fabrication/ordre-detail/ordre-detail';
-import { ProfileList } from './components/print-profiles/profile-list/profile-list';
-import { ProfileForm } from './components/print-profiles/profile-form/profile-form';
-import { ProfileDetail } from './components/print-profiles/profile-detail/profile-detail';
-import { ConsumptionList } from './features/consumption/consumption-list/consumption-list';
-import { ConsumptionForm } from './features/consumption/consumption-form/consumption-form';
-import { MaintenanceList } from './features/maintenance/maintenance-list/maintenance-list';
-import { MaintenanceForm } from './features/maintenance/maintenance-form/maintenance-form';
-import { MaintenanceDetail } from './features/maintenance/maintenance-detail/maintenance-detail';
-import { IncidentList } from './features/incidents/incident-list/incident-list';
-import { IncidentForm } from './features/incidents/incident-form/incident-form';
-import { IncidentDetail } from './features/incidents/incident-detail/incident-detail';
-import { ClientList } from './features/clients/client-list/client-list';
-import { ClientForm } from './features/clients/client-form/client-form';
-import { ClientDetail } from './features/clients/client-detail/client-detail';
-import { DevisList } from './features/devis/devis-list/devis-list';
-import { DevisForm } from './features/devis/devis-form/devis-form';
-import { DevisDetail } from './features/devis/devis-detail/devis-detail';
 
 export const routes: Routes = [
-    { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-    { path: 'login', component: Login },
-    { path: 'register', component: Register },
-    { path: 'pieces', component: PieceList, canActivate: [AuthGuard] },
-    { path: 'pieces/nouveau', component: PieceForm, canActivate: [AuthGuard] },
-    { path: 'pieces/:id', component: PieceDetail, canActivate: [AuthGuard] },
-    { path: 'pieces/:id/edit', component: PieceForm, canActivate: [AuthGuard] },
-    { path: 'kanban', component: PieceKanban, canActivate: [AuthGuard] },
-    { path: 'commercial', component: CommercialCatalog, canActivate: [AuthGuard] },
-    { path: 'dashboard', component: Dashboard, canActivate: [AuthGuard] },
-    { path: 'projets', component: ProjectList, canActivate: [AuthGuard] },
-    { path: 'projets/nouveau', component: ProjetForm, canActivate: [AuthGuard] },
-    { path: 'projets/:id', component: ProjetDetail, canActivate: [AuthGuard] },
-    { path: 'projets/:id/edit', component: ProjetForm, canActivate: [AuthGuard] },
-    { path: 'admin/audit-logs', component: AuditLogs, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-    { path: 'printers', component: PrinterList, canActivate: [AuthGuard] },
-    { path: 'printers/new', component: PrinterForm, canActivate: [AuthGuard] },
-    { path: 'printers/:id', component: PrinterDetail, canActivate: [AuthGuard] },
-    { path: 'printers/:id/edit', component: PrinterForm, canActivate: [AuthGuard] },
-    { path: 'print-jobs', component: PrintJobList, canActivate: [AuthGuard] },
-    { path: 'print-jobs/new', component: PrintJobForm, canActivate: [AuthGuard] },
-    { path: 'print-jobs/:id', component: PrintJobDetail, canActivate: [AuthGuard] },
-    { path: 'stock', component: MaterialstockList, canActivate: [AuthGuard] },
-    { path: 'stock/new', component: MaterialstockForm, canActivate: [AuthGuard] },
-    { path: 'stock/:id', component: MaterialstockDetail, canActivate: [AuthGuard] },
-    { path: 'stock/:id/edit', component: MaterialstockForm, canActivate: [AuthGuard] },
-    { path: 'admin/users', component: UserList, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-    { path: 'accept-invitation', component: AcceptInvitation },
-    { path: 'pieces/:id/versions', component: PieceVersions, canActivate: [AuthGuard] },
-    { path: 'notifications', component: NotificationCenter, canActivate: [AuthGuard] },
-    { path: 'unauthorized', component: Unauthorized },
-    { path: 'ordres', component: OrdreList, canActivate: [AuthGuard] },
-    { path: 'ordres/nouveau', component: OrdreForm, canActivate: [AuthGuard] },
-    { path: 'ordres/:id', component: OrdreDetail, canActivate: [AuthGuard] },
-    { path: 'ordres/:id/edit', component: OrdreForm, canActivate: [AuthGuard] },
-    { path: 'profils-impression', component: ProfileList, canActivate: [AuthGuard] },
-    { path: 'profils-impression/nouveau', component: ProfileForm, canActivate: [AuthGuard] },
-    { path: 'profils-impression/:id', component: ProfileDetail, canActivate: [AuthGuard] },
-    { path: 'profils-impression/:id/edit', component: ProfileForm, canActivate: [AuthGuard] },
-    { path: 'consommations', component: ConsumptionList, canActivate: [AuthGuard] },
-    { path: 'consommations/nouveau', component: ConsumptionForm, canActivate: [AuthGuard] },
-    { path: 'maintenances', component: MaintenanceList, canActivate: [AuthGuard] },
-    { path: 'maintenances/nouveau', component: MaintenanceForm, canActivate: [AuthGuard] },
-    { path: 'maintenances/:id/edit', component: MaintenanceForm, canActivate: [AuthGuard] },
-    { path: 'maintenances/:id', component: MaintenanceDetail, canActivate: [AuthGuard] },
-    { path: 'incidents', component: IncidentList, canActivate: [AuthGuard] },
-    { path: 'incidents/nouveau', component: IncidentForm, canActivate: [AuthGuard] },
-    { path: 'incidents/:id', component: IncidentDetail, canActivate: [AuthGuard] },
-    { path: 'clients', component: ClientList, canActivate: [AuthGuard] },
-    { path: 'clients/nouveau', component: ClientForm, canActivate: [AuthGuard] },
-    { path: 'clients/:id', component: ClientDetail, canActivate: [AuthGuard] },
-    { path: 'clients/:id/edit', component: ClientForm, canActivate: [AuthGuard] },
-    { path: 'devis', component: DevisList, canActivate: [AuthGuard] },
-    { path: 'devis/nouveau', component: DevisForm, canActivate: [AuthGuard] },
-    { path: 'devis/:id', component: DevisDetail, canActivate: [AuthGuard] },
-    { path: '**', component: NotFound }
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  {
+    path: 'login',
+    loadComponent: () => import('./components/login/login').then((m) => m.Login),
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./components/register/register').then((m) => m.Register),
+  },
+  {
+    path: 'pieces',
+    loadComponent: () => import('./components/piece-list/piece-list').then((m) => m.PieceList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'pieces/nouveau',
+    loadComponent: () => import('./components/piece-form/piece-form').then((m) => m.PieceForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'pieces/:id',
+    loadComponent: () => import('./components/piece-detail/piece-detail').then((m) => m.PieceDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'pieces/:id/edit',
+    loadComponent: () => import('./components/piece-form/piece-form').then((m) => m.PieceForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'kanban',
+    loadComponent: () => import('./components/piece-kanban/piece-kanban').then((m) => m.PieceKanban),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'commercial',
+    loadComponent: () => import('./components/commercial-catalog/commercial-catalog').then((m) => m.CommercialCatalog),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./components/dashboard/dashboard').then((m) => m.Dashboard),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'projets',
+    loadComponent: () => import('./components/project-list/project-list').then((m) => m.ProjectList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'projets/nouveau',
+    loadComponent: () => import('./components/projet-form/projet-form').then((m) => m.ProjetForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'projets/:id',
+    loadComponent: () => import('./components/projet-detail/projet-detail').then((m) => m.ProjetDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'projets/:id/edit',
+    loadComponent: () => import('./components/projet-form/projet-form').then((m) => m.ProjetForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'admin/audit-logs',
+    loadComponent: () => import('./components/admin/audit-log/audit-logs/audit-logs').then((m) => m.AuditLogs),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin'] },
+  },
+  {
+    path: 'printers',
+    loadComponent: () => import('./components/printers/printer-list/printer-list').then((m) => m.PrinterList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'printers/new',
+    loadComponent: () => import('./components/printers/printer-form/printer-form').then((m) => m.PrinterForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'printers/:id',
+    loadComponent: () => import('./components/printers/printer-detail/printer-detail').then((m) => m.PrinterDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'printers/:id/edit',
+    loadComponent: () => import('./components/printers/printer-form/printer-form').then((m) => m.PrinterForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'print-jobs',
+    loadComponent: () => import('./components/printers/print-job-list/print-job-list').then((m) => m.PrintJobList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'print-jobs/new',
+    loadComponent: () => import('./components/printers/print-job-form/print-job-form').then((m) => m.PrintJobForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'print-jobs/:id',
+    loadComponent: () => import('./components/printers/print-job-detail/print-job-detail').then((m) => m.PrintJobDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'stock',
+    loadComponent: () => import('./components/material/materialstock-list/materialstock-list').then((m) => m.MaterialstockList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'stock/new',
+    loadComponent: () => import('./components/material/materialstock-form/materialstock-form').then((m) => m.MaterialstockForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'stock/:id',
+    loadComponent: () => import('./components/material/materialstock-detail/materialstock-detail').then((m) => m.MaterialstockDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'stock/:id/edit',
+    loadComponent: () => import('./components/material/materialstock-form/materialstock-form').then((m) => m.MaterialstockForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'admin/users',
+    loadComponent: () => import('./components/admin/user/user-list/user-list').then((m) => m.UserList),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin'] },
+  },
+  {
+    path: 'accept-invitation',
+    loadComponent: () => import('./features/auth/accept-invitation/accept-invitation').then((m) => m.AcceptInvitation),
+  },
+  {
+    path: 'pieces/:id/versions',
+    loadComponent: () => import('./components/piece-versions/piece-versions').then((m) => m.PieceVersions),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'notifications',
+    loadComponent: () => import('./components/notification-center/notification-center').then((m) => m.NotificationCenter),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'unauthorized',
+    loadComponent: () => import('./components/unauthorized/unauthorized').then((m) => m.Unauthorized),
+  },
+  {
+    path: 'ordres',
+    loadComponent: () => import('./components/ordres-fabrication/ordre-list/ordre-list').then((m) => m.OrdreList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'ordres/nouveau',
+    loadComponent: () => import('./components/ordres-fabrication/ordre-form/ordre-form').then((m) => m.OrdreForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'ordres/:id',
+    loadComponent: () => import('./components/ordres-fabrication/ordre-detail/ordre-detail').then((m) => m.OrdreDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'ordres/:id/edit',
+    loadComponent: () => import('./components/ordres-fabrication/ordre-form/ordre-form').then((m) => m.OrdreForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profils-impression',
+    loadComponent: () => import('./components/print-profiles/profile-list/profile-list').then((m) => m.ProfileList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profils-impression/nouveau',
+    loadComponent: () => import('./components/print-profiles/profile-form/profile-form').then((m) => m.ProfileForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profils-impression/:id',
+    loadComponent: () => import('./components/print-profiles/profile-detail/profile-detail').then((m) => m.ProfileDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profils-impression/:id/edit',
+    loadComponent: () => import('./components/print-profiles/profile-form/profile-form').then((m) => m.ProfileForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'consommations',
+    loadComponent: () => import('./features/consumption/consumption-list/consumption-list').then((m) => m.ConsumptionList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'consommations/nouveau',
+    loadComponent: () => import('./features/consumption/consumption-form/consumption-form').then((m) => m.ConsumptionForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'maintenances',
+    loadComponent: () => import('./features/maintenance/maintenance-list/maintenance-list').then((m) => m.MaintenanceList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'maintenances/nouveau',
+    loadComponent: () => import('./features/maintenance/maintenance-form/maintenance-form').then((m) => m.MaintenanceForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'maintenances/:id/edit',
+    loadComponent: () => import('./features/maintenance/maintenance-form/maintenance-form').then((m) => m.MaintenanceForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'maintenances/:id',
+    loadComponent: () => import('./features/maintenance/maintenance-detail/maintenance-detail').then((m) => m.MaintenanceDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'incidents',
+    loadComponent: () => import('./features/incidents/incident-list/incident-list').then((m) => m.IncidentList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'incidents/nouveau',
+    loadComponent: () => import('./features/incidents/incident-form/incident-form').then((m) => m.IncidentForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'incidents/:id',
+    loadComponent: () => import('./features/incidents/incident-detail/incident-detail').then((m) => m.IncidentDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'clients',
+    loadComponent: () => import('./features/clients/client-list/client-list').then((m) => m.ClientList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'clients/nouveau',
+    loadComponent: () => import('./features/clients/client-form/client-form').then((m) => m.ClientForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'clients/:id',
+    loadComponent: () => import('./features/clients/client-detail/client-detail').then((m) => m.ClientDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'clients/:id/edit',
+    loadComponent: () => import('./features/clients/client-form/client-form').then((m) => m.ClientForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'devis',
+    loadComponent: () => import('./features/devis/devis-list/devis-list').then((m) => m.DevisList),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'devis/nouveau',
+    loadComponent: () => import('./features/devis/devis-form/devis-form').then((m) => m.DevisForm),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'devis/:id',
+    loadComponent: () => import('./features/devis/devis-detail/devis-detail').then((m) => m.DevisDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./components/not-found/not-found').then((m) => m.NotFound),
+  },
 ];

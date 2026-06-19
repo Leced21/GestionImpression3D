@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import { PieceService } from "../../services/piece.service";
 import { Piece } from "../../models/piece.model";
+import { ToastService } from "../../services/toast.service";
 
 @Component({
   selector: 'app-piece-form',
@@ -31,7 +32,8 @@ export class PieceForm implements OnInit, OnDestroy {
     private pieceService: PieceService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -89,7 +91,7 @@ export class PieceForm implements OnInit, OnDestroy {
         this.updateCoutTotal();
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
       },
-      error: (err) => console.error('Erreur chargement:', err)
+      error: () => this.toast.error('Impossible de charger la pièce')
     });
   }
 
@@ -172,10 +174,10 @@ export class PieceForm implements OnInit, OnDestroy {
       this.pieceService.update(this.pieceId, updatedPiece).subscribe({
         next: () => {
           this.isSubmitting = false;
+          this.toast.success('Pièce mise à jour');
           this.router.navigate(['/pieces', this.pieceId]);
         },
         error: (err) => {
-          console.error('Erreur mise à jour:', err);
           this.submissionError = err?.message || 'Erreur lors de la mise à jour';
           this.isSubmitting = false;
         }
@@ -185,6 +187,7 @@ export class PieceForm implements OnInit, OnDestroy {
       this.pieceService.create(formValue).subscribe({
         next: (newPiece) => {
           this.isSubmitting = false;
+          this.toast.success('Pièce créée');
 
           // Si un fichier STL est sélectionné, l'uploader
           if (this.selectedFile) {
@@ -194,7 +197,6 @@ export class PieceForm implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Erreur création:', err);
           this.submissionError = err?.message || 'Erreur lors de la création';
           this.isSubmitting = false;
         }
@@ -203,8 +205,7 @@ export class PieceForm implements OnInit, OnDestroy {
   }
 
   uploadStl(pieceId: number, file: File): void {
-    // À implémenter quand l'upload STL sera disponible
-    console.log('Upload STL à implémenter:', pieceId, file.name);
+    this.toast.info(`Fichier ${file.name} sélectionné. Upload STL à finaliser.`);
     this.router.navigate(['/pieces', pieceId]);
   }
 
