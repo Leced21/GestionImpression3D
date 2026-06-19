@@ -80,6 +80,9 @@ namespace Backend.Services
             var incident = await _incidentRepository.GetByIdAsync(id);
             if (incident == null) return null;
 
+            if (!_currentUser.UserId.HasValue)
+                throw new InvalidOperationException("Impossible de résoudre l'incident sans utilisateur authentifié.");
+
             var resolved = await _incidentRepository.ResolveAsync(id, request.Resolution, _currentUser.UserId.Value);
 
             await _auditLogger.LogStatusChangeAsync(EntityType.PrintIncident, id, incident.Status.ToString(), "Résolu");

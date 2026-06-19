@@ -133,7 +133,9 @@ namespace Backend.Services
             var existing = await _pieceRepository.GetByIdAsync(id);
             if (existing == null) return null;
 
-            var oldStatut = existing.Statut;
+            var oldStatut = Enum.Parse<PieceStatus>(existing.Statut.ToString());
+            if (!IsValidTransition(oldStatut, nouveauStatut))
+                throw new InvalidOperationException($"Transition impossible de {oldStatut} vers {nouveauStatut}");
             existing.Statut = nouveauStatut;
             await _pieceRepository.UpdateStatutAsync(id, nouveauStatut);
             await _auditLogger.LogStatusChangeAsync(EntityType.Piece, id, oldStatut.ToString(), nouveauStatut.ToString());
@@ -161,6 +163,21 @@ namespace Backend.Services
             await context.SaveChangesAsync();
 
             return metadata;
+        }
+        private bool IsValidTransition(PieceStatus oldStatus, PieceStatus newStatus)
+        {
+            // Si même statut, pas de changement
+            if (oldStatus == newStatus) return true;
+
+            // Liste des statuts dans l'ordre
+            var order = new[] { PieceStatus.Brouillon, PieceStatus.Conception, PieceStatus.Prototypage,
+                        PieceStatus.Validation, PieceStatus.Production, PieceStatus.Commercialisable };
+
+            var oldIndex = Array.IndexOf(order, oldStatus);
+            var newIndex = Array.IndexOf(order, newStatus);
+
+            // On ne peut avancer que d'une étape (et pas reculer)
+            return newIndex == oldIndex + 1;
         }
     }
 }
