@@ -31,7 +31,9 @@ export class PrinterService {
     return this.http.put<Printer>(`${this.apiUrl}/${id}`, printer);
   }
   updateStatus(id: number, status: string): Observable<Printer> {
-    return this.http.patch<Printer>(`${this.apiUrl}/${id}/status`, { status });
+    return this.http.patch<Printer>(`${this.apiUrl}/${id}/status`, JSON.stringify(status), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);

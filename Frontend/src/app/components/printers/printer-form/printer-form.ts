@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PrinterService } from '../../../services/printer.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-printer-form',
@@ -21,7 +22,8 @@ export class PrinterForm implements OnInit {
     private fb: FormBuilder,
     private printerService: PrinterService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) { }
   ngOnInit(): void {
     this.initForm();
@@ -49,7 +51,8 @@ export class PrinterForm implements OnInit {
     this.printerService.getById(this.printerId!).subscribe({
       next: (printer) => {
         this.printerForm.patchValue(printer);
-      }
+      },
+      error: () => this.toast.error("Impossible de charger l'imprimante")
     });
   }
 
@@ -60,11 +63,17 @@ export class PrinterForm implements OnInit {
 
     if (this.isEditMode && this.printerId) {
       this.printerService.update(this.printerId, printer).subscribe({
-        next: () => this.router.navigate(['/printers'])
+        next: () => {
+          this.toast.success('Imprimante mise à jour');
+          this.router.navigate(['/printers']);
+        }
       });
     } else {
       this.printerService.create(printer).subscribe({
-        next: () => this.router.navigate(['/printers'])
+        next: () => {
+          this.toast.success('Imprimante créée');
+          this.router.navigate(['/printers']);
+        }
       });
     }
   }

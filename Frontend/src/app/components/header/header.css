@@ -19,6 +19,15 @@
 
 .header-right {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notification-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .user-menu {

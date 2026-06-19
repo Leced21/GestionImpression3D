@@ -3,6 +3,8 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MaterialStockService } from '../../../services/material-stock.service';
+import { ToastService } from '../../../services/toast.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-materialstock-form',
@@ -21,7 +23,8 @@ export class MaterialstockForm implements OnInit {
     private materialStockService: MaterialStockService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -58,7 +61,7 @@ export class MaterialstockForm implements OnInit {
         this.materialForm.patchValue(material);
         this.cdr.detectChanges();
       },
-      error: (err) => console.error(err)
+      error: () => this.toast.error('Impossible de charger le stock matière')
     })
   }
 
@@ -68,17 +71,21 @@ export class MaterialstockForm implements OnInit {
     const material = this.materialForm.value;
 
     if (this.isEditMode && this.materialId) {
-      // Pour l'édition, on utilise des endpoints séparés
-      // Seuils
-      this.materialStockService.updateThresholds(this.materialId, material.minThreshold, material.maxThreshold).subscribe();
-      // Prix
-      this.materialStockService.updatePrice(this.materialId, material.unitPrice).subscribe();
-      // Redirection
-      this.router.navigate(['/stock']);
+      forkJoin([
+        this.materialStockService.updateThresholds(this.materialId, material.minThreshold, material.maxThreshold),
+        this.materialStockService.updatePrice(this.materialId, material.unitPrice)
+      ]).subscribe({
+        next: () => {
+          this.toast.success('Stock matière mis à jour');
+          this.router.navigate(['/stock']);
+        }
+      });
     } else {
       this.materialStockService.create(material).subscribe({
-        next: () => this.router.navigate(['/stock']),
-        error: (err) => console.error(err)
+        next: () => {
+          this.toast.success('Stock matière créé');
+          this.router.navigate(['/stock']);
+        }
       });
     }
   }
