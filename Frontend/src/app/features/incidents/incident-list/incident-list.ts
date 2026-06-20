@@ -36,6 +36,7 @@ export class IncidentList implements OnInit {
     this.incidentService.getAll().subscribe({
       next: (data) => {
         this.incidents = data;
+        this.filterIncidents();
         this.cdr.detectChanges();
       },
       error: (error) => {

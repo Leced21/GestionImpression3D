@@ -8,11 +8,13 @@ namespace Backend.Services
     {
         private readonly IProjetRepository _projetRepository;
         private readonly IPieceRepository _pieceRepository;
+        private readonly IClientService _clientService;
 
-        public ProjetService(IProjetRepository projetRepository, IPieceRepository pieceRepository)
+        public ProjetService(IProjetRepository projetRepository, IPieceRepository pieceRepository, IClientService clientService)
         {
             _projetRepository = projetRepository;
             _pieceRepository = pieceRepository;
+            _clientService = clientService;
         }
         public async Task<ProjetPiece> AjouterPieceAsync(int projetId, int pieceId, int quantite)
         {
@@ -24,6 +26,7 @@ namespace Backend.Services
 
         public async Task<Projet> CreateAsync(Projet projet)
         {
+            await SynchronizeClientAsync(projet);
             return await _projetRepository.CreateAsync(projet);
         }
 
@@ -73,7 +76,26 @@ namespace Backend.Services
 
         public async Task<Projet?> UpdateAsync(int id, Projet projet)
         {
+            await SynchronizeClientAsync(projet);
             return await _projetRepository.UpdateAsync(id, projet);
+        }
+
+        private async Task SynchronizeClientAsync(Projet projet)
+        {
+            if (string.IsNullOrWhiteSpace(projet.ClientNom) && string.IsNullOrWhiteSpace(projet.ClientEmail))
+                return;
+
+            var client = await _clientService.EnsureClientAsync(new Backend.DTOs.CreateClientRequest
+            {
+                Nom = projet.ClientNom ?? string.Empty,
+                Email = projet.ClientEmail ?? string.Empty
+            });
+
+            if (client != null)
+            {
+                projet.ClientNom = client.Nom;
+                projet.ClientEmail = client.Email;
+            }
         }
     }
 }

@@ -5,6 +5,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjetService } from '../../services/projet.service';
 import { ProjetStatus } from '../../models/projet.model';
 import { Subject, takeUntil } from 'rxjs';
+import { Client } from '../../models/client.model';
+import { ClientService } from '../../services/client.service';
 
 @Component({
   selector: 'app-projet-form',
@@ -20,17 +22,20 @@ export class ProjetForm implements OnInit, OnDestroy {
   projetId?: number;
   isSubmitting: boolean = false;
   submissionError?: string;
+  clients: Client[] = [];
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private projetService: ProjetService,
+    private clientService: ClientService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ){}
   ngOnInit(): void {
     this.initForm();
+    this.loadClients();
 
     this.projetId = this.route.snapshot.params['id'];
     if (this.projetId) {
@@ -44,11 +49,39 @@ export class ProjetForm implements OnInit, OnDestroy {
       nom: ['', Validators.required],
       reference: [''],
       description: [''],
+      clientId: [''],
       clientNom: [''],
       clientEmail: ['', Validators.email],
       dateLivraisonPrevue: [''],
       budget: [0],
       statut: [ProjetStatus.Brouillon]
+    });
+  }
+
+  loadClients(): void {
+    this.clientService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (clients) => {
+        this.clients = clients;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erreur chargement clients:', err);
+      }
+    });
+  }
+
+  onClientSelect(): void {
+    const clientId = Number(this.projetForm.get('clientId')?.value);
+    const client = this.clients.find(c => c.id === clientId);
+
+    if (!client) {
+      this.projetForm.patchValue({ clientNom: '', clientEmail: '' });
+      return;
+    }
+
+    this.projetForm.patchValue({
+      clientNom: client.nom,
+      clientEmail: client.email
     });
   }
 

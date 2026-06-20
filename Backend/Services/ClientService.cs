@@ -16,29 +16,87 @@ namespace Backend.Services
         }
         public async Task<Client> CreateAsync(CreateClientRequest request)
         {
+            Normalize(request);
+
+            if (string.IsNullOrWhiteSpace(request.Nom))
+                throw new InvalidOperationException("Le nom du client est obligatoire");
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new InvalidOperationException("L'email du client est obligatoire");
+
             var existing = await _clientRepository.GetByEmailAsync(request.Email);
             if (existing != null)
                 throw new InvalidOperationException("Un client avec cet email existe déjà");
 
-            var client = new Client
-            {
-                Nom = request.Nom,
-                Email = request.Email,
-                Telephone = request.Telephone,
-                Adresse = request.Adresse,
-                CodePostal = request.CodePostal,
-                Ville = request.Ville,
-                Pays = request.Pays,
-                Siret = request.Siret,
-                TVAIntra = request.TVAIntra,
-                Notes = request.Notes,
-                IsActive = true
-            };
+            var client = ToClient(request);
 
             var created = await _clientRepository.CreateAsync(client);
 
             await _auditLogger.LogCreationAsync(EntityType.Client, created.Id, created.Nom);
 
+            return created;
+        }
+
+        public async Task<Client?> EnsureClientAsync(CreateClientRequest request)
+        {
+            Normalize(request);
+
+            if (string.IsNullOrWhiteSpace(request.Nom) && string.IsNullOrWhiteSpace(request.Email))
+                return null;
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new InvalidOperationException("L'email du client est obligatoire pour centraliser sa fiche");
+
+            var existing = await _clientRepository.GetByEmailAsync(request.Email);
+            if (existing != null)
+            {
+                var changed = false;
+
+                if (!string.IsNullOrWhiteSpace(request.Nom) && existing.Nom != request.Nom)
+                {
+                    existing.Nom = request.Nom;
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.Telephone) && existing.Telephone != request.Telephone)
+                {
+                    existing.Telephone = request.Telephone;
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.Adresse) && existing.Adresse != request.Adresse)
+                {
+                    existing.Adresse = request.Adresse;
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.CodePostal) && existing.CodePostal != request.CodePostal)
+                {
+                    existing.CodePostal = request.CodePostal;
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.Ville) && existing.Ville != request.Ville)
+                {
+                    existing.Ville = request.Ville;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    var updated = await _clientRepository.UpdateAsync(existing);
+                    await _auditLogger.LogUpdateAsync(EntityType.Client, updated.Id, "Client", "Synchronisé", updated.Nom);
+                    return updated;
+                }
+
+                return existing;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Nom))
+                request.Nom = request.Email;
+
+            var client = ToClient(request);
+            var created = await _clientRepository.CreateAsync(client);
+            await _auditLogger.LogCreationAsync(EntityType.Client, created.Id, created.Nom);
             return created;
         }
 
@@ -85,16 +143,16 @@ namespace Backend.Services
             var client = await _clientRepository.GetByIdAsync(id);
             if (client == null) return null;
 
-            client.Nom = request.Nom;
-            client.Email = request.Email;
-            client.Telephone = request.Telephone;
-            client.Adresse = request.Adresse;
-            client.CodePostal = request.CodePostal;
-            client.Ville = request.Ville;
-            client.Pays = request.Pays;
-            client.Siret = request.Siret;
-            client.TVAIntra = request.TVAIntra;
-            client.Notes = request.Notes;
+            client.Nom = request.Nom.Trim();
+            client.Email = request.Email.Trim().ToLowerInvariant();
+            client.Telephone = request.Telephone?.Trim() ?? string.Empty;
+            client.Adresse = request.Adresse?.Trim() ?? string.Empty;
+            client.CodePostal = request.CodePostal?.Trim() ?? string.Empty;
+            client.Ville = request.Ville?.Trim() ?? string.Empty;
+            client.Pays = string.IsNullOrWhiteSpace(request.Pays) ? "France" : request.Pays.Trim();
+            client.Siret = string.IsNullOrWhiteSpace(request.Siret) ? null : request.Siret.Trim();
+            client.TVAIntra = string.IsNullOrWhiteSpace(request.TVAIntra) ? null : request.TVAIntra.Trim();
+            client.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
             client.IsActive = request.IsActive;
 
             var updated = await _clientRepository.UpdateAsync(client);
@@ -102,6 +160,38 @@ namespace Backend.Services
             await _auditLogger.LogUpdateAsync(EntityType.Client, id, "Client", "Modifié", updated.Nom);
 
             return updated;
+        }
+
+        private static Client ToClient(CreateClientRequest request)
+        {
+            return new Client
+            {
+                Nom = request.Nom,
+                Email = request.Email,
+                Telephone = request.Telephone,
+                Adresse = request.Adresse,
+                CodePostal = request.CodePostal,
+                Ville = request.Ville,
+                Pays = request.Pays,
+                Siret = request.Siret,
+                TVAIntra = request.TVAIntra,
+                Notes = request.Notes,
+                IsActive = true
+            };
+        }
+
+        private static void Normalize(CreateClientRequest request)
+        {
+            request.Nom = request.Nom.Trim();
+            request.Email = request.Email.Trim().ToLowerInvariant();
+            request.Telephone = request.Telephone?.Trim() ?? string.Empty;
+            request.Adresse = request.Adresse?.Trim() ?? string.Empty;
+            request.CodePostal = request.CodePostal?.Trim() ?? string.Empty;
+            request.Ville = request.Ville?.Trim() ?? string.Empty;
+            request.Pays = string.IsNullOrWhiteSpace(request.Pays) ? "France" : request.Pays.Trim();
+            request.Siret = string.IsNullOrWhiteSpace(request.Siret) ? null : request.Siret.Trim();
+            request.TVAIntra = string.IsNullOrWhiteSpace(request.TVAIntra) ? null : request.TVAIntra.Trim();
+            request.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
         }
     }
 }

@@ -33,6 +33,7 @@ namespace Backend.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Devis> Devis { get; set; }
         public DbSet<DevisLigne> DevisLignes { get; set; }
+        public DbSet<UserSettings> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -342,6 +343,21 @@ namespace Backend.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Description).HasMaxLength(500);
+            });
+            modelBuilder.Entity<UserSettings>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Language).HasMaxLength(10);
+                entity.Property(e => e.Timezone).HasMaxLength(50);
+                entity.Property(e => e.DateFormat).HasMaxLength(20);
+                entity.Property(e => e.Theme).HasMaxLength(20);
+                entity.Property(e => e.PrimaryColor).HasMaxLength(20);
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId);
+
+                entity.HasIndex(e => e.UserId).IsUnique();
             });
 
             // 🚀 BUCKET MAGIQUE : Configure globalement tous les types decimal à (18,2)
