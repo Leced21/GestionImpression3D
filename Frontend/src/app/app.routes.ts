@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { Settings } from './features/settings/settings';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -271,6 +272,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/devis/devis-detail/devis-detail').then((m) => m.DevisDetail),
     canActivate: [AuthGuard],
   },
+  { path: 'settings', component: Settings, canActivate: [AuthGuard] },
   {
     path: '**',
     loadComponent: () => import('./components/not-found/not-found').then((m) => m.NotFound),

@@ -5,6 +5,8 @@ import {ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PrinterService } from '../../../services/printer.service';
 import { PrinterMaintenanceService } from '../../../services/printer-maintenance.service';
 import { Printer } from '../../../models/printer.model';
+import { MaintenanceType } from '../../../models/maintenance.model';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-maintenance-form',
@@ -18,6 +20,7 @@ export class MaintenanceForm implements OnInit{
   isEditMode = false;
   maintenanceId?: number;
   printers: Printer[] = [];
+  isSubmitting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -25,7 +28,8 @@ export class MaintenanceForm implements OnInit{
     private printerService: PrinterService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService
   ) { }
   ngOnInit(): void {
     this.initForm();
@@ -81,18 +85,61 @@ export class MaintenanceForm implements OnInit{
     });
   }
   onSubmit(): void {
-    if (this.maintenanceForm.invalid) return;
-    const maintenanceData = this.maintenanceForm.value;
+    if (this.maintenanceForm.invalid) {
+      this.maintenanceForm.markAllAsTouched();
+      this.toast.warn('Complète les champs obligatoires avant d’enregistrer.');
+      return;
+    }
+
+    const formValue = this.maintenanceForm.value;
+    const maintenanceData = {
+      ...formValue,
+      printerId: Number(formValue.printerId),
+      type: this.toMaintenanceTypeValue(formValue.type),
+      title: String(formValue.title ?? '').trim(),
+      description: String(formValue.description ?? '').trim(),
+      scheduledDate: new Date(formValue.scheduledDate).toISOString(),
+      durationMinutes: Number(formValue.durationMinutes),
+      cost: Number(formValue.cost),
+      notes: formValue.notes ? String(formValue.notes).trim() : null
+    };
+
+    this.isSubmitting = true;
     if (this.isEditMode && this.maintenanceId) {
       this.maintenanceService.update(this.maintenanceId, maintenanceData).subscribe({
-        next: () => this.router.navigate(['/maintenances']),
-        error: (err) => console.error(err)
+        next: () => {
+          this.toast.success('Maintenance mise à jour');
+          this.router.navigate(['/maintenances']);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.toast.error(this.extractErrorMessage(err));
+        }
       });
     } else {
       this.maintenanceService.create(maintenanceData).subscribe({
-        next: () => this.router.navigate(['/maintenances']),
-        error: (err) => console.error(err)
+        next: () => {
+          this.toast.success('Maintenance enregistrée');
+          this.router.navigate(['/maintenances']);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.toast.error(this.extractErrorMessage(err));
+        }
       });
     }
+  }
+
+  private toMaintenanceTypeValue(type: MaintenanceType | string): number {
+    const values = Object.values(MaintenanceType);
+    const index = values.indexOf(type as MaintenanceType);
+    return index >= 0 ? index + 1 : 1;
+  }
+
+  private extractErrorMessage(err: any): string {
+    if (err?.error?.error) return err.error.error;
+    if (err?.error?.title) return err.error.title;
+    if (err?.status === 403) return 'Tu n’as pas les droits pour enregistrer une maintenance.';
+    return 'Impossible d’enregistrer la maintenance.';
   }
 }

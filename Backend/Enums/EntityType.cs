@@ -14,6 +14,7 @@
         MaterialConsumption = 10,   // ← AJOUTER
         PrintIncident = 11,
         Client = 12,
-        Devis = 13
+        Devis = 13,
+        Invitation = 14
     }
 }

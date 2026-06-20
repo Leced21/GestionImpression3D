@@ -8,11 +8,11 @@
     <!-- Onglets -->
     <div class="tabs">
         <button class="tab" [class.active]="activeTab === 'all'"
-            (click)="activeTab = 'all'">Toutes</button>
+            (click)="setActiveTab('all')">Toutes</button>
         <button class="tab" [class.active]="activeTab === 'upcoming'"
-            (click)="activeTab = 'upcoming'">À venir</button>
+            (click)="setActiveTab('upcoming')">À venir</button>
         <button class="tab" [class.active]="activeTab === 'completed'"
-            (click)="activeTab = 'completed'">Terminées</button>
+            (click)="setActiveTab('completed')">Terminées</button>
     </div>
 
     <!-- Liste des maintenances -->
