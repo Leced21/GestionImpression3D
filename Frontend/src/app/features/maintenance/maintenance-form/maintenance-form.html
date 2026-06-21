@@ -79,7 +79,9 @@
             <button type="button" class="btn-secondary"
                 routerLink="/maintenances">Annuler</button>
             <button type="submit" class="btn-primary"
-                [disabled]="maintenanceForm.invalid">Enregistrer</button>
+                [disabled]="maintenanceForm.invalid || isSubmitting">
+                {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
         </div>
     </form>
 </div>
