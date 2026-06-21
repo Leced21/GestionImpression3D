@@ -75,7 +75,9 @@ builder.Services.AddScoped<IMaterialStockService, MaterialStockService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
+builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IExcelExportService, ExcelExportService>();
 builder.Services.AddScoped<IExcelExportRepository, ExcelExportRepository>();
 builder.Services.AddScoped<IPieceVersionRepository, PieceVersionRepository>();
@@ -111,6 +113,8 @@ builder.Services.AddScoped<IDevisRepository, DevisRepository>();
 builder.Services.AddScoped<IPrintIncidentService, PrintIncidentService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IDevisService, DevisService>();
+builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();
@@ -157,5 +161,19 @@ app.UseAuthorization();
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    try
+    {
+        await context.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration error: {ex.Message}");
+        throw;
+    }
+}
 
 app.Run();
