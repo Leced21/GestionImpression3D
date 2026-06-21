@@ -48,7 +48,10 @@
         <div class="form-actions">
             <button type="button" class="btn-secondary"
                 routerLink="/clients">Annuler</button>
-            <button type="submit" class="btn-primary">Enregistrer</button>
+            <button type="submit" class="btn-primary"
+                [disabled]="clientForm.invalid || isSubmitting">
+                {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
         </div>
     </form>
 </div>

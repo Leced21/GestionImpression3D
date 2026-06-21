@@ -105,11 +105,13 @@ namespace Backend.Controllers
         [HttpGet("{id}/prix-recommande")]
         public async Task<ActionResult<decimal>> GetPrixRecommandé(int id)
         {
-            var prix = await _pieceService.CalculerPrixRecommandéAsync(id);
-            if (prix == 0)
+            var piece = await _pieceService.GetByIdAsync(id);
+            if (piece == null)
             {
                 return NotFound();
             }
+
+            var prix = await _pieceService.CalculerPrixRecommandéAsync(id);
             return Ok(prix);
         }
         [HttpDelete("{id}")]

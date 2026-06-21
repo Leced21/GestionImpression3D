@@ -8,10 +8,12 @@ namespace Backend.Services
     {
         private readonly IPieceRepository _pieceRepository;
         private readonly ICommercialRepository _repository;
-        public CommercialService(IPieceRepository pieceRepository, ICommercialRepository repository)
+        private readonly IClientService _clientService;
+        public CommercialService(IPieceRepository pieceRepository, ICommercialRepository repository, IClientService clientService)
         {
             _pieceRepository = pieceRepository;
             _repository = repository;
+            _clientService = clientService;
         }
         public async Task<bool> AnnulerCommandeAsync(int id)
         {
@@ -29,6 +31,14 @@ namespace Backend.Services
             // Validation
             if (request.Items == null || !request.Items.Any())
                 throw new InvalidOperationException("La commande doit contenir au moins un article");
+
+            var client = await _clientService.EnsureClientAsync(new Backend.DTOs.CreateClientRequest
+            {
+                Nom = request.ClientNom,
+                Email = request.ClientEmail,
+                Telephone = request.ClientTelephone,
+                Adresse = request.AdresseLivraison
+            });
 
             // Vérifier les stocks
             foreach (var item in request.Items)
@@ -69,9 +79,9 @@ namespace Backend.Services
             var commande = new Commande
             {
                 NumeroCommande = numeroCommande,
-                ClientNom = request.ClientNom,
-                ClientEmail = request.ClientEmail,
-                ClientTelephone = request.ClientTelephone,
+                ClientNom = client?.Nom ?? request.ClientNom,
+                ClientEmail = client?.Email ?? request.ClientEmail,
+                ClientTelephone = client?.Telephone ?? request.ClientTelephone,
                 AdresseLivraison = request.AdresseLivraison,
                 Total = total,
                 Statut = "En attente",
