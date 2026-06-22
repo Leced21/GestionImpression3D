@@ -9,10 +9,22 @@ import { Observable } from 'rxjs/internal/Observable';
 })
 export class UserService {
   private apiUrl = `${API_BASE_URL}/admin`;
+  private settingsUrl = `${API_BASE_URL}/settings`;
 
-  constructor(private http: HttpClient) {}
-    getUsers(): Observable<User[]> {
+  constructor(private http: HttpClient) { }
+  getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/users`);
+  }
+
+  getProfile(): Observable<User> {
+    return this.http.get<User>(`${this.settingsUrl}/profile`);
+  }
+  updateProfile(user: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.settingsUrl}/profile`, user);
+  }
+
+  changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.settingsUrl}/change-password`, data);
   }
 
   getUserById(id: number): Observable<User> {

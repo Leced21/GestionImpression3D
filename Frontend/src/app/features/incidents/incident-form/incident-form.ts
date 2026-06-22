@@ -72,8 +72,18 @@ export class IncidentForm implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.incidentForm.valid) return;
-    const incidentData = this.incidentForm.value;
+    if (this.incidentForm.invalid) {
+      this.incidentForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.incidentForm.value;
+    const incidentData = {
+      ...formValue,
+      printerId: formValue.printerId ? Number(formValue.printerId) : null,
+      printJobId: formValue.printJobId ? Number(formValue.printJobId) : null
+    };
+
     if (this.isEditMode && this.incidentId) {
       this.incidentService.update(this.incidentId, incidentData).subscribe({
         next: () => {
