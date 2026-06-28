@@ -1,50 +1,212 @@
 stages:
   - test
   - build
+  - docker
   - deploy
 
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\/.*$/'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+default:
+  tags:
+    - local-runner
+
 variables:
-  DOTNET_VERSION: "10.0"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+
+  paths:
+    - .nuget/packages
+    - Frontend/node_modules
+
+####################################################
+# BACKEND
+####################################################
 
 backend-test:
+
   stage: test
 
-  image: mcr.microsoft.com/dotnet/sdk:10.0
-
   script:
-    - cd Backend
-    - dotnet restore
-    - dotnet build
-    - dotnet test ../TestProject/TestProject.csproj
 
-frontend-test:
-  stage: test
+    - dotnet restore Backend/Backend.slnx
 
-  image: node:22
+    - dotnet build Backend/Backend.slnx --configuration Release --no-restore
 
-  script:
-    - cd Frontend
-    - npm ci
-    - npm run build
+    - dotnet test TestProject/TestProject.csproj --configuration Release --no-build
 
-docker-build:
+backend-publish:
+
   stage: build
 
-  tags:
-    - local-runner
+  needs:
+    - backend-test
 
   script:
-    - docker compose build
 
-deploy:
+    - dotnet publish Backend/Backend.csproj `
+        -c Release `
+        -o Backend/publish
+
+  artifacts:
+
+    expire_in: 7 days
+
+    paths:
+
+      - Backend/publish
+
+####################################################
+# FRONTEND
+####################################################
+
+frontend-test:
+
+  stage: test
+
+  script:
+
+    - cd Frontend
+
+    - npm ci
+
+    - npm run build
+
+frontend-publish:
+
+  stage: build
+
+  needs:
+    - frontend-test
+
+  script:
+
+    - cd Frontend
+
+    - npm ci
+
+    - npm run build
+
+  artifacts:
+
+    expire_in: 7 days
+
+    paths:
+
+      - Frontend/dist
+
+####################################################
+# BACKEND IMAGE
+####################################################
+
+docker-backend:
+
+  stage: docker
+
+  needs:
+    - backend-publish
+
+  script:
+
+    - docker login $env:CI_REGISTRY -u $env:CI_REGISTRY_USER -p $env:CI_REGISTRY_PASSWORD
+
+    - docker build `
+        -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" `
+        Backend
+
+    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA"
+
+####################################################
+# FRONTEND IMAGE
+####################################################
+
+docker-frontend:
+
+  stage: docker
+
+  needs:
+    - frontend-publish
+
+  script:
+
+    - docker login $env:CI_REGISTRY -u $env:CI_REGISTRY_USER -p $env:CI_REGISTRY_PASSWORD
+
+    - docker build `
+        -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" `
+        Frontend
+
+    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
+
+####################################################
+# DEPLOY DEV
+####################################################
+
+deploy-dev:
+
   stage: deploy
 
-  tags:
-    - local-runner
+  only:
+    - dev
 
   script:
-    - docker compose down
-    - docker compose up -d --build
+
+    - Copy-Item docker\.env.dev .env -Force
+
+    - (Get-Content .env) + "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA" | Set-Content .env
+
+    - docker compose pull
+
+    - docker compose up -d
+
+####################################################
+# DEPLOY STAGING
+####################################################
+
+deploy-staging:
+
+  stage: deploy
+
+  only:
+    - staging
+
+  script:
+
+    - Copy-Item docker\.env.staging .env -Force
+
+    - (Get-Content .env) + "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA" | Set-Content .env
+
+    - docker compose pull
+
+    - docker compose up -d
+
+####################################################
+# DEPLOY PROD
+####################################################
+
+deploy-prod:
+
+  stage: deploy
+
+  when: manual
 
   only:
     - main
+
+  script:
+
+    - Copy-Item docker\.env.prod .env -Force
+
+    - (Get-Content .env) + "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA" | Set-Content .env
+
+    - docker compose pull
+
+    - docker compose up -d

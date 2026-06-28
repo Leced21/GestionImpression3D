@@ -1,0 +1,73 @@
+docker-backend:
+
+  extends:
+    - .docker
+
+  stage: docker
+
+  needs:
+    - backend-publish
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="dev"'
+    - if: '$CI_COMMIT_BRANCH=="staging"'
+    - if: '$CI_COMMIT_BRANCH=="main"'
+
+  script:
+
+    - |
+      if ($env:CI_COMMIT_BRANCH -eq "dev") {
+          $TAG="dev"
+      }
+      elseif ($env:CI_COMMIT_BRANCH -eq "staging") {
+          $TAG="staging"
+      }
+      else {
+          $TAG="latest"
+      }
+
+      docker build `
+        -f Backend/Dockerfile `
+        -t $env:BACKEND_IMAGE:$env:CI_COMMIT_SHA `
+        -t $env:BACKEND_IMAGE:$TAG `
+        Backend
+
+      docker push $env:BACKEND_IMAGE:$env:CI_COMMIT_SHA
+      docker push $env:BACKEND_IMAGE:$TAG
+
+docker-frontend:
+
+  extends:
+    - .docker
+
+  stage: docker
+
+  needs:
+    - frontend-build
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="dev"'
+    - if: '$CI_COMMIT_BRANCH=="staging"'
+    - if: '$CI_COMMIT_BRANCH=="main"'
+
+  script:
+
+    - |
+      if ($env:CI_COMMIT_BRANCH -eq "dev") {
+          $TAG="dev"
+      }
+      elseif ($env:CI_COMMIT_BRANCH -eq "staging") {
+          $TAG="staging"
+      }
+      else {
+          $TAG="latest"
+      }
+
+      docker build `
+        -f Frontend/Dockerfile `
+        -t $env:FRONTEND_IMAGE:$env:CI_COMMIT_SHA `
+        -t $env:FRONTEND_IMAGE:$TAG `
+        Frontend
+
+      docker push $env:FRONTEND_IMAGE:$env:CI_COMMIT_SHA
+      docker push $env:FRONTEND_IMAGE:$TAG

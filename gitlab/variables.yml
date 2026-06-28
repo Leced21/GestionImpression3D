@@ -1,0 +1,25 @@
+stages:
+  - test
+  - build
+  - docker
+  - deploy
+
+variables:
+
+  DOTNET_CONFIGURATION: Release
+
+  NODE_ENV: production
+
+  DOCKER_BUILDKIT: "1"
+
+  COMPOSE_DOCKER_CLI_BUILD: "1"
+
+  DOCKER_DRIVER: overlay2
+
+  BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend"
+
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+
+  NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"

@@ -59,6 +59,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
+builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
 // --- 4. Injection de dépendances (Scope & Business Logic) ---
 // Métier : Pièces et Commerciaux
@@ -170,10 +171,12 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         try
         {
+            logger.LogInformation("Application des migrations...");
             await context.Database.MigrateAsync();
+            logger.LogInformation("Base de données prête.");
         }
         catch (Exception ex)
         {
@@ -182,5 +185,5 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         }
     }
 }
-
+app.MapHealthChecks("/health");
 app.Run();

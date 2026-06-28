@@ -1,0 +1,104 @@
+deploy-dev:
+
+  extends:
+    - .docker
+
+  stage: deploy
+
+  needs:
+    - docker-backend
+    - docker-frontend
+
+  environment:
+    name: development
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="dev"'
+
+  script:
+
+    - docker compose `
+        --env-file docker/.env.dev `
+        -f docker/docker-compose.yml `
+        -f docker/docker-compose.dev.yml `
+        pull
+
+    - docker compose `
+        --env-file docker/.env.dev `
+        -f docker/docker-compose.yml `
+        -f docker/docker-compose.dev.yml `
+        up -d
+
+    - docker image prune -f
+
+
+
+deploy-staging:
+
+  extends:
+    - .docker
+
+  stage: deploy
+
+  needs:
+    - docker-backend
+    - docker-frontend
+
+  environment:
+    name: staging
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="staging"'
+
+  script:
+
+    - docker compose `
+        --env-file docker/.env.staging `
+        -f docker/docker-compose.yml `
+        -f docker/docker-compose.staging.yml `
+        pull
+
+    - docker compose `
+        --env-file docker/.env.staging `
+        -f docker/docker-compose.yml `
+        -f docker/docker-compose.staging.yml `
+        up -d
+
+    - docker image prune -f
+
+
+
+deploy-prod:
+
+  extends:
+    - .docker
+
+  stage: deploy
+
+  needs:
+    - docker-backend
+    - docker-frontend
+
+  environment:
+    name: production
+
+  when: manual
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="main"'
+
+  script:
+
+    - docker compose `
+        --env-file docker/.env.prod `
+        -f docker/docker-compose.yml `
+        -f docker/docker-compose.prod.yml `
+        pull
+
+    - docker compose `
+        --env-file docker/.env.prod `
+        -f docker/docker-compose.yml `
+        -f docker/docker-compose.prod.yml `
+        up -d
+
+    - docker image prune -f

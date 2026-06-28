@@ -1,0 +1,60 @@
+backend-test:
+
+  extends:
+    - .dotnet
+
+  stage: test
+
+  rules:
+    - if: '$CI_PIPELINE_SOURCE=="merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\/.*$/'
+    - if: '$CI_COMMIT_BRANCH=="dev"'
+    - if: '$CI_COMMIT_BRANCH=="staging"'
+    - if: '$CI_COMMIT_BRANCH=="main"'
+
+  script:
+
+    - dotnet restore Backend/Backend.slnx
+
+    - dotnet build Backend/Backend.slnx --configuration $DOTNET_CONFIGURATION --no-restore
+
+    - dotnet test TestProject/TestProject.csproj --configuration $DOTNET_CONFIGURATION --no-build --logger trx
+
+  artifacts:
+
+    when: always
+
+    expire_in: 7 days
+
+    paths:
+      - TestProject/TestResults/
+
+
+backend-publish:
+
+  extends:
+    - .dotnet
+
+  stage: build
+
+  needs:
+    - backend-test
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="dev"'
+    - if: '$CI_COMMIT_BRANCH=="staging"'
+    - if: '$CI_COMMIT_BRANCH=="main"'
+
+  script:
+
+    - dotnet restore Backend/Backend.slnx
+
+    - dotnet publish Backend/Backend.csproj --configuration $DOTNET_CONFIGURATION --output Backend/publish --no-restore
+
+  artifacts:
+
+    expire_in: 7 days
+
+    paths:
+
+      - Backend/publish/
