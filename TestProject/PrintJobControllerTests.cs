@@ -9,9 +9,9 @@ using System.Text.Json;
 
 namespace TestProject
 {
-    public class PrintJobControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class PrintJobControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
-        private readonly WebApplicationFactory<Program> _factory;
+        private readonly CustomWebApplicationFactory _factory;
         private readonly HttpClient _client;
         private string _token = string.Empty;
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -19,7 +19,7 @@ namespace TestProject
             PropertyNameCaseInsensitive = true
         };
 
-        public PrintJobControllerTests(WebApplicationFactory<Program> factory)
+        public PrintJobControllerTests(CustomWebApplicationFactory factory)
         {
             _factory = factory;
             _client = _factory.CreateClient();

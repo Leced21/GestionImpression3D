@@ -12,9 +12,8 @@ namespace TestProject
 
         public ClientRepositoryTests()
         {
-            var databaseName = $"GestionImpression3D_ClientRepositoryTests_{Guid.NewGuid():N}";
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlServer($@"Server=(localdb)\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;MultipleActiveResultSets=true")
+                .UseInMemoryDatabase($"GestionImpression3D_ClientRepositoryTests_{Guid.NewGuid():N}")
                 .Options;
 
             _context = new AppDbContext(options);
