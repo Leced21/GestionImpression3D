@@ -161,5 +161,19 @@ app.UseAuthorization();
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    try
+    {
+        await context.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration error: {ex.Message}");
+        throw;
+    }
+}
 
 app.Run();
