@@ -1,0 +1,50 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  DOTNET_VERSION: "10.0"
+
+backend-test:
+  stage: test
+
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+
+  script:
+    - cd Backend
+    - dotnet restore
+    - dotnet build
+    - dotnet test ../TestProject/TestProject.csproj
+
+frontend-test:
+  stage: test
+
+  image: node:22
+
+  script:
+    - cd Frontend
+    - npm ci
+    - npm run build
+
+docker-build:
+  stage: build
+
+  tags:
+    - local-runner
+
+  script:
+    - docker compose build
+
+deploy:
+  stage: deploy
+
+  tags:
+    - local-runner
+
+  script:
+    - docker compose down
+    - docker compose up -d --build
+
+  only:
+    - main
