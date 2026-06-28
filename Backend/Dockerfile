@@ -13,7 +13,7 @@ COPY Backend.csproj .
 # Si tu ajoutes d'autres projets plus tard,
 # ajoute simplement les COPY ici.
 
-RUN dotnet restore Backend.slnx
+RUN dotnet restore Backend.csproj
 
 # Copie du reste
 COPY . .
