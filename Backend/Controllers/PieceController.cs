@@ -1,4 +1,4 @@
-﻿using Backend.Enums;
+using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 using Backend.Services;
@@ -211,12 +211,23 @@ namespace Backend.Controllers
             if (piece == null || string.IsNullOrEmpty(piece.StlFileName))
                 return NotFound(new { error = "Fichier STL non trouvé" });
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", piece.StlFileName);
+            var safeFileName = Path.GetFileName(piece.StlFileName);
+            if (!string.Equals(safeFileName, piece.StlFileName, StringComparison.Ordinal))
+                return BadRequest(new { error = "Nom de fichier invalide" });
+
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", safeFileName);
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new { error = "Fichier introuvable sur le serveur" });
 
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-            return File(fileBytes, "application/sla", piece.StlFileName);
+            var stream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                bufferSize: 64 * 1024,
+                options: FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+            return File(stream, GetContentType(Path.GetExtension(safeFileName)), safeFileName, enableRangeProcessing: true);
         }
         // Controllers/PiecesController.cs - Ajouter
         [HttpGet("{id}/pdf")]
@@ -243,6 +254,12 @@ namespace Backend.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new { error = "Aucun fichier fourni" });
 
+            if (file.Length > MaxUploadSizeBytes)
+                return BadRequest(new { error = "Fichier trop volumineux. Taille maximale: 100 Mo" });
+
+            if (!string.Equals(Path.GetExtension(file.FileName), ".stl", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { error = "Seuls les fichiers STL peuvent être analysés" });
+
             var metadata = await _pieceService.AnalyzeSTLAsync(id, file);
             if (metadata == null) return NotFound();
 
@@ -256,5 +273,13 @@ namespace Backend.Controllers
             if (metadata == null) return NotFound();
             return Ok(metadata);
         }
+
+        private static string GetContentType(string extension) => extension.ToLowerInvariant() switch
+        {
+            ".stl" => "model/stl",
+            ".step" or ".stp" => "model/step",
+            ".3mf" => "model/3mf",
+            _ => "application/octet-stream"
+        };
     }
 }
