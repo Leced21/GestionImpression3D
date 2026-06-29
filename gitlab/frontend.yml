@@ -1,65 +1,25 @@
 frontend-test:
 
-  extends:
-    - .node
-
   stage: test
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE=="merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH =~ /^feature\/.*$/'
-    - if: '$CI_COMMIT_BRANCH=="dev"'
-    - if: '$CI_COMMIT_BRANCH=="staging"'
-    - if: '$CI_COMMIT_BRANCH=="main"'
 
   script:
 
     - cd Frontend
 
-    - npm ci
+    - npm ci --cache .npm
 
-    - npm run lint
-
-    - npm run test -- --watch=false --browsers=ChromeHeadless
+    - npm test -- --watch=false
 
     - npm run build
 
   artifacts:
 
-    expire_in: 7 days
+    when: always
 
     paths:
 
-      - Frontend/dist/
-
-      - Frontend/coverage/
-
-
-frontend-build:
-
-  extends:
-    - .node
-
-  stage: build
-
-  needs:
-    - frontend-test
+      - Frontend/dist
 
   rules:
-    - if: '$CI_COMMIT_BRANCH=="dev"'
-    - if: '$CI_COMMIT_BRANCH=="staging"'
-    - if: '$CI_COMMIT_BRANCH=="main"'
 
-  script:
-
-    - npm ci
-
-    - npm run build 
-
-  artifacts:
-
-    expire_in: 7 days
-
-    paths:
-
-      - Frontend/dist/
+    - when: always

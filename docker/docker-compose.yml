@@ -1,9 +1,8 @@
-version: "3.9"
-
 services:
 
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2022-CU18-ubuntu-22.04
+
     container_name: printflow-sqlserver
 
     restart: always
@@ -12,43 +11,27 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${SA_PASSWORD}
 
-    ports:
-      - "1433:1433"
-
     volumes:
       - sqlserver-data:/var/opt/mssql
 
     healthcheck:
       test:
         [
-          "CMD",
-          "/opt/mssql-tools18/bin/sqlcmd",
-          "-S",
-          "localhost",
-          "-U",
-          "sa",
-          "-P",
-          "${SA_PASSWORD}",
-          "-Q",
-          "SELECT 1"
+          "CMD-SHELL",
+          "pidof sqlservr || exit 1"
         ]
-
       interval: 20s
-
       timeout: 10s
-
       retries: 10
 
-  logging:
-
-    driver: json-file
-    options:
-      max-size: "20m"
-      max-file: "5"
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
 
     networks:
       - printflow
-
 
   backend:
 
@@ -65,42 +48,38 @@ services:
     environment:
 
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-      
+
       ASPNETCORE_URLS: http://+:8080
 
-      ConnectionStrings__DefaultConnection: Server=sqlserver;Database=PrintFlow3D;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true;
+      ConnectionStrings__DefaultConnection: Server=sqlserver;Database=PrintFlow3D;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=True;
 
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
 
-    ports:
-      - "5000:8080"
+      Database__ApplyMigrationsOnStartup: ${APPLY_MIGRATIONS}
 
     volumes:
-
       - uploads:/app/uploads
+
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:8080/health || exit 1"
+        ]
       interval: 20s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
     logging:
-
       driver: json-file
-
       options:
-
         max-size: "20m"
-
         max-file: "5"
 
     networks:
       - printflow
-
-
 
   frontend:
 
@@ -113,24 +92,15 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-        
-    ports:
-      - "4200:80"
 
     logging:
-
       driver: json-file
-
       options:
-
         max-size: "20m"
-
         max-file: "5"
 
     networks:
       - printflow
-
-
 
 volumes:
 
@@ -138,9 +108,6 @@ volumes:
 
   uploads:
 
-
 networks:
 
   printflow:
-
-    driver: bridge

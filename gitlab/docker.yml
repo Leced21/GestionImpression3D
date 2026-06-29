@@ -1,73 +1,63 @@
 docker-backend:
 
-  extends:
-    - .docker
-
   stage: docker
 
   needs:
-    - backend-publish
 
-  rules:
-    - if: '$CI_COMMIT_BRANCH=="dev"'
-    - if: '$CI_COMMIT_BRANCH=="staging"'
-    - if: '$CI_COMMIT_BRANCH=="main"'
+    - backend-test
 
   script:
 
-    - |
-      if ($env:CI_COMMIT_BRANCH -eq "dev") {
-          $TAG="dev"
-      }
-      elseif ($env:CI_COMMIT_BRANCH -eq "staging") {
-          $TAG="staging"
-      }
-      else {
-          $TAG="latest"
-      }
+    - $env:CI_REGISTRY_PASSWORD |
+      docker login `
+      $env:CI_REGISTRY `
+      --username $env:CI_REGISTRY_USER `
+      --password-stdin
 
-      docker build `
+    - docker build `
         -f Backend/Dockerfile `
-        -t $env:BACKEND_IMAGE:$env:CI_COMMIT_SHA `
-        -t $env:BACKEND_IMAGE:$TAG `
-        Backend
+        -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" `
+        .
 
-      docker push $env:BACKEND_IMAGE:$env:CI_COMMIT_SHA
-      docker push $env:BACKEND_IMAGE:$TAG
+    - docker push `
+        "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA"
+
+  rules:
+
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 docker-frontend:
 
-  extends:
-    - .docker
-
   stage: docker
 
   needs:
-    - frontend-build
 
-  rules:
-    - if: '$CI_COMMIT_BRANCH=="dev"'
-    - if: '$CI_COMMIT_BRANCH=="staging"'
-    - if: '$CI_COMMIT_BRANCH=="main"'
+    - frontend-test
 
   script:
 
-    - |
-      if ($env:CI_COMMIT_BRANCH -eq "dev") {
-          $TAG="dev"
-      }
-      elseif ($env:CI_COMMIT_BRANCH -eq "staging") {
-          $TAG="staging"
-      }
-      else {
-          $TAG="latest"
-      }
+    - $env:CI_REGISTRY_PASSWORD |
+      docker login `
+      $env:CI_REGISTRY `
+      --username $env:CI_REGISTRY_USER `
+      --password-stdin
 
-      docker build `
+    - docker build `
         -f Frontend/Dockerfile `
-        -t $env:FRONTEND_IMAGE:$env:CI_COMMIT_SHA `
-        -t $env:FRONTEND_IMAGE:$TAG `
-        Frontend
+        -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" `
+        .
 
-      docker push $env:FRONTEND_IMAGE:$env:CI_COMMIT_SHA
-      docker push $env:FRONTEND_IMAGE:$TAG
+    - docker push `
+        "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
+
+  rules:
+
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+
+    - if: '$CI_COMMIT_BRANCH == "main"'

@@ -1,8 +1,5 @@
 deploy-dev:
 
-  extends:
-    - .docker
-
   stage: deploy
 
   needs:
@@ -17,26 +14,22 @@ deploy-dev:
 
   script:
 
-    - docker compose `
-        --env-file docker/.env.dev `
-        -f docker/docker-compose.yml `
-        -f docker/docker-compose.dev.yml `
-        pull
+    - Copy-Item C:\PrintFlow3D\env\.env.dev C:\PrintFlow3D\.env -Force
+
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+
+    - Set-Location C:\PrintFlow3D
 
     - docker compose `
-        --env-file docker/.env.dev `
-        -f docker/docker-compose.yml `
-        -f docker/docker-compose.dev.yml `
-        up -d
+        -f docker\docker-compose.yml `
+        -f docker\docker-compose.dev.yml `
+        up -d --pull always --remove-orphans
 
-    - docker image prune -f
+    - powershell -ExecutionPolicy Bypass scripts\healthcheck.ps1 http://localhost:5000/health
 
 
 
 deploy-staging:
-
-  extends:
-    - .docker
 
   stage: deploy
 
@@ -52,28 +45,27 @@ deploy-staging:
 
   script:
 
-    - docker compose `
-        --env-file docker/.env.staging `
-        -f docker/docker-compose.yml `
-        -f docker/docker-compose.staging.yml `
-        pull
+    - Copy-Item C:\PrintFlow3D\env\.env.staging C:\PrintFlow3D\.env -Force
+
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+
+    - Set-Location C:\PrintFlow3D
 
     - docker compose `
-        --env-file docker/.env.staging `
-        -f docker/docker-compose.yml `
-        -f docker/docker-compose.staging.yml `
-        up -d
+        -f docker\docker-compose.yml `
+        -f docker\docker-compose.staging.yml `
+        up -d --pull always --remove-orphans
 
-    - docker image prune -f
-
+    - powershell -ExecutionPolicy Bypass scripts\healthcheck.ps1 http://localhost:5001/health
 
 
 deploy-prod:
 
-  extends:
-    - .docker
-
   stage: deploy
+
+  resource_group: production
+
+  when: manual
 
   needs:
     - docker-backend
@@ -82,23 +74,22 @@ deploy-prod:
   environment:
     name: production
 
-  when: manual
-
   rules:
     - if: '$CI_COMMIT_BRANCH=="main"'
 
   script:
 
-    - docker compose `
-        --env-file docker/.env.prod `
-        -f docker/docker-compose.yml `
-        -f docker/docker-compose.prod.yml `
-        pull
+    - powershell -ExecutionPolicy Bypass scripts\backup.ps1
+
+    - Copy-Item C:\PrintFlow3D\env\.env.prod C:\PrintFlow3D\.env -Force
+
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+
+    - Set-Location C:\PrintFlow3D
 
     - docker compose `
-        --env-file docker/.env.prod `
-        -f docker/docker-compose.yml `
-        -f docker/docker-compose.prod.yml `
-        up -d
+        -f docker\docker-compose.yml `
+        -f docker\docker-compose.prod.yml `
+        up -d --pull always --remove-orphans
 
-    - docker image prune -f
+    - powershell -ExecutionPolicy Bypass scripts\healthcheck.ps1 http://localhost:5002/health

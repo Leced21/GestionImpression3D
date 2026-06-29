@@ -53,7 +53,17 @@ builder.Services.AddAuthorization();
 
 // --- 2. Configuration de la base de données ---
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql =>
+        {
+            sql.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        });
+});
 
 // --- 3. Documentation & Outils ---
 builder.Services.AddSwaggerGen();
@@ -126,13 +136,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins("http://localhost","http://localhost:4200")
                .AllowAnyMethod()
                .AllowAnyHeader()
+               .AllowCredentials()
                // Essentiel pour que le frontend Angular puisse lire le nom du fichier PDF généré
                .WithExposedHeaders("Content-Disposition");
     });
 });
+builder.Logging.ClearProviders();
+
+builder.Logging.AddConsole();
+
+builder.Logging.AddDebug();
+
+builder.Services.AddResponseCompression();
 
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -145,6 +163,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
+app.UseResponseCompression();
 // Étape B : Gestion du CORS (Placé haut pour intercepter et autoriser immédiatement les requêtes OPTIONS)
 app.UseCors("AllowAngular");
 
@@ -154,7 +173,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // Étape C : Sécurité et Routage (L'authentification TOUJOURS avant l'autorisation)
 app.UseAuthentication();
@@ -185,5 +207,15 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         }
     }
 }
+app.MapGet("/", () => Results.Ok("PrintFlow3D API"));
+
+app.MapGet("/version", () =>
+{
+    return Results.Ok(new
+    {
+        Version = typeof(Program).Assembly.GetName().Version?.ToString(),
+        Environment = app.Environment.EnvironmentName
+    });
+});
 app.MapHealthChecks("/health");
 app.Run();
