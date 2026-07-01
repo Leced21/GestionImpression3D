@@ -6,7 +6,6 @@
 stages:
   - test
   - docker
-  - migrate
   - deploy
   - verify
 
@@ -66,13 +65,8 @@ tests:
 # STAGE: DOCKER
 ############################################################
 
-.docker-login-base:
-  before_script:
-    - if ($env:CI_JOB_TOKEN) { echo $env:CI_JOB_TOKEN | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin } else { echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin }
-
 docker-backend:
   stage: docker
-  extends: .docker-login-base
   needs:
     - tests
   rules:
@@ -93,15 +87,12 @@ docker-backend:
         - .gitlab-ci.yml
     - when: never
   script:
-    - docker build -f Backend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" .
+    - docker build -f Backend/Dockerfile -t "backend:$CI_COMMIT_SHORT_SHA" .
     - if ($env:CI_COMMIT_BRANCH -eq "dev") { $env:TARGET_TAG = "dev" } elseif ($env:CI_COMMIT_BRANCH -eq "staging") { $env:TARGET_TAG = "staging" } elseif ($env:CI_COMMIT_BRANCH -eq "main") { $env:TARGET_TAG = "latest" } else { $env:TARGET_TAG = $env:CI_COMMIT_SHORT_SHA }
-    - docker tag "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
-    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA"
-    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
+    - docker tag "backend:$CI_COMMIT_SHORT_SHA" "backend:$env:TARGET_TAG"
 
 docker-frontend:
   stage: docker
-  extends: .docker-login-base
   needs:
     - tests
   rules:
@@ -122,39 +113,10 @@ docker-frontend:
         - .gitlab-ci.yml
     - when: never
   script:
-    - docker build -f Frontend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" Frontend
+    - docker build -f Frontend/Dockerfile -t "frontend:$CI_COMMIT_SHORT_SHA" Frontend
     - if ($env:CI_COMMIT_BRANCH -eq "dev") { $env:TARGET_TAG = "dev" } elseif ($env:CI_COMMIT_BRANCH -eq "staging") { $env:TARGET_TAG = "staging" } elseif ($env:CI_COMMIT_BRANCH -eq "main") { $env:TARGET_TAG = "latest" } else { $env:TARGET_TAG = $env:CI_COMMIT_SHORT_SHA }
-    - docker tag "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
-    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
-    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
+    - docker tag "frontend:$CI_COMMIT_SHORT_SHA" "frontend:$env:TARGET_TAG"
 
-############################################################
-# STAGE: MIGRATE
-############################################################
-
-migrate-dev:
-  stage: migrate
-  needs:
-    - docker-backend
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-  script:
-    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.dev" "$env:CI_PROJECT_DIR\.env" -Force
-    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
-    - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml run --rm backend dotnet ef database update
-
-migrate-staging:
-  stage: migrate
-  needs:
-    - docker-backend
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "staging"'
-  script:
-    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.staging" "$env:CI_PROJECT_DIR\.env" -Force
-    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
-    - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml run --rm backend dotnet ef database update
 ############################################################
 # STAGE: DEPLOY
 ############################################################
@@ -162,26 +124,30 @@ migrate-staging:
 deploy-dev:
   stage: deploy
   needs:
-    - migrate-dev
+    - docker-backend
     - docker-frontend
   environment:
     name: development
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
   script:
+    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.dev" "$env:CI_PROJECT_DIR\.env" -Force
+    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
     - Set-Location $env:CI_PROJECT_DIR
     - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml up -d --pull always --remove-orphans
 
 deploy-staging:
   stage: deploy
   needs:
-    - migrate-staging
+    - docker-backend
     - docker-frontend
   environment:
     name: staging
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
   script:
+    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.staging" "$env:CI_PROJECT_DIR\.env" -Force
+    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
     - Set-Location $env:CI_PROJECT_DIR
     - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml up -d --pull always --remove-orphans
 
