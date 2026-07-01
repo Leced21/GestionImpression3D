@@ -4,7 +4,7 @@ docker-backend:
 
   needs:
 
-    - backend-test
+    - tests
 
   script:
 
@@ -36,7 +36,7 @@ docker-frontend:
 
   needs:
 
-    - frontend-test
+    - tests
 
   script:
 

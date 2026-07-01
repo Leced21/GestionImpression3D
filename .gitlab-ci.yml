@@ -36,42 +36,27 @@ cache:
     - .nuget/packages/
     - Frontend/.npm/
 
-# Ancre YAML réutilisable pour éviter la répétition des règles d'étiquetage Docker
-.docker_rules: &docker_rules
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      variables: { TARGET_TAG: "dev" }
-    - if: '$CI_COMMIT_BRANCH == "staging"'
-      variables: { TARGET_TAG: "staging" }
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      variables: { TARGET_TAG: "latest" }
+# Variables Docker tag branch-specific définies directement dans chaque job
 
 ############################################################
 # STAGE: TEST
 ############################################################
 
-backend-test:
+tests:
   stage: test
   script:
+    - echo "Running backend tests"
     - dotnet restore TestProject\TestProject.csproj
     - dotnet test TestProject\TestProject.csproj --configuration Release --no-restore
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
-      changes:
-        - Backend/**/*
-        - TestProject/**/*
-        - .gitlab-ci.yml
-    - when: never
-
-frontend-test:
-  stage: test
-  script:
+    - echo "Running frontend tests"
     - cd Frontend
     - npm ci --cache .npm
     - npm test -- --watch=false
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
       changes:
+        - Backend/**/*
+        - TestProject/**/*
         - Frontend/**/*
         - Frontend/package*.json
         - .gitlab-ci.yml
@@ -89,10 +74,19 @@ docker-backend:
   stage: docker
   extends: .docker-login-base
   needs:
-    - backend-test
-  <<: *docker_rules
+    - tests
   rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - Backend/**/*
+        - TestProject/**/*
+        - .gitlab-ci.yml
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+        - Backend/**/*
+        - TestProject/**/*
+        - .gitlab-ci.yml
+    - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - Backend/**/*
         - TestProject/**/*
@@ -100,6 +94,7 @@ docker-backend:
     - when: never
   script:
     - docker build -f Backend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" .
+    - if ($env:CI_COMMIT_BRANCH -eq "dev") { $env:TARGET_TAG = "dev" } elseif ($env:CI_COMMIT_BRANCH -eq "staging") { $env:TARGET_TAG = "staging" } elseif ($env:CI_COMMIT_BRANCH -eq "main") { $env:TARGET_TAG = "latest" } else { $env:TARGET_TAG = $env:CI_COMMIT_SHORT_SHA }
     - docker tag "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
     - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA"
     - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
@@ -108,10 +103,19 @@ docker-frontend:
   stage: docker
   extends: .docker-login-base
   needs:
-    - frontend-test
-  <<: *docker_rules
+    - tests
   rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - Frontend/**/*
+        - Frontend/package*.json
+        - .gitlab-ci.yml
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+        - Frontend/**/*
+        - Frontend/package*.json
+        - .gitlab-ci.yml
+    - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - Frontend/**/*
         - Frontend/package*.json
@@ -119,6 +123,7 @@ docker-frontend:
     - when: never
   script:
     - docker build -f Frontend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" Frontend
+    - if ($env:CI_COMMIT_BRANCH -eq "dev") { $env:TARGET_TAG = "dev" } elseif ($env:CI_COMMIT_BRANCH -eq "staging") { $env:TARGET_TAG = "staging" } elseif ($env:CI_COMMIT_BRANCH -eq "main") { $env:TARGET_TAG = "latest" } else { $env:TARGET_TAG = $env:CI_COMMIT_SHORT_SHA }
     - docker tag "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
     - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
     - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
