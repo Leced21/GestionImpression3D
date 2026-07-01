@@ -8,11 +8,7 @@ docker-backend:
 
   script:
 
-    - $env:CI_REGISTRY_PASSWORD |
-      docker login `
-      $env:CI_REGISTRY `
-      --username $env:CI_REGISTRY_USER `
-      --password-stdin
+    - if ($env:CI_JOB_TOKEN) { echo $env:CI_JOB_TOKEN | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin } else { echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin }
 
     - docker build `
         -f Backend/Dockerfile `
@@ -40,11 +36,7 @@ docker-frontend:
 
   script:
 
-    - $env:CI_REGISTRY_PASSWORD |
-      docker login `
-      $env:CI_REGISTRY `
-      --username $env:CI_REGISTRY_USER `
-      --password-stdin
+    - if ($env:CI_JOB_TOKEN) { echo $env:CI_JOB_TOKEN | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin } else { echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin }
 
     - docker build `
         -f Frontend/Dockerfile `

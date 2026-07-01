@@ -68,7 +68,7 @@ tests:
 
 .docker-login-base:
   before_script:
-    - echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin
+    - if ($env:CI_JOB_TOKEN) { echo $env:CI_JOB_TOKEN | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin } else { echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin }
 
 docker-backend:
   stage: docker
