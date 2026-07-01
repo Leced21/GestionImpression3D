@@ -53,11 +53,15 @@ cache:
 backend-test:
   stage: test
   script:
-    - dotnet restore Backend\Backend.csproj
     - dotnet restore TestProject\TestProject.csproj
     - dotnet test TestProject\TestProject.csproj --configuration Release --no-restore
   rules:
-    - when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
+      changes:
+        - Backend/**/*
+        - TestProject/**/*
+        - .gitlab-ci.yml
+    - when: never
 
 frontend-test:
   stage: test
@@ -65,9 +69,13 @@ frontend-test:
     - cd Frontend
     - npm ci --cache .npm
     - npm test -- --watch=false
-    - npm run build
   rules:
-    - when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
+      changes:
+        - Frontend/**/*
+        - Frontend/package*.json
+        - .gitlab-ci.yml
+    - when: never
 
 ############################################################
 # STAGE: DOCKER
@@ -83,6 +91,13 @@ docker-backend:
   needs:
     - backend-test
   <<: *docker_rules
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
+      changes:
+        - Backend/**/*
+        - TestProject/**/*
+        - .gitlab-ci.yml
+    - when: never
   script:
     - docker build -f Backend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" .
     - docker tag "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
@@ -95,9 +110,15 @@ docker-frontend:
   needs:
     - frontend-test
   <<: *docker_rules
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
+      changes:
+        - Frontend/**/*
+        - Frontend/package*.json
+        - .gitlab-ci.yml
+    - when: never
   script:
-    - cd Frontend
-    - docker build -f Dockerfile -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" .
+    - docker build -f Frontend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" Frontend
     - docker tag "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
     - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
     - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"

@@ -4,4 +4,4 @@
 *.user
 *.suo
 uploads/
-.env
+env/
