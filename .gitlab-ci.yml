@@ -134,7 +134,7 @@ deploy-dev:
     - Copy-Item "$env:CI_PROJECT_DIR\env\.env.dev" "$env:CI_PROJECT_DIR\.env" -Force
     - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
     - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml up -d --pull always --remove-orphans
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml up -d --remove-orphans
 
 deploy-staging:
   stage: deploy
@@ -149,7 +149,7 @@ deploy-staging:
     - Copy-Item "$env:CI_PROJECT_DIR\env\.env.staging" "$env:CI_PROJECT_DIR\.env" -Force
     - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
     - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml up -d --pull always --remove-orphans
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml up -d --remove-orphans
 
 deploy-prod:
   stage: deploy
@@ -166,7 +166,7 @@ deploy-prod:
     - Copy-Item "$env:CI_PROJECT_DIR\env\.env.prod" "$env:CI_PROJECT_DIR\.env" -Force
     - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
     - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.prod.yml up -d --pull always --remove-orphans
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.prod.yml up -d --remove-orphans
 
 ############################################################
 # STAGE: VERIFY & RECOVERY
