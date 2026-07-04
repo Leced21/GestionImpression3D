@@ -185,6 +185,61 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task UpdateOrdre_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+            var updateRequest = new UpdateOrdreRequest { Quantite = 15, Priorite = OrdrePriorite.Haute };
+
+            // Act
+            var result = await _ordreService.UpdateAsync(99, updateRequest);
+
+            // Assert
+            Assert.Null(result);
+            _ordreRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdreFabrication>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+
+            // Act
+            var result = await _ordreService.UpdateStatutAsync(99, OrdreStatut.EnCours);
+
+            // Assert
+            Assert.Null(result);
+            _ordreRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdreFabrication>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task StartProduction_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+
+            // Act
+            var result = await _ordreService.StartProductionAsync(99);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task CompleteProduction_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+
+            // Act
+            var result = await _ordreService.CompleteProductionAsync(99);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
         public async Task UpdateStatut_ValidTransition_UpdatesStatus()
         {
             // Arrange
@@ -309,6 +364,20 @@ namespace TestProject
             Assert.Equal(1, result.Termines);
             Assert.Equal(23, result.QuantiteTotale); // 10+5+8
             Assert.Equal(10, result.QuantiteProduite); // 0+2+8
+        }
+
+        [Fact]
+        public async Task GetStatistics_WithNoOrdres_ReturnsZeroedStatsWithoutDivisionByZero()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<OrdreFabrication>());
+
+            // Act
+            var result = await _ordreService.GetStatisticsAsync();
+
+            // Assert
+            Assert.Equal(0, result.TotalOrdres);
+            Assert.Equal(0, result.TauxAvancement);
         }
     }
 }

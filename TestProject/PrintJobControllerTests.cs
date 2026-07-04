@@ -98,6 +98,128 @@ namespace TestProject
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
+
+        [Fact]
+        public async Task GetQueue_ReturnsOkResult()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "/api/printjob/queue");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetById_WithInvalidId_ReturnsNotFound()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "/api/printjob/999999");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Create_WithValidData_ReturnsCreatedResult()
+        {
+            var pieceId = await CreatePieceAsync($"PrintJob Piece {DateTime.UtcNow.Ticks}");
+            var newJob = new
+            {
+                PieceId = pieceId,
+                Quantity = 2,
+                Priority = "Normal",
+                EstimatedDurationMinutes = 120,
+                EstimatedMaterialGrams = 50.5m
+            };
+            var content = new StringContent(JsonSerializer.Serialize(newJob), Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/printjob") { Content = content };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Create_WithInvalidPieceId_ReturnsBadRequest()
+        {
+            var newJob = new
+            {
+                PieceId = 999999,
+                Quantity = 1,
+                Priority = "Normal",
+                EstimatedDurationMinutes = 60,
+                EstimatedMaterialGrams = 10m
+            };
+            var content = new StringContent(JsonSerializer.Serialize(newJob), Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/printjob") { Content = content };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Delete_WithInvalidId_ReturnsNotFound()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, "/api/printjob/999999");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Delete_WithValidId_ReturnsNoContent()
+        {
+            var pieceId = await CreatePieceAsync($"PrintJob Delete Piece {DateTime.UtcNow.Ticks}");
+            var newJob = new
+            {
+                PieceId = pieceId,
+                Quantity = 1,
+                Priority = "Normal",
+                EstimatedDurationMinutes = 60,
+                EstimatedMaterialGrams = 10m
+            };
+            var createContent = new StringContent(JsonSerializer.Serialize(newJob), Encoding.UTF8, "application/json");
+            var createRequest = new HttpRequestMessage(HttpMethod.Post, "/api/printjob") { Content = createContent };
+            createRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            var createResponse = await _client.SendAsync(createRequest);
+            var createdJson = await createResponse.Content.ReadAsStringAsync();
+            var createdJob = JsonSerializer.Deserialize<PrintJobIdResponse>(createdJson, JsonOptions);
+
+            var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/printjob/{createdJob!.Id}");
+            deleteRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(deleteRequest);
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        private async Task<int> CreatePieceAsync(string nom)
+        {
+            var newPiece = new { Nom = nom, Reference = $"REF-{DateTime.UtcNow.Ticks}" };
+            var content = new StringContent(JsonSerializer.Serialize(newPiece), Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/piece") { Content = content };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var response = await _client.SendAsync(request);
+            if (response.StatusCode != HttpStatusCode.Created)
+                Assert.Fail("Impossible de créer une pièce pour le test");
+
+            var json = await response.Content.ReadAsStringAsync();
+            var piece = JsonSerializer.Deserialize<PrintJobIdResponse>(json, JsonOptions);
+            return piece!.Id;
+        }
+    }
+
+    public class PrintJobIdResponse
+    {
+        public int Id { get; set; }
     }
 
     public class AuthResponse

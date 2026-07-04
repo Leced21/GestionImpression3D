@@ -188,6 +188,81 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task GetProfilesByMateriau_ReturnsProfiles()
+        {
+            // Arrange
+            var profiles = new List<PrintProfile>
+            {
+                new PrintProfile { Id = 1, Nom = "PLA Standard", Materiau = "PLA" }
+            };
+            _profileRepositoryMock.Setup(x => x.GetByMateriauAsync("PLA")).ReturnsAsync(profiles);
+
+            // Act
+            var result = await _profileService.GetByMateriauAsync("PLA");
+
+            // Assert
+            Assert.Single(result);
+        }
+
+        [Fact]
+        public async Task GetDefaultForPrinter_DelegatesToRepository()
+        {
+            // Arrange
+            var profile = new PrintProfile { Id = 1, Nom = "PLA Standard", PrinterId = 1, IsDefault = true };
+            _profileRepositoryMock.Setup(x => x.GetDefaultForPrinterAsync(1)).ReturnsAsync(profile);
+
+            // Act
+            var result = await _profileService.GetDefaultForPrinterAsync(1);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(result.IsDefault);
+        }
+
+        [Fact]
+        public async Task SetDefaultProfile_NonExistingProfile_ReturnsNull()
+        {
+            // Arrange
+            _profileRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((PrintProfile?)null);
+
+            // Act
+            var result = await _profileService.SetDefaultAsync(99);
+
+            // Assert
+            Assert.Null(result);
+            _profileRepositoryMock.Verify(x => x.SetDefaultAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DuplicateProfile_NonExistingProfile_ReturnsNull()
+        {
+            // Arrange
+            _profileRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((PrintProfile?)null);
+
+            // Act
+            var result = await _profileService.DuplicateAsync(99, "Copy");
+
+            // Assert
+            Assert.Null(result);
+            _profileRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<PrintProfile>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateProfile_NonExistingProfile_ReturnsNull()
+        {
+            // Arrange
+            _profileRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((PrintProfile?)null);
+            var updateRequest = new UpdatePrintProfileRequest { Nom = "New Name", IsActive = true };
+
+            // Act
+            var result = await _profileService.UpdateAsync(99, updateRequest);
+
+            // Assert
+            Assert.Null(result);
+            _profileRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PrintProfile>()), Times.Never);
+        }
+
+        [Fact]
         public async Task SetDefaultProfile_UpdatesDefaultStatus()
         {
             // Arrange
