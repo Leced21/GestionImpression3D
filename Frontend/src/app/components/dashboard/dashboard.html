@@ -1,4 +1,23 @@
 <div class="dashboard-container">
+    <div class="first-visit-tutorial" *ngIf="showTutorial">
+        <div class="tutorial-card">
+            <div class="tutorial-header">
+                <div>
+                    <h2>Bienvenue sur PrintFlow3D</h2>
+                    <p>Voici un petit guide rapide pour démarrer dans l'application.</p>
+                </div>
+                <button class="close-btn" (click)="closeTutorial()">×</button>
+            </div>
+            <ol class="tutorial-list">
+                <li><strong>1.</strong> Utilisez le menu pour accéder aux imprimantes et aux pièces.</li>
+                <li><strong>2.</strong> Créez une nouvelle pièce depuis "Pièces" → "Nouveau".</li>
+                <li><strong>3.</strong> Suivez les travaux d'impression et le stock depuis ce tableau de bord.</li>
+                <li><strong>4.</strong> Consultez les projets et l'historique dans le menu latéral.</li>
+            </ol>
+            <button class="tutorial-ok-btn" (click)="closeTutorial()">J'ai compris</button>
+        </div>
+    </div>
+
     <div class="header">
         <div>
             <h1>📊 Tableau de bord industriel</h1>

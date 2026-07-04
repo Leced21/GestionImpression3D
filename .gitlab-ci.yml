@@ -6,6 +6,7 @@
 stages:
   - test
   - docker
+  - migrate
   - deploy
   - verify
 
@@ -35,88 +36,98 @@ cache:
     - .nuget/packages/
     - Frontend/.npm/
 
-# Variables Docker tag branch-specific définies directement dans chaque job
+# Ancre YAML réutilisable pour éviter la répétition des règles d'étiquetage Docker
+.docker_rules: &docker_rules
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      variables: { TARGET_TAG: "dev" }
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      variables: { TARGET_TAG: "staging" }
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      variables: { TARGET_TAG: "latest" }
 
 ############################################################
 # STAGE: TEST
 ############################################################
 
-tests:
+backend-test:
   stage: test
   script:
-    - echo "Running backend tests"
+    - dotnet restore Backend\Backend.csproj
     - dotnet restore TestProject\TestProject.csproj
     - dotnet test TestProject\TestProject.csproj --configuration Release --no-restore
-    - echo "Running frontend tests"
+  rules:
+    - when: always
+
+frontend-test:
+  stage: test
+  script:
     - cd Frontend
     - npm ci --cache .npm
     - npm test -- --watch=false
+    - npm run build
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^(dev|staging|main)$/ '
-      changes:
-        - Backend/**/*
-        - TestProject/**/*
-        - Frontend/**/*
-        - Frontend/package*.json
-        - .gitlab-ci.yml
-    - when: never
+    - when: always
 
 ############################################################
 # STAGE: DOCKER
 ############################################################
 
+.docker-login-base:
+  before_script:
+    - echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin
+
 docker-backend:
   stage: docker
+  extends: .docker-login-base
   needs:
-    - tests
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - Backend/**/*
-        - TestProject/**/*
-        - .gitlab-ci.yml
-    - if: '$CI_COMMIT_BRANCH == "staging"'
-      changes:
-        - Backend/**/*
-        - TestProject/**/*
-        - .gitlab-ci.yml
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - Backend/**/*
-        - TestProject/**/*
-        - .gitlab-ci.yml
-    - when: never
+    - backend-test
+  <<: *docker_rules
   script:
-    - docker build -f Backend/Dockerfile -t "backend:$CI_COMMIT_SHORT_SHA" .
-    - if ($env:CI_COMMIT_BRANCH -eq "dev") { $env:TARGET_TAG = "dev" } elseif ($env:CI_COMMIT_BRANCH -eq "staging") { $env:TARGET_TAG = "staging" } elseif ($env:CI_COMMIT_BRANCH -eq "main") { $env:TARGET_TAG = "latest" } else { $env:TARGET_TAG = $env:CI_COMMIT_SHORT_SHA }
-    - docker tag "backend:$CI_COMMIT_SHORT_SHA" "backend:$env:TARGET_TAG"
+    - docker build -f Backend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" .
+    - docker tag "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
+    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA"
+    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
 
 docker-frontend:
   stage: docker
+  extends: .docker-login-base
   needs:
-    - tests
+    - frontend-test
+  <<: *docker_rules
+  script:
+    - docker build -f Frontend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" .
+    - docker tag "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
+    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
+    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
+
+############################################################
+# STAGE: MIGRATE
+############################################################
+
+migrate-dev:
+  stage: migrate
+  needs:
+    - docker-backend
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - Frontend/**/*
-        - Frontend/package*.json
-        - .gitlab-ci.yml
-    - if: '$CI_COMMIT_BRANCH == "staging"'
-      changes:
-        - Frontend/**/*
-        - Frontend/package*.json
-        - .gitlab-ci.yml
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - Frontend/**/*
-        - Frontend/package*.json
-        - .gitlab-ci.yml
-    - when: never
   script:
-    - docker build -f Frontend/Dockerfile -t "frontend:$CI_COMMIT_SHORT_SHA" Frontend
-    - if ($env:CI_COMMIT_BRANCH -eq "dev") { $env:TARGET_TAG = "dev" } elseif ($env:CI_COMMIT_BRANCH -eq "staging") { $env:TARGET_TAG = "staging" } elseif ($env:CI_COMMIT_BRANCH -eq "main") { $env:TARGET_TAG = "latest" } else { $env:TARGET_TAG = $env:CI_COMMIT_SHORT_SHA }
-    - docker tag "frontend:$CI_COMMIT_SHORT_SHA" "frontend:$env:TARGET_TAG"
+    - Copy-Item C:\PrintFlow3D\env\.env.dev C:\PrintFlow3D\.env -Force
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml run --rm backend dotnet ef database update
 
+migrate-staging:
+  stage: migrate
+  needs:
+    - docker-backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+  script:
+    - Copy-Item C:\PrintFlow3D\env\.env.staging C:\PrintFlow3D\.env -Force
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml run --rm backend dotnet ef database update
 ############################################################
 # STAGE: DEPLOY
 ############################################################
@@ -124,32 +135,28 @@ docker-frontend:
 deploy-dev:
   stage: deploy
   needs:
-    - docker-backend
+    - migrate-dev
     - docker-frontend
   environment:
     name: development
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
   script:
-    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.dev" "$env:CI_PROJECT_DIR\.env" -Force
-    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
-    - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml up -d --remove-orphans
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml up -d --pull always --remove-orphans
 
 deploy-staging:
   stage: deploy
   needs:
-    - docker-backend
+    - migrate-staging
     - docker-frontend
   environment:
     name: staging
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
   script:
-    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.staging" "$env:CI_PROJECT_DIR\.env" -Force
-    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
-    - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml up -d --remove-orphans
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml up -d --pull always --remove-orphans
 
 deploy-prod:
   stage: deploy
@@ -163,10 +170,10 @@ deploy-prod:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
   script:
-    - Copy-Item "$env:CI_PROJECT_DIR\env\.env.prod" "$env:CI_PROJECT_DIR\.env" -Force
-    - Add-Content "$env:CI_PROJECT_DIR\.env" "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
-    - Set-Location $env:CI_PROJECT_DIR
-    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.prod.yml up -d --remove-orphans
+    - Copy-Item C:\PrintFlow3D\env\.env.prod C:\PrintFlow3D\.env -Force
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.prod.yml up -d --pull always --remove-orphans
 
 ############################################################
 # STAGE: VERIFY & RECOVERY
@@ -179,7 +186,7 @@ verify-dev:
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
   script:
-    - Set-Location $env:CI_PROJECT_DIR
+    - Set-Location C:\PrintFlow3D
     - $i=0; while($i -lt 30 -and (Invoke-WebRequest http://localhost:5000/health -UseBasicParsing).StatusCode -ne 200) { Start-Sleep 2; $i++ }
     - if($i -eq 30) { throw "HealthCheck DEV failed." }
 
@@ -190,7 +197,7 @@ verify-staging:
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
   script:
-    - Set-Location $env:CI_PROJECT_DIR
+    - Set-Location C:\PrintFlow3D
     - $i=0; while($i -lt 30 -and (Invoke-WebRequest http://localhost:5001/health -UseBasicParsing).StatusCode -ne 200) { Start-Sleep 2; $i++ }
     - if($i -eq 30) { throw "HealthCheck STAGING failed." }
 
@@ -201,7 +208,7 @@ verify-prod:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - Set-Location $env:CI_PROJECT_DIR
+    - Set-Location C:\PrintFlow3D
     - $i=0; while($i -lt 30 -and (Invoke-WebRequest http://localhost:5002/health -UseBasicParsing).StatusCode -ne 200) { Start-Sleep 2; $i++ }
     - if($i -eq 30) { throw "Application indisponible." }
 
@@ -213,5 +220,5 @@ rollback-prod:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: on_failure
   script:
-    - Set-Location $env:CI_PROJECT_DIR
+    - Set-Location C:\PrintFlow3D
     - powershell .\rollback.ps1 latest

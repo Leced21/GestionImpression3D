@@ -7,6 +7,9 @@ services:
 
     restart: always
 
+    ports:
+      - "${SQLSERVER_PORT:-1434}:1433"
+
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${SA_PASSWORD}
@@ -35,11 +38,18 @@ services:
 
   backend:
 
+    build:
+      context: ../Backend
+      dockerfile: Dockerfile
+      target: runtime
     image: ${BACKEND_IMAGE}:${IMAGE_TAG}
 
     container_name: printflow-api
 
     restart: always
+
+    ports:
+      - "${BACKEND_PORT:-8081}:8080"
 
     depends_on:
       sqlserver:
@@ -83,11 +93,17 @@ services:
 
   frontend:
 
+    build:
+      context: ../Frontend
+      dockerfile: Dockerfile
     image: ${FRONTEND_IMAGE}:${IMAGE_TAG}
 
     container_name: printflow-frontend
 
     restart: always
+
+    ports:
+      - "${FRONTEND_PORT:-8082}:80"
 
     depends_on:
       backend:

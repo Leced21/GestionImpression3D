@@ -3,7 +3,7 @@ services:
   sqlserver:
 
     ports:
-      - "1433:1433"
+      - "133:1433"
 
   backend:
 
@@ -13,4 +13,4 @@ services:
   frontend:
 
     ports:
-      - "4200:80"
+      - "4300:80"

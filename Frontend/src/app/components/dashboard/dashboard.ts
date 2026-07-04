@@ -21,6 +21,8 @@ export class Dashboard implements OnInit, OnDestroy {
   printersActivity: PrinterActivity[] = [];
   recentJobs: any[] = [];
   lastUpdated: Date = new Date();
+  showTutorial = false;
+  private readonly tutorialStorageKey = 'printflow3d_first_visit_tutorial_seen';
   private refreshInterval: any;
 
   // Configuration graphiques
@@ -52,6 +54,7 @@ export class Dashboard implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
+    this.showTutorial = !localStorage.getItem(this.tutorialStorageKey);
     this.loadAllData();
     this.refreshInterval = setInterval(() => this.loadAllData(), 30000);
   }
@@ -174,6 +177,11 @@ export class Dashboard implements OnInit, OnDestroy {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h${mins.toString().padStart(2, '0')}` : `${mins}min`;
+  }
+
+  closeTutorial(): void {
+    localStorage.setItem(this.tutorialStorageKey, 'true');
+    this.showTutorial = false;
   }
 }
 

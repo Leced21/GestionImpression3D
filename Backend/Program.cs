@@ -8,6 +8,7 @@ using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -136,7 +137,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost","http://localhost:4200")
+        policy.WithOrigins(
+            "http://localhost",
+            "https://localhost",
+            "http://localhost:4200",
+            "https://localhost:4200")
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials()
@@ -190,24 +195,92 @@ app.MapControllers();
 // conteneur d'initialisation, etc.).
 if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        try
-        {
-            logger.LogInformation("Application des migrations...");
-            await context.Database.MigrateAsync();
-            logger.LogInformation("Base de données prête.");
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogCritical(ex, "Database migration failed during startup");
-            throw;
-        }
+        logger.LogInformation("Attente de la base de données SQL Server...");
+        await EnsureDatabaseAsync(app.Configuration, logger);
+        logger.LogInformation("Application des migrations...");
+        await context.Database.MigrateAsync();
+        logger.LogInformation("Base de données prête.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogCritical(ex, "Database migration failed during startup");
+        throw;
     }
 }
 app.MapGet("/", () => Results.Ok("PrintFlow3D API"));
+
+static async Task EnsureDatabaseAsync(IConfiguration configuration, ILogger logger, int maxRetries = 20, TimeSpan? delay = null)
+{
+    delay ??= TimeSpan.FromSeconds(5);
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("La chaîne de connexion par défaut est manquante.");
+    }
+
+    var builder = new SqlConnectionStringBuilder(connectionString)
+    {
+        ConnectTimeout = 5
+    };
+
+    if (string.IsNullOrWhiteSpace(builder.InitialCatalog))
+    {
+        throw new InvalidOperationException("La base de données cible est absente dans la chaîne de connexion.");
+    }
+
+    var databaseName = builder.InitialCatalog;
+    var masterBuilder = new SqlConnectionStringBuilder(connectionString)
+    {
+        InitialCatalog = "master",
+        ConnectTimeout = 5
+    };
+
+    for (var attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            await using var masterConnection = new SqlConnection(masterBuilder.ConnectionString);
+            await masterConnection.OpenAsync();
+
+            await using var checkCommand = masterConnection.CreateCommand();
+            checkCommand.CommandText = "SELECT 1 FROM sys.databases WHERE name = @name";
+            checkCommand.Parameters.AddWithValue("@name", databaseName);
+            var exists = await checkCommand.ExecuteScalarAsync();
+
+            if (exists == null)
+            {
+                logger.LogInformation("La base de données {Database} n'existe pas. Création en cours...", databaseName);
+                var safeDatabaseName = databaseName.Replace("]", "]]" );
+                await using var createCommand = masterConnection.CreateCommand();
+                createCommand.CommandText = $"CREATE DATABASE [{safeDatabaseName}]";
+                await createCommand.ExecuteNonQueryAsync();
+                logger.LogInformation("Base de données {Database} créée.", databaseName);
+            }
+
+            await using var targetConnection = new SqlConnection(builder.ConnectionString);
+            await targetConnection.OpenAsync();
+            logger.LogInformation("SQL Server est prêt après {Attempt} tentative(s).", attempt);
+            return;
+        }
+        catch (SqlException ex) when (attempt < maxRetries)
+        {
+            logger.LogWarning(ex, "Impossible de se connecter à SQL Server (tentative {Attempt}/{Max}). Nouvelle tentative dans {DelaySeconds}s...", attempt, maxRetries, delay.Value.TotalSeconds);
+            await Task.Delay(delay.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, "Impossible de se connecter à SQL Server après {Attempt} tentatives.", attempt);
+            throw;
+        }
+    }
+
+    throw new InvalidOperationException("Impossible de se connecter à SQL Server après plusieurs tentatives.");
+}
 
 app.MapGet("/version", () =>
 {
