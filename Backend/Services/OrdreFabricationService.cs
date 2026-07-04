@@ -46,6 +46,7 @@ namespace Backend.Services
                 Reference = reference,
                 ProjetId = request.ProjetId,
                 PieceId = request.PieceId,
+                DevisId = request.DevisId,
                 Quantite = request.Quantite,
                 QuantiteProduite = 0,
                 Statut = OrdreStatut.EnAttente,
@@ -112,6 +113,11 @@ namespace Backend.Services
         public async Task<OrdreFabrication?> StartProductionAsync(int id)
         {
             return await UpdateStatutAsync(id, OrdreStatut.EnCours);
+        }
+
+        public async Task<bool> ExistsForDevisAsync(int devisId)
+        {
+            return await _ordreRepository.ExistsForDevisAsync(devisId);
         }
 
         public async Task<OrdreFabrication?> UpdateAsync(int id, UpdateOrdreRequest request)

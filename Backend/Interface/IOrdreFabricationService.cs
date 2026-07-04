@@ -15,5 +15,6 @@ namespace Backend.Interface
         Task<OrdreFabrication?> CompleteProductionAsync(int id);
         Task<bool> DeleteAsync(int id);
         Task<OrdreStatisticsDto> GetStatisticsAsync();
+        Task<bool> ExistsForDevisAsync(int devisId);
     }
 }

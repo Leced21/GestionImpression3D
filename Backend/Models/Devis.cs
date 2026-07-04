@@ -22,5 +22,6 @@ namespace Backend.Models
         public Client Client { get; set; } = null!;
         public Projet? Projet { get; set; }
         public List<DevisLigne> Lignes { get; set; } = new();
+        public List<OrdreFabrication> OrdresFabrication { get; set; } = new();
     }
 }

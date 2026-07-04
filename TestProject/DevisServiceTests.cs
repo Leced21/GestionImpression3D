@@ -1,0 +1,185 @@
+using Backend.DTOs;
+using Backend.Enums;
+using Backend.Interface;
+using Backend.Models;
+using Backend.Services;
+using Moq;
+
+namespace TestProject
+{
+    public class DevisServiceTests
+    {
+        private readonly IDevisService _devisService;
+        private readonly Mock<IDevisRepository> _devisRepositoryMock;
+        private readonly Mock<IClientRepository> _clientRepositoryMock;
+        private readonly Mock<IPieceRepository> _pieceRepositoryMock;
+        private readonly Mock<IOrdreFabricationService> _ordreFabricationServiceMock;
+        private readonly Mock<IAuditLogger> _auditLoggerMock;
+
+        public DevisServiceTests()
+        {
+            _devisRepositoryMock = new Mock<IDevisRepository>();
+            _clientRepositoryMock = new Mock<IClientRepository>();
+            _pieceRepositoryMock = new Mock<IPieceRepository>();
+            _ordreFabricationServiceMock = new Mock<IOrdreFabricationService>();
+            _auditLoggerMock = new Mock<IAuditLogger>();
+
+            _devisService = new DevisService(
+                _devisRepositoryMock.Object,
+                _clientRepositoryMock.Object,
+                _pieceRepositoryMock.Object,
+                _ordreFabricationServiceMock.Object,
+                _auditLoggerMock.Object
+            );
+        }
+
+        private static Devis CreateDevis(int id, DevisStatus statut, int? projetId, params DevisLigne[] lignes)
+        {
+            return new Devis
+            {
+                Id = id,
+                NumeroDevis = $"DEV-2026-{id:D4}",
+                ProjetId = projetId,
+                Statut = statut,
+                Lignes = lignes.ToList()
+            };
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWithProjetAndPieceLignes_GeneratesOneOrdrePerLigne()
+        {
+            // Arrange
+            var lignes = new[]
+            {
+                new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 },
+                new DevisLigne { Id = 2, PieceId = 20, Quantite = 5 }
+            };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+
+            // Act
+            var result = await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            Assert.NotNull(result);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.Is<CreateOrdreRequest>(r =>
+                r.ProjetId == 7 && r.PieceId == 10 && r.Quantite == 2 && r.DevisId == 1)), Times.Once);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.Is<CreateOrdreRequest>(r =>
+                r.ProjetId == 7 && r.PieceId == 20 && r.Quantite == 5 && r.DevisId == 1)), Times.Once);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWithoutProjet_ThrowsAndDoesNotPersistStatut()
+        {
+            // Arrange
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: null);
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _devisService.UpdateStatutAsync(1, DevisStatus.Accepté)
+            );
+            _devisRepositoryMock.Verify(x => x.UpdateStatutAsync(It.IsAny<int>(), It.IsAny<DevisStatus>()), Times.Never);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteAlreadyAccepted_DoesNotRegenerateOrdres()
+        {
+            // Arrange : le devis est déjà Accepté, on renvoie le même statut (idempotence au niveau transition)
+            var devis = CreateDevis(1, DevisStatus.Accepté, projetId: 7,
+                new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 });
+            var updated = CreateDevis(1, DevisStatus.Accepté, projetId: 7,
+                new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 });
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(updated);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _ordreFabricationServiceMock.Verify(x => x.ExistsForDevisAsync(It.IsAny<int>()), Times.Never);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWhenOrdresAlreadyExistForDevis_SkipsGeneration()
+        {
+            // Arrange : statut Accepté renvoyé une seconde fois par erreur (rejeu), des ordres existent déjà
+            var lignes = new[] { new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 } };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(true);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWithLignesWithoutPieceId_SkipsThoseLignes()
+        {
+            // Arrange : ligne de service libre (sans pièce catalogue) mélangée à une ligne catalogue
+            var lignes = new[]
+            {
+                new DevisLigne { Id = 1, PieceId = null, Description = "Frais de dossier", Quantite = 1 },
+                new DevisLigne { Id = 2, PieceId = 10, Quantite = 3 }
+            };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Once);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.Is<CreateOrdreRequest>(r => r.PieceId == 10)), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToNonAccepteStatut_DoesNotGenerateOrdres()
+        {
+            // Arrange
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7,
+                new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 });
+            var refused = CreateDevis(1, DevisStatus.Refusé, projetId: 7,
+                new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 });
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Refusé)).ReturnsAsync(refused);
+
+            // Act
+            var result = await _devisService.UpdateStatutAsync(1, DevisStatus.Refusé);
+
+            // Assert
+            Assert.NotNull(result);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_NonExistingDevis_ReturnsNull()
+        {
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Devis?)null);
+
+            var result = await _devisService.UpdateStatutAsync(99, DevisStatus.Accepté);
+
+            Assert.Null(result);
+            _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+        }
+    }
+}

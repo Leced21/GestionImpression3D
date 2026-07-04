@@ -73,6 +73,48 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task CreateOrdre_WithDevisId_PassesDevisIdThrough()
+        {
+            // Arrange
+            var request = new CreateOrdreRequest
+            {
+                ProjetId = 1,
+                PieceId = 1,
+                DevisId = 42,
+                Quantite = 3
+            };
+
+            var projet = new Projet { Id = 1, Nom = "Projet Test" };
+            var piece = new Piece { Id = 1, Nom = "Piece Test" };
+
+            _projetRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(projet);
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(piece);
+            _ordreRepositoryMock.Setup(x => x.GetNextReferenceNumberAsync()).ReturnsAsync(1);
+            _ordreRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<OrdreFabrication>()))
+                .ReturnsAsync((OrdreFabrication o) => o);
+
+            // Act
+            var result = await _ordreService.CreateAsync(request);
+
+            // Assert
+            Assert.Equal(42, result.DevisId);
+            _ordreRepositoryMock.Verify(x => x.CreateAsync(It.Is<OrdreFabrication>(o => o.DevisId == 42)), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsForDevis_DelegatesToRepository()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.ExistsForDevisAsync(42)).ReturnsAsync(true);
+
+            // Act
+            var result = await _ordreService.ExistsForDevisAsync(42);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
         public async Task CreateOrdre_WithInvalidProjet_ThrowsException()
         {
             // Arrange
