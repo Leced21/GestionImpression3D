@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError, Observable } from 'rxjs';
-import { Commande } from '../models/cart.model';
+import { Commande, CommandeCreatedResponse, CommandeRequest } from '../models/cart.model';
 import { API_BASE_URL } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
@@ -14,8 +14,8 @@ export class CommercialService {
     return this.http.get<Commande[]>(`${this.apiUrl}/commandes`).pipe(catchError(this.handleError));
   }
 
-  creerCommande(commande: Partial<Commande>): Observable<Commande> {
-    return this.http.post<Commande>(`${this.apiUrl}/commandes`, commande).pipe(catchError(this.handleError));
+  creerCommande(commande: CommandeRequest): Observable<CommandeCreatedResponse> {
+    return this.http.post<CommandeCreatedResponse>(`${this.apiUrl}/commande`, commande).pipe(catchError(this.handleError));
   }
 
   updateCommandeStatut(id: number, statut: string): Observable<Commande> {
