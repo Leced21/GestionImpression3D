@@ -78,10 +78,10 @@ export class AuditLogFormatterService {
 
   formatChangeMessage(log: AuditLog): string {
     if (log.action === ActionType.Create) {
-      return `Création de la ${log.entityTypeLabel} "${log.entityName}"`;
+      return `Création de la ${this.getEntityTypeLabel(log.entityType)} "${log.entityName}"`;
     }
     if (log.action === ActionType.Delete) {
-      return `Suppression de la ${log.entityTypeLabel} "${log.entityName}"`;
+      return `Suppression de la ${this.getEntityTypeLabel(log.entityType)} "${log.entityName}"`;
     }
     if (log.action === ActionType.StatusChange) {
       return `Statut: ${log.oldValue} → ${log.newValue}`;

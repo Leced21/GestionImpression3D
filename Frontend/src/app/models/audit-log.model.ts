@@ -29,9 +29,7 @@ export interface AuditLog {
   userId?: number;
   userEmail?: string;
   action: ActionType;
-  actionLabel: string;
   entityType: EntityType;
-  entityTypeLabel: string;
   entityId: number;
   entityName?: string;
   fieldName?: string;
