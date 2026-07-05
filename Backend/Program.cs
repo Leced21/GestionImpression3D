@@ -188,7 +188,15 @@ builder.Services.AddScoped<IFactureRepository, FactureRepository>();
 builder.Services.AddScoped<IFactureService, FactureService>();
 builder.Services.AddScoped<IClientMagicLinkRepository, ClientMagicLinkRepository>();
 builder.Services.AddScoped<IClientPortalAuthService, ClientPortalAuthService>();
-builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+// Sans SMTP configuré (dev/local), on logge les emails au lieu de tenter un vrai envoi.
+if (string.IsNullOrWhiteSpace(builder.Configuration[$"{SmtpOptions.SectionName}:Host"]))
+{
+    builder.Services.AddTransient<IEmailSender, LoggingEmailSender>();
+}
+else
+{
+    builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+}
 builder.Services.AddScoped<IClientPortalMailSender, ClientPortalMailSender>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();

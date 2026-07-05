@@ -1,13 +1,41 @@
 using Backend.Interface;
 using Backend.Models;
+using Backend.Options;
 using Backend.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace TestProject
 {
     public class MailingTests
     {
+        [Theory]
+        [InlineData("", 587, "from@printflow3d.com", "Mail:Smtp:Host")]
+        [InlineData("smtp.example.com", 0, "from@printflow3d.com", "Mail:Smtp:Port")]
+        [InlineData("smtp.example.com", 70000, "from@printflow3d.com", "Mail:Smtp:Port")]
+        [InlineData("smtp.example.com", 587, "", "Mail:Smtp:FromEmail")]
+        public async Task SmtpEmailSender_WithInvalidConfiguration_ThrowsBeforeSending(
+            string host, int port, string fromEmail, string expectedMessageFragment)
+        {
+            var options = Options.Create(new SmtpOptions { Host = host, Port = port, FromEmail = fromEmail });
+            var sender = new SmtpEmailSender(options, NullLogger<SmtpEmailSender>.Instance);
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                sender.SendHtmlAsync("client@example.com", "Sujet", "<p>Corps</p>"));
+
+            Assert.Contains(expectedMessageFragment, ex.Message);
+        }
+
+        [Fact]
+        public async Task LoggingEmailSender_DoesNotThrowWithoutSmtpConfigured()
+        {
+            var sender = new LoggingEmailSender(NullLogger<LoggingEmailSender>.Instance);
+
+            await sender.SendHtmlAsync("client@example.com", "Sujet", "<p>Corps</p>");
+        }
+
         [Fact]
         public async Task ClientPortalMailSender_SendsMagicLinkWithoutInjectingRawHtml()
         {

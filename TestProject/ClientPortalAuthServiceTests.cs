@@ -2,6 +2,7 @@ using Backend.Interface;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace TestProject
@@ -32,7 +33,8 @@ namespace TestProject
                 _clientRepositoryMock.Object,
                 _magicLinkRepositoryMock.Object,
                 _mailSenderMock.Object,
-                _configMock.Object
+                _configMock.Object,
+                NullLogger<ClientPortalAuthService>.Instance
             );
         }
 
@@ -58,6 +60,20 @@ namespace TestProject
 
             _magicLinkRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<ClientMagicLink>()), Times.Never);
             _mailSenderMock.Verify(x => x.SendMagicLinkAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task RequestAccess_WhenMailSendFails_DoesNotThrowAndStillCreatesLink()
+        {
+            var client = new Client { Id = 7, Nom = "Test SARL", Email = "contact@testsarl.com" };
+            _clientRepositoryMock.Setup(x => x.GetByEmailAsync("contact@testsarl.com")).ReturnsAsync(client);
+            _mailSenderMock
+                .Setup(x => x.SendMagicLinkAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("SMTP indisponible"));
+
+            await _service.RequestAccessAsync("contact@testsarl.com");
+
+            _magicLinkRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<ClientMagicLink>()), Times.Once);
         }
 
         [Fact]

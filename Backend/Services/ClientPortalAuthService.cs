@@ -16,17 +16,20 @@ namespace Backend.Services
         private readonly IClientMagicLinkRepository _magicLinkRepository;
         private readonly IClientPortalMailSender _mailSender;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ClientPortalAuthService> _logger;
 
         public ClientPortalAuthService(
             IClientRepository clientRepository,
             IClientMagicLinkRepository magicLinkRepository,
             IClientPortalMailSender mailSender,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<ClientPortalAuthService> logger)
         {
             _clientRepository = clientRepository;
             _magicLinkRepository = magicLinkRepository;
             _mailSender = mailSender;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task RequestAccessAsync(string email)
@@ -52,7 +55,18 @@ namespace Backend.Services
             var baseUrl = _configuration["ClientPortal:FrontendBaseUrl"] ?? "http://localhost:4200";
             var magicLinkUrl = $"{baseUrl}/portail/acces?token={Uri.EscapeDataString(rawToken)}";
 
-            await _mailSender.SendMagicLinkAsync(client.Email, client.Nom, magicLinkUrl);
+            // Ne jamais laisser un échec d'envoi remonter : la réponse de cet endpoint doit
+            // rester identique que le client existe ou non, y compris quand le fournisseur
+            // mail est en panne (sinon un client existant renverrait 500 là où un email
+            // inconnu renvoie normalement, ce qui recrée un canal d'énumération).
+            try
+            {
+                await _mailSender.SendMagicLinkAsync(client.Email, client.Nom, magicLinkUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Échec de l'envoi du lien magique au client {ClientId}", client.Id);
+            }
         }
 
         public async Task<ClientPortalAuthResponse?> ConsumeAsync(string rawToken)
