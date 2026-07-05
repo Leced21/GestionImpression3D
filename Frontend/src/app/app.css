@@ -23,5 +23,5 @@ app-sidebar {
   flex-grow: 1;
   overflow-y: auto; /* Seule cette zone scrolle si le contenu est long */
   padding: 2rem;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-alt);
 }

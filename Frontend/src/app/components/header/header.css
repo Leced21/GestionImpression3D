@@ -1,12 +1,12 @@
 .header {
-    background: white;
+    background: var(--color-surface);
     padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
     top: 0;
     z-index: 100;
 }
@@ -14,7 +14,7 @@
 .logo {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text);
 }
 
 .header-right {
@@ -41,13 +41,13 @@
 }
 
 .user-menu:hover {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
 }
 
 .user-avatar {
     width: 32px;
     height: 32px;
-    background: #3b82f6;
+    background: var(--color-primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -59,19 +59,19 @@
 
 .user-name {
     font-size: 0.875rem;
-    color: #475569;
+    color: var(--color-text-secondary);
 }
 
 .dropdown-arrow {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--color-text-faint);
 }
 
 .dropdown-menu {
     position: absolute;
     top: 100%;
     right: 0;
-    background: white;
+    background: var(--color-surface);
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 200px;
@@ -93,12 +93,12 @@
 }
 
 .dropdown-item:hover {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
 }
 
 .dropdown-divider {
     height: 1px;
-    background: #e2e8f0;
+    background: var(--color-border);
     margin: 0.25rem 0;
 }
 @keyframes fadeIn {

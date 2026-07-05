@@ -30,7 +30,7 @@ h1 {
 }
 
 .stat-card {
-    background: white;
+    background: var(--color-surface);
     padding: 1rem;
     border-radius: 0.75rem;
     text-align: center;
@@ -43,7 +43,7 @@ h1 {
 }
 
 .chart-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -70,14 +70,14 @@ h1 {
     flex: 1;
     position: relative;
     height: 30px;
-    background: #e2e8f0;
+    background: var(--color-border);
     border-radius: 4px;
     overflow: hidden;
 }
 
 .bar-fill {
     height: 100%;
-    background: #3b82f6;
+    background: var(--color-primary);
     transition: width 0.3s;
 }
 
@@ -87,7 +87,7 @@ h1 {
     top: 50%;
     transform: translateY(-50%);
     font-size: 0.7rem;
-    color: #475569;
+    color: var(--color-text-secondary);
 }
 
 .consumptions-list {
@@ -97,7 +97,7 @@ h1 {
 }
 
 .consumption-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 0.75rem;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -111,7 +111,7 @@ h1 {
 
 .consumption-date {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .consumption-badge {
@@ -121,18 +121,18 @@ h1 {
 }
 
 .consumption-badge.Production {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
 }
 
 .consumption-badge.Perte {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
 }
 
 .consumption-badge.Test {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
 }
 
 .consumption-content {
@@ -147,17 +147,17 @@ h1 {
 
 .consumption-quantity {
     font-weight: 700;
-    color: #3b82f6;
+    color: var(--color-primary);
 }
 
 .consumption-footer {
     margin-top: 0.5rem;
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .btn-primary {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -166,7 +166,7 @@ h1 {
 }
 
 .btn-refresh {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;

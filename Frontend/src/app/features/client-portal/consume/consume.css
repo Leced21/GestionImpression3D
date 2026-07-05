@@ -3,12 +3,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, var(--color-chrome-start) 0%, var(--color-chrome-end) 100%);
     padding: 1rem;
 }
 
 .portal-card {
-    background: white;
+    background: var(--color-surface);
     padding: 2rem;
     border-radius: 1rem;
     width: 100%;
@@ -32,8 +32,8 @@
     width: 32px;
     height: 32px;
     margin: 0 auto 1rem;
-    border: 3px solid #e2e8f0;
-    border-top-color: #3b82f6;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -48,7 +48,7 @@
     display: inline-block;
     margin-top: 1rem;
     padding: 0.75rem 1.5rem;
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border-radius: 0.5rem;
     text-decoration: none;

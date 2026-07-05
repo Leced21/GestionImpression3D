@@ -1,6 +1,6 @@
 .portal-shell {
     min-height: 100vh;
-    background: #f8fafc;
+    background: var(--color-surface-alt);
 }
 
 .portal-header {
@@ -8,7 +8,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    background: #1e293b;
+    background: var(--color-chrome-start);
     color: white;
 }
 
@@ -46,12 +46,12 @@
     border-bottom: 2px solid transparent;
     cursor: pointer;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .tabs button.active {
-    color: #1e293b;
-    border-bottom-color: #3b82f6;
+    color: var(--color-text);
+    border-bottom-color: var(--color-primary);
 }
 
 .portal-content {
@@ -62,12 +62,12 @@
 
 .empty-state {
     text-align: center;
-    color: #94a3b8;
+    color: var(--color-text-faint);
     padding: 3rem 0;
 }
 
 .item-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 0.75rem;
     padding: 1rem 1.25rem;
     margin-bottom: 0.75rem;
@@ -90,12 +90,12 @@
 .date {
     display: block;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--color-text-faint);
 }
 
 .status-badge {
     font-size: 0.85rem;
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
     padding: 0.25rem 0.6rem;
     border-radius: 999px;
 }
@@ -108,8 +108,8 @@
 
 .btn-download {
     padding: 0.4rem 0.7rem;
-    border: 1px solid #e2e8f0;
-    background: white;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
     border-radius: 0.5rem;
     cursor: pointer;
 }
@@ -117,7 +117,7 @@
 .item-details {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--color-border);
 }
 
 .ligne {
@@ -125,13 +125,13 @@
     justify-content: space-between;
     padding: 0.35rem 0;
     font-size: 0.9rem;
-    color: #475569;
+    color: var(--color-text-secondary);
 }
 
 .totaux {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
-    border-top: 1px dashed #e2e8f0;
+    border-top: 1px dashed var(--color-border);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;

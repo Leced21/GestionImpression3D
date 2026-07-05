@@ -13,7 +13,7 @@
 .btn-back {
     background: none;
     border: none;
-    color: #3b82f6;
+    color: var(--color-primary);
     cursor: pointer;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .info-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -34,7 +34,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .status-badge {
@@ -44,7 +44,7 @@
 }
 
 .actions-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     margin-top: 1.5rem;
@@ -53,7 +53,7 @@
 
 .action-btn {
     padding: 0.5rem 1rem;
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 0.5rem;
@@ -61,7 +61,7 @@
 }
 
 .action-btn.success {
-    background: #10b981;
+    background: var(--color-success);
 }
 
 .loading {

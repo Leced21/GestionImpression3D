@@ -43,7 +43,7 @@
 }
 
 .view-btn.active {
-    background: #3b82f6;
+    background: var(--color-primary);
 }
 
 /* Panneau dimensions */
@@ -63,7 +63,7 @@
 
 .dimensions-panel h4 {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-text-faint);
     margin-bottom: 0.75rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -77,11 +77,11 @@
 }
 
 .dimension-item span:first-child {
-    color: #94a3b8;
+    color: var(--color-text-faint);
 }
 
 .dimension-item strong {
-    color: #3b82f6;
+    color: var(--color-primary);
 }
 
 .dimension-divider {
@@ -116,7 +116,7 @@
 .scale-marker {
     width: 2px;
     height: 10px;
-    background: white;
+    background: var(--color-surface);
 }
 
 /* Contrôles bottom */
@@ -141,5 +141,5 @@
 }
 
 .bottom-btn:hover {
-    background: #3b82f6;
+    background: var(--color-primary);
 }

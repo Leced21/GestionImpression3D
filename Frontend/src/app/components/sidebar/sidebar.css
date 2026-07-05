@@ -10,8 +10,8 @@
 
 .sidebar {
     width: 260px;
-    background-color: #ffffff;
-    border-right: 1px solid #e2e8f0;
+    background-color: var(--color-surface);
+    border-right: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -23,7 +23,7 @@
     /* Prend tout l'espace restant */
     overflow-y: auto;
     /* Permet le scroll uniquement ici */
-    background-color: #f8fafc;
+    background-color: var(--color-surface-alt);
     padding: 2rem;
 }
 
@@ -37,13 +37,13 @@
 }
 
 .nav-item:hover {
-    background-color: #f1f5f9;
+    background-color: var(--color-surface-hover);
 }
 
 /* La classe 'active' ajoutée automatiquement par Angular */
 .active {
-    background-color: #eff6ff !important;
-    color: #3b82f6 !important;
+    background-color: var(--color-primary-light) !important;
+    color: var(--color-primary) !important;
     font-weight: 600;
 }
 
@@ -55,7 +55,7 @@
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(180deg, var(--color-chrome-start) 0%, var(--color-chrome-end) 100%);
     color: white;
     position: fixed;
     height: 100vh;

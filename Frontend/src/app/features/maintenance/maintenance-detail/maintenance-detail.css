@@ -15,7 +15,7 @@
 .btn-back {
     background: none;
     border: none;
-    color: #3b82f6;
+    color: var(--color-primary);
     cursor: pointer;
 }
 
@@ -37,14 +37,14 @@ h1 {
 }
 
 .btn-edit {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
 }
 
 .btn-delete {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
     border: none;
 }
 
@@ -55,7 +55,7 @@ h1 {
 }
 
 .info-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -69,7 +69,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .type-badge,
@@ -80,23 +80,23 @@ h1 {
 }
 
 .type-badge.Preventive {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
 }
 
 .type-badge.Corrective {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
 }
 
 .status-badge.Scheduled {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
 }
 
 .status-badge.Completed {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
 }
 
 .actions-card {
@@ -105,7 +105,7 @@ h1 {
     justify-content: center;
     margin-top: 1.5rem;
     padding: 1.5rem;
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
 }
 
@@ -117,13 +117,13 @@ h1 {
 }
 
 .action-btn.success {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
 }
 
 .action-btn.warning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
 }
 
 .loading {

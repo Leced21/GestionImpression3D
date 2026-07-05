@@ -16,7 +16,7 @@
 .btn-back {
     background: none;
     border: none;
-    color: #3b82f6;
+    color: var(--color-primary);
     cursor: pointer;
     margin-bottom: 0.5rem;
 }
@@ -28,7 +28,7 @@
 }
 
 .reference {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.875rem;
 }
 
@@ -40,14 +40,14 @@
 }
 
 .btn-edit {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
 }
 
 .btn-delete {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
     border: none;
 }
 
@@ -64,7 +64,7 @@
 }
 
 .info-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -81,11 +81,11 @@
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .type-badge {
-    background: #e2e8f0;
+    background: var(--color-border);
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
     font-size: 0.75rem;
@@ -113,7 +113,7 @@
 .volume-dimension {
     text-align: center;
     padding: 0.5rem;
-    background: #f8fafc;
+    background: var(--color-surface-alt);
     border-radius: 0.5rem;
     flex: 1;
 }
@@ -121,7 +121,7 @@
 .dimension-label {
     display: block;
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .dimension-value {
@@ -133,7 +133,7 @@
 .volume-total {
     text-align: center;
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .stats-list {
@@ -146,12 +146,12 @@
     display: flex;
     justify-content: space-between;
     padding: 0.5rem;
-    background: #f8fafc;
+    background: var(--color-surface-alt);
     border-radius: 0.5rem;
 }
 
 .stat-label {
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .stat-value {
@@ -169,22 +169,22 @@
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
 }
 
 .action-btn.warning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
 }
 
 .action-btn.danger {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
 }
 
 .action-btn.offline {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
 }
 
 .api-config {
@@ -201,7 +201,7 @@
 }
 
 .api-url code {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
     font-family: monospace;
@@ -209,8 +209,8 @@
 
 .btn-test {
     padding: 0.5rem;
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
@@ -227,8 +227,8 @@
 .spinner {
     width: 48px;
     height: 48px;
-    border: 3px solid #e2e8f0;
-    border-top-color: #3b82f6;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
