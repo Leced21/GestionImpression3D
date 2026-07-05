@@ -4,6 +4,7 @@ using Backend.Hubs;
 using Backend.Interface;
 using Backend.Mappers;
 using Backend.Middleware;
+using Backend.Options;
 using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -128,6 +129,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 
 // --- 4. Injection de dépendances (Scope & Business Logic) ---
 // Métier : Pièces et Commerciaux
@@ -186,7 +188,8 @@ builder.Services.AddScoped<IFactureRepository, FactureRepository>();
 builder.Services.AddScoped<IFactureService, FactureService>();
 builder.Services.AddScoped<IClientMagicLinkRepository, ClientMagicLinkRepository>();
 builder.Services.AddScoped<IClientPortalAuthService, ClientPortalAuthService>();
-builder.Services.AddScoped<IClientPortalMailSender, LoggingClientPortalMailSender>();
+builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IClientPortalMailSender, ClientPortalMailSender>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
