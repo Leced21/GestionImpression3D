@@ -23,5 +23,6 @@ namespace Backend.Interface
         Task<bool> UpdateStockAsync(int pieceId, int quantite);
         Task<decimal> GetChiffreAffairesAsync();
         Task<Dictionary<string, int>> GetStatistiquesCommandesAsync();
+        Task<string> GenerateNumeroCommandeAsync();
     }
 }

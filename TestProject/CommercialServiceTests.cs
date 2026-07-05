@@ -51,6 +51,7 @@ namespace TestProject
 
             _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(piece);
             _clientServiceMock.Setup(x => x.EnsureClientAsync(It.IsAny<CreateClientRequest>())).ReturnsAsync(client);
+            _commercialRepositoryMock.Setup(x => x.GenerateNumeroCommandeAsync()).ReturnsAsync("CMD-2026-0001");
             _commercialRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Commande>())).ReturnsAsync((Commande c) => c);
 
             // Act
@@ -58,6 +59,7 @@ namespace TestProject
 
             // Assert
             Assert.Equal(5, result.ClientId);
+            Assert.Equal("CMD-2026-0001", result.NumeroCommande);
             _commercialRepositoryMock.Verify(x => x.CreateAsync(It.Is<Commande>(c => c.ClientId == 5)), Times.Once);
         }
 
@@ -70,6 +72,7 @@ namespace TestProject
 
             _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(piece);
             _clientServiceMock.Setup(x => x.EnsureClientAsync(It.IsAny<CreateClientRequest>())).ReturnsAsync((Client?)null);
+            _commercialRepositoryMock.Setup(x => x.GenerateNumeroCommandeAsync()).ReturnsAsync("CMD-2026-0002");
             _commercialRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Commande>())).ReturnsAsync((Commande c) => c);
 
             // Act

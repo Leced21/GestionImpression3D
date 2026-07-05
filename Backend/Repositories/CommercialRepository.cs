@@ -131,5 +131,23 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<string> GenerateNumeroCommandeAsync()
+        {
+            var year = DateTime.Now.Year;
+            var lastCommande = await _context.Commandes
+                .Where(c => c.NumeroCommande.StartsWith($"CMD-{year}"))
+                .OrderByDescending(c => c.NumeroCommande)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (lastCommande != null)
+            {
+                var lastNumber = int.Parse(lastCommande.NumeroCommande.Split('-').Last());
+                nextNumber = lastNumber + 1;
+            }
+
+            return $"CMD-{year}-{nextNumber:D4}";
+        }
     }
 }

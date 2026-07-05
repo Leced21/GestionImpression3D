@@ -52,7 +52,7 @@ namespace Backend.Services
             }
 
             // Générer numéro de commande
-            var numeroCommande = GenererNumeroCommande();
+            var numeroCommande = await _repository.GenerateNumeroCommandeAsync();
 
             // Calculer le total
             decimal total = 0;
@@ -146,11 +146,6 @@ namespace Backend.Services
         }
 
         // Méthodes privées
-        private string GenererNumeroCommande()
-        {
-            return $"CMD-{DateTime.UtcNow:yyyyMMddHHmmssfff}-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000, 10000)}";
-        }
-
         private async Task<decimal> GetChiffreAffairesMoisAsync()
         {
             var commandes = await _repository.GetAllAsync();
