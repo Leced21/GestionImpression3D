@@ -50,7 +50,8 @@ export class AuditLogFormatterService {
       [EntityType.Client]: 'Client',
       [EntityType.Devis]: 'Devis',
       [EntityType.Invitation]: 'Invitation',
-      [EntityType.Facture]: 'Facture'
+      [EntityType.Facture]: 'Facture',
+      [EntityType.Commande]: 'Commande'
     };
     return labels[entityType] || 'Inconnu';
   }
@@ -71,7 +72,8 @@ export class AuditLogFormatterService {
       [EntityType.Client]: '👥',
       [EntityType.Devis]: '📄',
       [EntityType.Invitation]: '✉️',
-      [EntityType.Facture]: '💶'
+      [EntityType.Facture]: '💶',
+      [EntityType.Commande]: '📦'
     };
     return icons[entityType] || '📄';
   }

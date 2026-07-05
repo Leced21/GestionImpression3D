@@ -1,4 +1,5 @@
-﻿using Backend.Interface;
+﻿using Backend.Enums;
+using Backend.Interface;
 using Backend.Models;
 using Backend.Repositories;
 
@@ -9,11 +10,13 @@ namespace Backend.Services
         private readonly IPieceRepository _pieceRepository;
         private readonly ICommercialRepository _repository;
         private readonly IClientService _clientService;
-        public CommercialService(IPieceRepository pieceRepository, ICommercialRepository repository, IClientService clientService)
+        private readonly IAuditLogger _auditLogger;
+        public CommercialService(IPieceRepository pieceRepository, ICommercialRepository repository, IClientService clientService, IAuditLogger auditLogger)
         {
             _pieceRepository = pieceRepository;
             _repository = repository;
             _clientService = clientService;
+            _auditLogger = auditLogger;
         }
         public async Task<bool> AnnulerCommandeAsync(int id)
         {
@@ -23,7 +26,8 @@ namespace Backend.Services
             if (commande.Statut != "En attente" && commande.Statut != "Confirmée")
                 throw new InvalidOperationException("Seules les commandes en attente ou confirmées peuvent être annulées");
 
-            return await _repository.DeleteAsync(id);
+            await UpdateStatutCommandeAsync(id, "Annulée");
+            return true;
         }
 
         public async Task<Commande> CreerCommandeAsync(CommandeRequest request)
@@ -91,7 +95,11 @@ namespace Backend.Services
                 Lignes = lignes
             };
 
-            return await _repository.CreateAsync(commande);
+            var created = await _repository.CreateAsync(commande);
+
+            await _auditLogger.LogCreationAsync(EntityType.Commande, created.Id, created.NumeroCommande);
+
+            return created;
         }
 
         public async Task<IEnumerable<Commande>> GetAllCommandesAsync()
@@ -138,11 +146,31 @@ namespace Backend.Services
 
         public async Task<Commande?> UpdateStatutCommandeAsync(int id, string nouveauStatut)
         {
-            var statutsValides = new[] { "En attente", "Confirmée", "En production", "Expédiée", "Livrée" };
+            var statutsValides = new[] { "En attente", "Confirmée", "En production", "Expédiée", "Livrée", "Annulée" };
             if (!statutsValides.Contains(nouveauStatut))
                 throw new ArgumentException("Statut invalide");
 
-            return await _repository.UpdateStatutAsync(id, nouveauStatut);
+            var commande = await _repository.GetByIdAsync(id);
+            if (commande == null) return null;
+
+            var ancienStatut = commande.Statut;
+            if (ancienStatut == nouveauStatut) return commande;
+
+            // Restituer le stock consommé quand une commande passe (pour la première fois) à Annulée,
+            // quel que soit le chemin emprunté (annulation dédiée ou changement de statut direct).
+            if (nouveauStatut == "Annulée")
+            {
+                foreach (var ligne in commande.Lignes)
+                {
+                    await _repository.RestoreStockAsync(ligne.PieceId, ligne.Quantite);
+                }
+            }
+
+            var updated = await _repository.UpdateStatutAsync(id, nouveauStatut);
+
+            await _auditLogger.LogStatusChangeAsync(EntityType.Commande, id, ancienStatut, nouveauStatut);
+
+            return updated;
         }
 
         // Méthodes privées

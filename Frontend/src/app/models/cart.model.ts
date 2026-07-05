@@ -7,7 +7,7 @@ export interface CartItem {
   stlFileName?: string;
 }
 
-export type CommandeStatut = 'En attente' | 'Confirmée' | 'En production' | 'Expédiée' | 'Livrée';
+export type CommandeStatut = 'En attente' | 'Confirmée' | 'En production' | 'Expédiée' | 'Livrée' | 'Annulée';
 
 // Correspond exactement à Backend.Models.CommandeLigne.
 export interface CommandeLigneResponse {

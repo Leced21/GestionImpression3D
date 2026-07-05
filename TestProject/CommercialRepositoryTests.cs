@@ -47,6 +47,28 @@ namespace TestProject
             Assert.Equal($"CMD-{year}-0008", numero);
         }
 
+        [Fact]
+        public async Task RestoreStockAsync_AddsQuantityBackToPieceStock()
+        {
+            var piece = new Piece { Nom = "Support moteur", Reference = "REF-001", Stock = 5 };
+            _context.Pieces.Add(piece);
+            await _context.SaveChangesAsync();
+
+            var result = await _repository.RestoreStockAsync(piece.Id, 3);
+
+            Assert.True(result);
+            var reloaded = await _context.Pieces.FindAsync(piece.Id);
+            Assert.Equal(8, reloaded!.Stock);
+        }
+
+        [Fact]
+        public async Task RestoreStockAsync_WithUnknownPiece_ReturnsFalse()
+        {
+            var result = await _repository.RestoreStockAsync(999999, 3);
+
+            Assert.False(result);
+        }
+
         public void Dispose()
         {
             _context.Database.EnsureDeleted();

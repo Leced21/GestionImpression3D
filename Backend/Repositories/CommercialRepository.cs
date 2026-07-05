@@ -132,6 +132,17 @@ namespace Backend.Repositories
             return true;
         }
 
+        public async Task<bool> RestoreStockAsync(int pieceId, int quantite)
+        {
+            var piece = await _context.Pieces.FindAsync(pieceId);
+            if (piece == null) return false;
+
+            piece.Stock += quantite;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<string> GenerateNumeroCommandeAsync()
         {
             var year = DateTime.Now.Year;

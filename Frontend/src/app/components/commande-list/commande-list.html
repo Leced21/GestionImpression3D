@@ -60,12 +60,15 @@
                 </table>
 
                 <div class="detail-actions">
-                    <div class="statut-select">
+                    <div class="statut-select" *ngIf="commande.statut !== 'Annulée'; else annuleeMessage">
                         <label>Statut</label>
                         <select [ngModel]="commande.statut" (ngModelChange)="changerStatut(commande, $event)">
                             <option *ngFor="let s of statuts" [ngValue]="s">{{ s }}</option>
                         </select>
                     </div>
+                    <ng-template #annuleeMessage>
+                        <p class="annulee-message">🚫 Cette commande a été annulée, le stock a été restitué.</p>
+                    </ng-template>
                     <button class="btn-danger" *ngIf="peutAnnuler(commande)" (click)="annuler(commande)">
                         🗑️ Annuler la commande
                     </button>

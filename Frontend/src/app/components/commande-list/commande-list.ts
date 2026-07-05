@@ -19,6 +19,9 @@ export class CommandeList implements OnInit {
   isLoading = false;
   expandedId: number | null = null;
 
+  // "Annulée" n'est volontairement pas proposée ici : elle ne doit être atteinte
+  // que via l'action dédiée "Annuler la commande" (peutAnnuler), pas par un
+  // simple changement de statut qui contournerait la règle métier.
   readonly statuts: CommandeStatut[] = ['En attente', 'Confirmée', 'En production', 'Expédiée', 'Livrée'];
 
   constructor(
@@ -70,12 +73,14 @@ export class CommandeList implements OnInit {
   }
 
   annuler(commande: Commande): void {
-    if (!confirm(`Annuler la commande ${commande.numeroCommande} ?`)) return;
+    if (!confirm(`Annuler la commande ${commande.numeroCommande} ? Le stock réservé sera restitué.`)) return;
 
     this.commercialService.annulerCommande(commande.id).subscribe({
       next: () => {
-        this.commandes = this.commandes.filter(c => c.id !== commande.id);
-        this.toast.success(`Commande ${commande.numeroCommande} annulée`);
+        // La commande annulée n'est plus supprimée côté backend (historique conservé) :
+        // on met juste à jour son statut localement au lieu de la retirer de la liste.
+        commande.statut = 'Annulée';
+        this.toast.success(`Commande ${commande.numeroCommande} annulée, stock restitué`);
         this.cdr.detectChanges();
       },
       error: (err) => this.toast.error(err.message || 'Impossible d\'annuler la commande')
@@ -88,7 +93,8 @@ export class CommandeList implements OnInit {
       'Confirmée': 'badge-info',
       'En production': 'badge-info',
       'Expédiée': 'badge-info',
-      'Livrée': 'badge-success'
+      'Livrée': 'badge-success',
+      'Annulée': 'badge-danger'
     };
     return classes[statut] || 'badge-secondary';
   }

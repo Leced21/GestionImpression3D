@@ -21,7 +21,8 @@ export enum EntityType {
   Client = 12,
   Devis = 13,
   Invitation = 14,
-  Facture = 15
+  Facture = 15,
+  Commande = 16
 }
 
 export interface AuditLog {

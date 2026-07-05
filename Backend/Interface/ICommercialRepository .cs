@@ -21,6 +21,7 @@ namespace Backend.Interface
     {
         Task<IEnumerable<CatalogueItem>> GetCatalogueAsync();
         Task<bool> UpdateStockAsync(int pieceId, int quantite);
+        Task<bool> RestoreStockAsync(int pieceId, int quantite);
         Task<decimal> GetChiffreAffairesAsync();
         Task<Dictionary<string, int>> GetStatistiquesCommandesAsync();
         Task<string> GenerateNumeroCommandeAsync();

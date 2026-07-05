@@ -1,4 +1,5 @@
 using Backend.DTOs;
+using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 using Backend.Services;
@@ -12,17 +13,20 @@ namespace TestProject
         private readonly Mock<IPieceRepository> _pieceRepositoryMock;
         private readonly Mock<ICommercialRepository> _commercialRepositoryMock;
         private readonly Mock<IClientService> _clientServiceMock;
+        private readonly Mock<IAuditLogger> _auditLoggerMock;
 
         public CommercialServiceTests()
         {
             _pieceRepositoryMock = new Mock<IPieceRepository>();
             _commercialRepositoryMock = new Mock<ICommercialRepository>();
             _clientServiceMock = new Mock<IClientService>();
+            _auditLoggerMock = new Mock<IAuditLogger>();
 
             _commercialService = new CommercialService(
                 _pieceRepositoryMock.Object,
                 _commercialRepositoryMock.Object,
-                _clientServiceMock.Object
+                _clientServiceMock.Object,
+                _auditLoggerMock.Object
             );
         }
 
@@ -61,6 +65,7 @@ namespace TestProject
             Assert.Equal(5, result.ClientId);
             Assert.Equal("CMD-2026-0001", result.NumeroCommande);
             _commercialRepositoryMock.Verify(x => x.CreateAsync(It.Is<Commande>(c => c.ClientId == 5)), Times.Once);
+            _auditLoggerMock.Verify(x => x.LogCreationAsync(EntityType.Commande, It.IsAny<int>(), "CMD-2026-0001"), Times.Once);
         }
 
         [Fact]
@@ -131,6 +136,95 @@ namespace TestProject
 
             // Assert
             Assert.Single(result);
+        }
+
+        private static Commande CreateCommandeEnAttente()
+        {
+            return new Commande
+            {
+                Id = 1,
+                NumeroCommande = "CMD-2026-0001",
+                Statut = "En attente",
+                Lignes = new List<CommandeLigne>
+                {
+                    new CommandeLigne { PieceId = 10, Quantite = 3 },
+                    new CommandeLigne { PieceId = 11, Quantite = 1 }
+                }
+            };
+        }
+
+        [Fact]
+        public async Task AnnulerCommande_WithPendingCommande_RestoresStockAndSetsStatutAnnulee()
+        {
+            var commande = CreateCommandeEnAttente();
+            _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
+            _commercialRepositoryMock.Setup(x => x.UpdateStatutAsync(1, "Annulée"))
+                .ReturnsAsync(new Commande { Id = 1, Statut = "Annulée" });
+
+            var result = await _commercialService.AnnulerCommandeAsync(1);
+
+            Assert.True(result);
+            _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(10, 3), Times.Once);
+            _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(11, 1), Times.Once);
+            _commercialRepositoryMock.Verify(x => x.UpdateStatutAsync(1, "Annulée"), Times.Once);
+            _commercialRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<int>()), Times.Never);
+            _auditLoggerMock.Verify(x => x.LogStatusChangeAsync(EntityType.Commande, 1, "En attente", "Annulée"), Times.Once);
+        }
+
+        [Fact]
+        public async Task AnnulerCommande_WithNonCancellableStatus_ThrowsAndDoesNotRestoreStock()
+        {
+            var commande = CreateCommandeEnAttente();
+            commande.Statut = "Livrée";
+            _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => _commercialService.AnnulerCommandeAsync(1));
+
+            _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AnnulerCommande_WithNonExistingCommande_ReturnsFalse()
+        {
+            _commercialRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Commande?)null);
+
+            var result = await _commercialService.AnnulerCommandeAsync(99);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public async Task UpdateStatutCommande_WithInvalidStatut_ThrowsArgumentException()
+        {
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => _commercialService.UpdateStatutCommandeAsync(1, "Statut inconnu"));
+        }
+
+        [Fact]
+        public async Task UpdateStatutCommande_ToSameStatut_IsNoOpAndDoesNotRestoreStock()
+        {
+            var commande = CreateCommandeEnAttente();
+            _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
+
+            var result = await _commercialService.UpdateStatutCommandeAsync(1, "En attente");
+
+            Assert.Equal(commande, result);
+            _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+            _commercialRepositoryMock.Verify(x => x.UpdateStatutAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+            _auditLoggerMock.Verify(x => x.LogStatusChangeAsync(It.IsAny<EntityType>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatutCommande_ToProduction_DoesNotRestoreStock()
+        {
+            var commande = CreateCommandeEnAttente();
+            _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
+            _commercialRepositoryMock.Setup(x => x.UpdateStatutAsync(1, "En production"))
+                .ReturnsAsync(new Commande { Id = 1, Statut = "En production" });
+
+            await _commercialService.UpdateStatutCommandeAsync(1, "En production");
+
+            _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
         }
     }
 }
