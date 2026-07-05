@@ -65,6 +65,14 @@ namespace Backend.Controllers
             return Ok(commande);
         }
 
+        [HttpGet("commandes/client/{clientId}")]
+        [Authorize(Roles = "Admin,Commercial")]
+        public async Task<IActionResult> GetCommandesByClient(int clientId)
+        {
+            var commandes = await _commercialService.GetByClientAsync(clientId);
+            return Ok(commandes);
+        }
+
         [HttpPatch("commandes/{id}/statut")]
         [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> UpdateStatut(int id, [FromBody] string statut)

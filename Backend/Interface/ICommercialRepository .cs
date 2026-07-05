@@ -7,7 +7,7 @@ namespace Backend.Interface
         Task<Commande?> GetByIdAsync(int id);
         Task<IEnumerable<Commande>> GetAllAsync();
         Task<IEnumerable<Commande>> GetByStatutAsync(string statut);
-        Task<IEnumerable<Commande>> GetByClientAsync(string email);
+        Task<IEnumerable<Commande>> GetByClientAsync(int clientId);
     }
 
     public interface ICommandeWriter

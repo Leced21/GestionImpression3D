@@ -79,6 +79,7 @@ namespace Backend.Services
             var commande = new Commande
             {
                 NumeroCommande = numeroCommande,
+                ClientId = client?.Id,
                 ClientNom = client?.Nom ?? request.ClientNom,
                 ClientEmail = client?.Email ?? request.ClientEmail,
                 ClientTelephone = client?.Telephone ?? request.ClientTelephone,
@@ -111,6 +112,11 @@ namespace Backend.Services
         public async Task<Commande?> GetCommandeAsync(int id)
         {
             return await _repository.GetByIdAsync(id);
+        }
+
+        public async Task<IEnumerable<Commande>> GetByClientAsync(int clientId)
+        {
+            return await _repository.GetByClientAsync(clientId);
         }
 
         public async Task<object> GetDashboardStatsAsync()

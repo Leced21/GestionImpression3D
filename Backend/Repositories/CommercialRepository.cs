@@ -45,11 +45,12 @@ namespace Backend.Repositories
                                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Commande>> GetByClientAsync(string email)
+        public async Task<IEnumerable<Commande>> GetByClientAsync(int clientId)
         {
             return await _context.Commandes
                 .Include(c => c.Lignes)
-                .Where(c => c.ClientEmail == email)
+                .Where(c => c.ClientId == clientId)
+                .OrderByDescending(c => c.DateCommande)
                 .ToListAsync();
         }
 

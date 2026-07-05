@@ -1515,9 +1515,11 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Commande", b =>
                 {
-                    b.HasOne("Backend.Models.Client", null)
+                    b.HasOne("Backend.Models.Client", "Client")
                         .WithMany("Commandes")
                         .HasForeignKey("ClientId");
+
+                    b.Navigation("Client");
                 });
 
             modelBuilder.Entity("Backend.Models.CommandeLigne", b =>
