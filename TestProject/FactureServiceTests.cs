@@ -10,14 +10,16 @@ namespace TestProject
     {
         private readonly IFactureService _factureService;
         private readonly Mock<IFactureRepository> _factureRepositoryMock;
+        private readonly Mock<IPdfExportService> _pdfExportServiceMock;
         private readonly Mock<IAuditLogger> _auditLoggerMock;
 
         public FactureServiceTests()
         {
             _factureRepositoryMock = new Mock<IFactureRepository>();
+            _pdfExportServiceMock = new Mock<IPdfExportService>();
             _auditLoggerMock = new Mock<IAuditLogger>();
 
-            _factureService = new FactureService(_factureRepositoryMock.Object, _auditLoggerMock.Object);
+            _factureService = new FactureService(_factureRepositoryMock.Object, _pdfExportServiceMock.Object, _auditLoggerMock.Object);
         }
 
         private static Devis CreateAcceptedDevis()
@@ -132,6 +134,21 @@ namespace TestProject
             var result = await _factureService.GeneratePdfAsync(99);
 
             Assert.Empty(result);
+            _pdfExportServiceMock.Verify(x => x.ExportFacturePdfAsync(It.IsAny<Facture>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GeneratePdf_ExistingFacture_DelegatesToExportService()
+        {
+            var facture = new Facture { Id = 1, NumeroFacture = "FACT-2026-0001" };
+            var pdfBytes = new byte[] { 4, 5, 6 };
+
+            _factureRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(facture);
+            _pdfExportServiceMock.Setup(x => x.ExportFacturePdfAsync(facture)).ReturnsAsync(pdfBytes);
+
+            var result = await _factureService.GeneratePdfAsync(1);
+
+            Assert.Equal(pdfBytes, result);
         }
     }
 }

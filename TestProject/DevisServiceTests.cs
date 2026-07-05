@@ -15,6 +15,7 @@ namespace TestProject
         private readonly Mock<IPieceRepository> _pieceRepositoryMock;
         private readonly Mock<IOrdreFabricationService> _ordreFabricationServiceMock;
         private readonly Mock<IFactureService> _factureServiceMock;
+        private readonly Mock<IPdfExportService> _pdfExportServiceMock;
         private readonly Mock<IAuditLogger> _auditLoggerMock;
 
         public DevisServiceTests()
@@ -24,6 +25,7 @@ namespace TestProject
             _pieceRepositoryMock = new Mock<IPieceRepository>();
             _ordreFabricationServiceMock = new Mock<IOrdreFabricationService>();
             _factureServiceMock = new Mock<IFactureService>();
+            _pdfExportServiceMock = new Mock<IPdfExportService>();
             _auditLoggerMock = new Mock<IAuditLogger>();
 
             _devisService = new DevisService(
@@ -32,6 +34,7 @@ namespace TestProject
                 _pieceRepositoryMock.Object,
                 _ordreFabricationServiceMock.Object,
                 _factureServiceMock.Object,
+                _pdfExportServiceMock.Object,
                 _auditLoggerMock.Object
             );
         }
@@ -326,6 +329,31 @@ namespace TestProject
             Assert.Null(result);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
             _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GeneratePdf_ExistingDevis_DelegatesToExportService()
+        {
+            var devis = CreateDevis(1, DevisStatus.Brouillon, projetId: null);
+            var pdfBytes = new byte[] { 1, 2, 3 };
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _pdfExportServiceMock.Setup(x => x.ExportDevisPdfAsync(devis)).ReturnsAsync(pdfBytes);
+
+            var result = await _devisService.GeneratePdfAsync(1);
+
+            Assert.Equal(pdfBytes, result);
+        }
+
+        [Fact]
+        public async Task GeneratePdf_NonExistingDevis_ReturnsEmptyBytes()
+        {
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Devis?)null);
+
+            var result = await _devisService.GeneratePdfAsync(99);
+
+            Assert.Empty(result);
+            _pdfExportServiceMock.Verify(x => x.ExportDevisPdfAsync(It.IsAny<Devis>()), Times.Never);
         }
     }
 }

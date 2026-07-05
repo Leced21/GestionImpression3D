@@ -12,14 +12,16 @@ namespace Backend.Services
         private readonly IPieceRepository _pieceRepository;
         private readonly IOrdreFabricationService _ordreFabricationService;
         private readonly IFactureService _factureService;
+        private readonly IPdfExportService _pdfExportService;
         private readonly IAuditLogger _auditLogger;
-        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IOrdreFabricationService ordreFabricationService, IFactureService factureService, IAuditLogger auditLogger)
+        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IOrdreFabricationService ordreFabricationService, IFactureService factureService, IPdfExportService pdfExportService, IAuditLogger auditLogger)
         {
             _devisRepository = devisRepository;
             _clientRepository = clientRepository;
             _pieceRepository = pieceRepository;
             _ordreFabricationService = ordreFabricationService;
             _factureService = factureService;
+            _pdfExportService = pdfExportService;
             _auditLogger = auditLogger;
         }
         public async Task<Devis> CreateAsync(CreateDevisRequest request)
@@ -157,8 +159,7 @@ namespace Backend.Services
             var devis = await GetByIdAsync(id);
             if (devis == null) return Array.Empty<byte>();
 
-            // À implémenter avec une librairie PDF
-            return Array.Empty<byte>();
+            return await _pdfExportService.ExportDevisPdfAsync(devis);
         }
 
         public async Task<IEnumerable<Devis>> GetAllAsync()

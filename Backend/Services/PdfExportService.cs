@@ -353,5 +353,211 @@ namespace Backend.Services
                 return document.GeneratePdf();
             });
         }
+
+        public async Task<byte[]> ExportDevisPdfAsync(Devis devis)
+        {
+            return await Task.Run(() =>
+            {
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(2, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(10));
+
+                        page.Header().Column(column =>
+                        {
+                            column.Item().AlignCenter().Text("DEVIS")
+                                .SemiBold().FontSize(24).FontColor(Colors.Blue.Medium);
+                            column.Item().AlignCenter().Text($"N° {devis.NumeroDevis}")
+                                .FontSize(12).FontColor(Colors.Grey.Medium);
+                        });
+
+                        page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
+                        {
+                            column.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Cell().Text("Client:").Bold();
+                                table.Cell().Text(devis.Client?.Nom ?? "N/A");
+
+                                table.Cell().Text("Email:").Bold();
+                                table.Cell().Text(devis.Client?.Email ?? "N/A");
+
+                                table.Cell().Text("Date d'émission:").Bold();
+                                table.Cell().Text(devis.DateEmission.ToString("dd/MM/yyyy"));
+
+                                table.Cell().Text("Valable jusqu'au:").Bold();
+                                table.Cell().Text(devis.DateValidite.ToString("dd/MM/yyyy"));
+
+                                table.Cell().Text("Statut:").Bold();
+                                table.Cell().Text(devis.Statut.ToString());
+                            });
+
+                            column.Item().PaddingTop(15).Text("📦 Lignes du devis").SemiBold().FontSize(14);
+                            column.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(4);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Désignation").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Qté").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Prix unitaire").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total").Bold();
+                                });
+
+                                foreach (var ligne in devis.Lignes)
+                                {
+                                    table.Cell().Padding(5).Text(ligne.Description);
+                                    table.Cell().Padding(5).Text(ligne.Quantite.ToString());
+                                    table.Cell().Padding(5).Text($"{ligne.PrixUnitaire:F2} €");
+                                    table.Cell().Padding(5).Text($"{ligne.Total:F2} €");
+                                }
+
+                                table.Cell().ColumnSpan(3).Padding(5).Text("Total HT:").Bold().AlignRight();
+                                table.Cell().Padding(5).Text($"{devis.TotalHT:F2} €").Bold();
+
+                                table.Cell().ColumnSpan(3).Padding(5).Text($"TVA ({devis.TVA:F0}%):").AlignRight();
+                                table.Cell().Padding(5).Text($"{(devis.TotalTTC - devis.TotalHT):F2} €");
+
+                                table.Cell().ColumnSpan(3).Padding(5).Text("Total TTC:").Bold().AlignRight();
+                                table.Cell().Padding(5).Text($"{devis.TotalTTC:F2} €").Bold().FontColor(Colors.Green.Medium);
+                            });
+
+                            if (!string.IsNullOrWhiteSpace(devis.Conditions))
+                            {
+                                column.Item().PaddingTop(15).Text("💬 Conditions").SemiBold().FontSize(14);
+                                column.Item().Text(devis.Conditions).FontSize(10);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(devis.Notes))
+                            {
+                                column.Item().PaddingTop(10).Text("📝 Notes").SemiBold().FontSize(14);
+                                column.Item().Text(devis.Notes).FontSize(10);
+                            }
+                        });
+
+                        page.Footer().AlignCenter()
+                            .Text($"Devis généré le {DateTime.Now:dd/MM/yyyy HH:mm} - PrintFlow3D")
+                            .FontSize(10).FontColor(Colors.Grey.Medium);
+                    });
+                });
+
+                return document.GeneratePdf();
+            });
+        }
+
+        public async Task<byte[]> ExportFacturePdfAsync(Facture facture)
+        {
+            return await Task.Run(() =>
+            {
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(2, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(10));
+
+                        page.Header().Column(column =>
+                        {
+                            column.Item().AlignCenter().Text("FACTURE")
+                                .SemiBold().FontSize(24).FontColor(Colors.Blue.Medium);
+                            column.Item().AlignCenter().Text($"N° {facture.NumeroFacture}")
+                                .FontSize(12).FontColor(Colors.Grey.Medium);
+                        });
+
+                        page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
+                        {
+                            column.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Cell().Text("Client:").Bold();
+                                table.Cell().Text(facture.Client?.Nom ?? "N/A");
+
+                                table.Cell().Text("Email:").Bold();
+                                table.Cell().Text(facture.Client?.Email ?? "N/A");
+
+                                table.Cell().Text("Date d'émission:").Bold();
+                                table.Cell().Text(facture.DateEmission.ToString("dd/MM/yyyy"));
+
+                                table.Cell().Text("Date d'échéance:").Bold();
+                                table.Cell().Text(facture.DateEcheance.ToString("dd/MM/yyyy"));
+
+                                table.Cell().Text("Statut:").Bold();
+                                table.Cell().Text(facture.Statut.ToString());
+                            });
+
+                            column.Item().PaddingTop(15).Text("📦 Détail").SemiBold().FontSize(14);
+                            column.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(4);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Désignation").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Qté").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Prix unitaire").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total").Bold();
+                                });
+
+                                foreach (var ligne in facture.Lignes)
+                                {
+                                    table.Cell().Padding(5).Text(ligne.Description);
+                                    table.Cell().Padding(5).Text(ligne.Quantite.ToString());
+                                    table.Cell().Padding(5).Text($"{ligne.PrixUnitaire:F2} €");
+                                    table.Cell().Padding(5).Text($"{ligne.Total:F2} €");
+                                }
+
+                                table.Cell().ColumnSpan(3).Padding(5).Text("Total HT:").Bold().AlignRight();
+                                table.Cell().Padding(5).Text($"{facture.TotalHT:F2} €").Bold();
+
+                                table.Cell().ColumnSpan(3).Padding(5).Text($"TVA ({facture.TVA:F0}%):").AlignRight();
+                                table.Cell().Padding(5).Text($"{(facture.TotalTTC - facture.TotalHT):F2} €");
+
+                                table.Cell().ColumnSpan(3).Padding(5).Text("Total TTC:").Bold().AlignRight();
+                                table.Cell().Padding(5).Text($"{facture.TotalTTC:F2} €").Bold().FontColor(Colors.Green.Medium);
+                            });
+
+                            if (!string.IsNullOrWhiteSpace(facture.Notes))
+                            {
+                                column.Item().PaddingTop(15).Text("📝 Notes").SemiBold().FontSize(14);
+                                column.Item().Text(facture.Notes).FontSize(10);
+                            }
+                        });
+
+                        page.Footer().AlignCenter()
+                            .Text($"Facture générée le {DateTime.Now:dd/MM/yyyy HH:mm} - PrintFlow3D")
+                            .FontSize(10).FontColor(Colors.Grey.Medium);
+                    });
+                });
+
+                return document.GeneratePdf();
+            });
+        }
     }
 }

@@ -7,10 +7,12 @@ namespace Backend.Services
     public class FactureService : IFactureService
     {
         private readonly IFactureRepository _factureRepository;
+        private readonly IPdfExportService _pdfExportService;
         private readonly IAuditLogger _auditLogger;
-        public FactureService(IFactureRepository factureRepository, IAuditLogger auditLogger)
+        public FactureService(IFactureRepository factureRepository, IPdfExportService pdfExportService, IAuditLogger auditLogger)
         {
             _factureRepository = factureRepository;
+            _pdfExportService = pdfExportService;
             _auditLogger = auditLogger;
         }
 
@@ -55,8 +57,7 @@ namespace Backend.Services
             var facture = await GetByIdAsync(id);
             if (facture == null) return Array.Empty<byte>();
 
-            // À implémenter avec une librairie PDF
-            return Array.Empty<byte>();
+            return await _pdfExportService.ExportFacturePdfAsync(facture);
         }
 
         public async Task<IEnumerable<Facture>> GetAllAsync()
