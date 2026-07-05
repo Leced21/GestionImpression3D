@@ -9,5 +9,6 @@ namespace Backend.Interface
         Task<User?> GetUserByIdAsync(int id);
         Task<bool> UserExistsAsync(string email);
         Task<AuthResponse?> RefreshAsync(string refreshToken);
+        Task<bool> LogoutAsync(int userId);
     }
 }

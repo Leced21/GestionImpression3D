@@ -318,5 +318,35 @@ namespace TestProject
 
             Assert.Null(result);
         }
+
+        [Fact]
+        public async Task LogoutAsync_WithExistingUser_ClearsRefreshTokenAndReturnsTrue()
+        {
+            var user = new User
+            {
+                Id = 1,
+                Email = "admin@test.com",
+                RefreshToken = "some-refresh-token",
+                RefreshTokenExpiry = DateTime.UtcNow.AddDays(5)
+            };
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(user);
+
+            var result = await _authService.LogoutAsync(1);
+
+            Assert.True(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u =>
+                u.Id == 1 && u.RefreshToken == null && u.RefreshTokenExpiry == null)), Times.Once);
+        }
+
+        [Fact]
+        public async Task LogoutAsync_WithNonExistingUser_ReturnsFalse()
+        {
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((User?)null);
+
+            var result = await _authService.LogoutAsync(99);
+
+            Assert.False(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
     }
 }

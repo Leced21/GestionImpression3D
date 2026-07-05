@@ -46,6 +46,16 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  // Déconnexion initiée par l'utilisateur : révoque le refresh token côté serveur
+  // avant de vider la session locale (contrairement à logout(), utilisé en interne
+  // par l'intercepteur/le refresh en échec, où le token est de toute façon déjà invalide).
+  logoutAndRevoke(): void {
+    this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
+      next: () => this.logout(),
+      error: () => this.logout()
+    });
+  }
+
   getToken(): string | null {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   }

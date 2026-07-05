@@ -42,7 +42,7 @@ export class Header implements OnInit ,OnDestroy{
   }
 
   logout(): void {
-    this.authService.logout();
+    this.authService.logoutAndRevoke();
     this.menuOpen = false;
   }
 }

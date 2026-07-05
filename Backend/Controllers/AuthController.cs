@@ -53,6 +53,15 @@ namespace Backend.Controllers
             return Ok(new { user.Id, user.Email, user.Nom, user.Prenom, user.Role });
         }
 
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            await _authService.LogoutAsync(userId);
+            return NoContent();
+        }
+
         [HttpPost("refresh")]
         public async Task<ActionResult<AuthResponse>> Refresh(RefreshRequest request)
         {
