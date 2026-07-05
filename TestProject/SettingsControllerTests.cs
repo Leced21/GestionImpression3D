@@ -71,6 +71,11 @@ namespace TestProject
         [Fact]
         public async Task GetSettings_ReturnsDefaultSettingsOnFirstCall()
         {
+            // Le fixture (et donc la base) est partagé entre tous les tests de la classe :
+            // on efface tout réglage existant pour garantir un véritable "premier appel",
+            // quel que soit l'ordre d'exécution des tests.
+            RemoveAdminSettingsFromDatabase();
+
             var response = await _client.GetAsync("/api/settings");
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,6 +84,17 @@ namespace TestProject
             var settings = JsonSerializer.Deserialize<SettingsResponse>(json, JsonOptions);
             Assert.NotNull(settings);
             Assert.Equal("fr", settings!.Language);
+        }
+
+        private void RemoveAdminSettingsFromDatabase()
+        {
+            using var scope = _factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var admin = dbContext.Users.First(u => u.Email == "admin@printflow3d.com");
+            var existingSettings = dbContext.UserSettings.Where(s => s.UserId == admin.Id);
+            dbContext.UserSettings.RemoveRange(existingSettings);
+            dbContext.SaveChanges();
         }
 
         [Fact]
