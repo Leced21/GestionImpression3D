@@ -4,9 +4,6 @@ using Backend.Interface;
 using Backend.Models;
 using Backend.Services;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TestProject
 {
