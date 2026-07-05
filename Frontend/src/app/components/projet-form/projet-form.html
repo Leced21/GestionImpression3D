@@ -1,0 +1,92 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/projets">← Retour à la liste
+        </button>
+        <h1> {{isEditMode? '✏️ Modifier le projet': '➕ Nouveau projet'}}</h1>
+    </div>
+    <form [formGroup]="projetForm" (ngSubmit)="onSubmit()"
+        class="projet-form">
+        <!-- Section 1: Informations générales -->
+        <div class="form-section">
+            <h2 class="section-title">📋 Informations générales</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nom">Nom du projet*</label>
+                    <input type="text"
+                        id="nom"
+                        formControlName="nom"
+                        placeholder="Ex: Support moteur MX-400"
+                        [class.invalid]="projetForm.get('nom')?.invalid && projetForm.get('nom')?.touched">
+                    <div
+                        class="error-message"
+                        *ngIf="projetForm.get('nom')?.invalid && projetForm.get('nom')?.touched">Le
+                        nom est requis </div></div><div
+                    class="form-group"><label
+                        for="reference">Référence</label><input type="text"
+                        id="reference"
+                        formControlName="reference"
+                        placeholder="Auto-généré si vide"><div
+                        class="helper-text">Laissez vide pour génération
+                        automatique</div></div></div><div
+                class="form-group"><label
+                    for="description">Description</label><textarea
+                    id="description"
+                    formControlName="description"
+                    rows="3"
+                    placeholder="Description du projet, objectifs, contraintes..."></textarea></div></div>
+        <!-- Section 2: Client -->
+        <div class="form-section"><h2 class="section-title">Client</h2><div
+                class="form-row"><div class="form-group"><label
+                        for="clientId">Client centralisé</label><select
+                        id="clientId" formControlName="clientId"
+                        (change)="onClientSelect()"><option value>-- Aucun client
+                            --</option><option *ngFor="let client of clients"
+                            [value]="client.id">{{ client.nom }} - {{
+                            client.email }}</option></select><div
+                        class="helper-text">La création se fait depuis le module
+                        Clients.</div></div></div></div>
+        <div class="form-section"><h2
+                class="section-title">👤 Client</h2><div class="form-row"><div
+                    class="form-group"><label for="clientNom">Nom du
+                        client</label><input type="text" id="clientNom"
+                        formControlName="clientNom" readonly
+                        placeholder="Nom de l'entreprise ou du client"></div><div
+                    class="form-group"><label for="clientEmail">Email du
+                        client</label><input type="email" id="clientEmail"
+                        formControlName="clientEmail" readonly
+                        placeholder="client@email.com"></div></div></div><!--
+        Section 3: Planning et Budget --><div class="form-section"><h2
+                class="section-title">📅 Planning et budget</h2><div
+                class="form-row"><div class="form-group"><label
+                        for="dateLivraisonPrevue">Date de livraison
+                        prévue</label><input type="date"
+                        id="dateLivraisonPrevue"
+                        formControlName="dateLivraisonPrevue"></div><div
+                    class="form-group"><label for="budget">Budget
+                        (€)</label><input type="number" id="budget"
+                        formControlName="budget" step="0.01" min="0"
+                        placeholder="0.00"></div></div></div>
+        <!-- Section 4:Statut -->
+        <div class="form-section">
+            <h2 class="section-title">📊Statut</h2>
+            <div class="form-group">
+                <label for="statut">Statut du projet</label>
+                <select id="statut" formControlName="statut"><option
+                        value="Brouillon">📝
+                        Brouillon</option><option value="EnCours">🔄 En
+                        cours</option><option value="Termine">✅
+                        Terminé</option></select></div></div>
+        <!-- Actions-->
+        <div class="form-actions">
+            <div *ngIf="submissionError" class="submission-error">{{ submissionError }}</div>
+            <button type="button" class="btn-secondary"
+                routerLink="/projets">Annuler
+            </button>
+            <button type="submit"
+                class="btn-primary"
+                [disabled]="projetForm.invalid || isSubmitting">
+                {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer le projet') }}
+            </button>
+        </div>
+    </form>
+</div>

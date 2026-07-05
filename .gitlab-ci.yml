@@ -1,0 +1,224 @@
+############################################################
+# GestionImpression3D
+# GitLab CI/CD - Version 3.3 (Optimisée & Épurée)
+############################################################
+
+stages:
+  - test
+  - docker
+  - migrate
+  - deploy
+  - verify
+
+default:
+  tags:
+    - local-runner
+  interruptible: true
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\/.*$/'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+variables:
+  DOCKER_BUILDKIT: "1"
+  COMPOSE_DOCKER_CLI_BUILD: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .nuget/packages/
+    - Frontend/.npm/
+
+# Ancre YAML réutilisable pour éviter la répétition des règles d'étiquetage Docker
+.docker_rules: &docker_rules
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      variables: { TARGET_TAG: "dev" }
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      variables: { TARGET_TAG: "staging" }
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      variables: { TARGET_TAG: "latest" }
+
+############################################################
+# STAGE: TEST
+############################################################
+
+backend-test:
+  stage: test
+  script:
+    - dotnet restore Backend\Backend.csproj
+    - dotnet restore TestProject\TestProject.csproj
+    - dotnet test TestProject\TestProject.csproj --configuration Release --no-restore
+  rules:
+    - when: always
+
+frontend-test:
+  stage: test
+  script:
+    - cd Frontend
+    - npm ci --cache .npm
+    - npm test -- --watch=false
+    - npm run build
+  rules:
+    - when: always
+
+############################################################
+# STAGE: DOCKER
+############################################################
+
+.docker-login-base:
+  before_script:
+    - echo $env:CI_REGISTRY_PASSWORD | docker login $env:CI_REGISTRY --username $env:CI_REGISTRY_USER --password-stdin
+
+docker-backend:
+  stage: docker
+  extends: .docker-login-base
+  needs:
+    - backend-test
+  <<: *docker_rules
+  script:
+    - docker build -f Backend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" .
+    - docker tag "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
+    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:CI_COMMIT_SHORT_SHA"
+    - docker push "$env:CI_REGISTRY_IMAGE/backend:$env:TARGET_TAG"
+
+docker-frontend:
+  stage: docker
+  extends: .docker-login-base
+  needs:
+    - frontend-test
+  <<: *docker_rules
+  script:
+    - docker build -f Frontend/Dockerfile -t "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" .
+    - docker tag "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA" "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
+    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:CI_COMMIT_SHORT_SHA"
+    - docker push "$env:CI_REGISTRY_IMAGE/frontend:$env:TARGET_TAG"
+
+############################################################
+# STAGE: MIGRATE
+############################################################
+
+migrate-dev:
+  stage: migrate
+  needs:
+    - docker-backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - Copy-Item C:\PrintFlow3D\env\.env.dev C:\PrintFlow3D\.env -Force
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml run --rm backend dotnet ef database update
+
+migrate-staging:
+  stage: migrate
+  needs:
+    - docker-backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+  script:
+    - Copy-Item C:\PrintFlow3D\env\.env.staging C:\PrintFlow3D\.env -Force
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml run --rm backend dotnet ef database update
+############################################################
+# STAGE: DEPLOY
+############################################################
+
+deploy-dev:
+  stage: deploy
+  needs:
+    - migrate-dev
+    - docker-frontend
+  environment:
+    name: development
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.dev.yml up -d --pull always --remove-orphans
+
+deploy-staging:
+  stage: deploy
+  needs:
+    - migrate-staging
+    - docker-frontend
+  environment:
+    name: staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+  script:
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.staging.yml up -d --pull always --remove-orphans
+
+deploy-prod:
+  stage: deploy
+  resource_group: production
+  needs:
+    - docker-backend
+    - docker-frontend
+  environment:
+    name: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+  script:
+    - Copy-Item C:\PrintFlow3D\env\.env.prod C:\PrintFlow3D\.env -Force
+    - Add-Content C:\PrintFlow3D\.env "IMAGE_TAG=$env:CI_COMMIT_SHORT_SHA"
+    - Set-Location C:\PrintFlow3D
+    - docker compose --env-file .env -f docker\docker-compose.yml -f docker\docker-compose.prod.yml up -d --pull always --remove-orphans
+
+############################################################
+# STAGE: VERIFY & RECOVERY
+############################################################
+
+verify-dev:
+  stage: verify
+  needs:
+    - deploy-dev
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - Set-Location C:\PrintFlow3D
+    - $i=0; while($i -lt 30 -and (Invoke-WebRequest http://localhost:5000/health -UseBasicParsing).StatusCode -ne 200) { Start-Sleep 2; $i++ }
+    - if($i -eq 30) { throw "HealthCheck DEV failed." }
+
+verify-staging:
+  stage: verify
+  needs:
+    - deploy-staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+  script:
+    - Set-Location C:\PrintFlow3D
+    - $i=0; while($i -lt 30 -and (Invoke-WebRequest http://localhost:5001/health -UseBasicParsing).StatusCode -ne 200) { Start-Sleep 2; $i++ }
+    - if($i -eq 30) { throw "HealthCheck STAGING failed." }
+
+verify-prod:
+  stage: verify
+  needs:
+    - deploy-prod
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - Set-Location C:\PrintFlow3D
+    - $i=0; while($i -lt 30 -and (Invoke-WebRequest http://localhost:5002/health -UseBasicParsing).StatusCode -ne 200) { Start-Sleep 2; $i++ }
+    - if($i -eq 30) { throw "Application indisponible." }
+
+rollback-prod:
+  stage: verify
+  needs:
+    - verify-prod
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_failure
+  script:
+    - Set-Location C:\PrintFlow3D
+    - powershell .\rollback.ps1 latest

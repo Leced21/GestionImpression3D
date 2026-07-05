@@ -1,0 +1,382 @@
+<!-- src/app/components/piece-kanban/piece-kanban.component.html -->
+<div class="kanban-container">
+    <!-- En-tête -->
+    <div class="kanban-header">
+        <div>
+            <h1>🔄 Cycle de vie - Vue Kanban</h1>
+            <p class="subtitle">Glissez-déposez les pièces pour changer leur
+                statut</p>
+        </div>
+        <button class="btn-primary" routerLink="/pieces/nouveau">
+            + Nouvelle pièce
+        </button>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="kanban-stats">
+        <div class="stat-item">
+            <span class="stat-label">Total</span>
+            <span class="stat-value">{{ allPieces.length }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">En production</span>
+            <span class="stat-value">{{ getCountByStatut('Production') }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Commercialisables</span>
+            <span class="stat-value">{{ getCountByStatut('Commercialisable')
+                }}</span>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement du kanban...</p>
+    </div>
+
+    <!-- Kanban Board -->
+    <div *ngIf="!isLoading" class="kanban-board" cdkDropListGroup>
+        <!-- Colonne Brouillon -->
+        <div class="kanban-column">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="column-icon">📝</span>
+                    <span>Brouillon</span>
+                    <span class="badge-count">{{
+                        getPiecesByStatut('Brouillon').length }}</span>
+                </div>
+            </div>
+            <div
+                cdkDropList
+                [cdkDropListData]="getPiecesByStatut('Brouillon')"
+                (cdkDropListDropped)="onDrop($event)"
+                [cdkDropListConnectedTo]="getConnectedLists()"
+                class="column-content">
+                <div
+                    *ngFor="let piece of getPiecesByStatut('Brouillon')"
+                    class="kanban-card"
+                    cdkDrag>
+                    <div class="card-header">
+                        <h3 class="card-title">{{ piece.nom }}</h3>
+                        <button class="card-menu"
+                            (click)="openCardMenu($event, piece)">⋮</button>
+                    </div>
+                    <div class="card-ref">{{ piece.reference }}</div>
+                    <div class="card-description" *ngIf="piece.description">
+                        {{ piece.description | slice:0:60 }}{{
+                        piece.description.length > 60 ? '...' : '' }}
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-price" *ngIf="piece.prixVente">
+                            {{ piece.prixVente | number:'1.2-2' }} €
+                        </div>
+                        <div class="card-price empty" *ngIf="!piece.prixVente">
+                            Prix non défini
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id]"
+                            title="Voir détail">👁️</button>
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id, 'edit']"
+                            title="Modifier">✏️</button>
+                    </div>
+                    <div class="drag-handle" cdkDragHandle>
+                        ⋮⋮
+                    </div>
+                </div>
+                <div *ngIf="getPiecesByStatut(PieceStatus.Brouillon).length === 0"
+                    class="empty-column">
+                    Aucune pièce
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Conception -->
+        <div class="kanban-column">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="column-icon">🎨</span>
+                    <span>Conception</span>
+                    <span class="badge-count">{{
+                        getPiecesByStatut('Conception').length }}</span>
+                </div>
+            </div>
+            <div
+                cdkDropList
+                [cdkDropListData]="getPiecesByStatut('Conception')"
+                (cdkDropListDropped)="onDrop($event)"
+                [cdkDropListConnectedTo]="getConnectedLists()"
+                class="column-content">
+                <div
+                    *ngFor="let piece of getPiecesByStatut('Conception')"
+                    class="kanban-card"
+                    cdkDrag>
+                    <div class="card-header">
+                        <h3 class="card-title">{{ piece.nom }}</h3>
+                        <button class="card-menu"
+                            (click)="openCardMenu($event, piece)">⋮</button>
+                    </div>
+                    <div class="card-ref">{{ piece.reference }}</div>
+                    <div class="card-description" *ngIf="piece.description">
+                        {{ piece.description | slice:0:60 }}{{
+                        piece.description.length > 60 ? '...' : '' }}
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-cost">Coût: {{ getCoutTotal(piece) |
+                            number:'1.2-2' }} €</div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id]"
+                            title="Voir détail">👁️</button>
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id, 'edit']"
+                            title="Modifier">✏️</button>
+                    </div>
+                    <div class="drag-handle" cdkDragHandle>
+                        ⋮⋮
+                    </div>
+                </div>
+                <div *ngIf="getPiecesByStatut(PieceStatus.Conception).length === 0"
+                    class="empty-column">
+                    Aucune pièce
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Prototypage -->
+        <div class="kanban-column">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="column-icon">🖨️</span>
+                    <span>Prototypage</span>
+                    <span class="badge-count">{{
+                        getPiecesByStatut('Prototypage').length }}</span>
+                </div>
+            </div>
+            <div
+                cdkDropList
+                [cdkDropListData]="getPiecesByStatut('Prototypage')"
+                (cdkDropListDropped)="onDrop($event)"
+                [cdkDropListConnectedTo]="getConnectedLists()"
+                class="column-content">
+                <div
+                    *ngFor="let piece of getPiecesByStatut('Prototypage')"
+                    class="kanban-card"
+                    cdkDrag>
+                    <div class="card-header">
+                        <h3 class="card-title">{{ piece.nom }}</h3>
+                        <button class="card-menu"
+                            (click)="openCardMenu($event, piece)">⋮</button>
+                    </div>
+                    <div class="card-ref">{{ piece.reference }}</div>
+                    <div class="card-description" *ngIf="piece.description">
+                        {{ piece.description | slice:0:60 }}{{
+                        piece.description.length > 60 ? '...' : '' }}
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-cost">Coût: {{ getCoutTotal(piece) |
+                            number:'1.2-2' }} €</div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id]"
+                            title="Voir détail">👁️</button>
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id, 'edit']"
+                            title="Modifier">✏️</button>
+                    </div>
+                    <div class="drag-handle" cdkDragHandle>
+                        ⋮⋮
+                    </div>
+                </div>
+                <div *ngIf="getPiecesByStatut(PieceStatus.Prototypage).length === 0"
+                    class="empty-column">
+                    Aucune pièce
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Validation -->
+        <div class="kanban-column">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="column-icon">✅</span>
+                    <span>Validation</span>
+                    <span class="badge-count">{{
+                        getPiecesByStatut('Validation').length }}</span>
+                </div>
+            </div>
+            <div
+                cdkDropList
+                [cdkDropListData]="getPiecesByStatut('Validation')"
+                (cdkDropListDropped)="onDrop($event)"
+                [cdkDropListConnectedTo]="getConnectedLists()"
+                class="column-content">
+                <div
+                    *ngFor="let piece of getPiecesByStatut('Validation')"
+                    class="kanban-card"
+                    cdkDrag>
+                    <div class="card-header">
+                        <h3 class="card-title">{{ piece.nom }}</h3>
+                        <button class="card-menu"
+                            (click)="openCardMenu($event, piece)">⋮</button>
+                    </div>
+                    <div class="card-ref">{{ piece.reference }}</div>
+                    <div class="card-description" *ngIf="piece.description">
+                        {{ piece.description | slice:0:60 }}{{
+                        piece.description.length > 60 ? '...' : '' }}
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-price" *ngIf="piece.prixVente">
+                            Prix: {{ piece.prixVente | number:'1.2-2' }} €
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id]"
+                            title="Voir détail">👁️</button>
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id, 'edit']"
+                            title="Modifier">✏️</button>
+                    </div>
+                    <div class="drag-handle" cdkDragHandle>
+                        ⋮⋮
+                    </div>
+                </div>
+                <div *ngIf="getPiecesByStatut(PieceStatus.Validation).length === 0"
+                    class="empty-column">
+                    Aucune pièce
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Production -->
+        <div class="kanban-column">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="column-icon">🏭</span>
+                    <span>Production</span>
+                    <span class="badge-count">{{
+                        getPiecesByStatut('Production').length }}</span>
+                </div>
+            </div>
+            <div
+                cdkDropList
+                [cdkDropListData]="getPiecesByStatut('Production')"
+                (cdkDropListDropped)="onDrop($event)"
+                [cdkDropListConnectedTo]="getConnectedLists()"
+                class="column-content">
+                <div
+                    *ngFor="let piece of getPiecesByStatut('Production')"
+                    class="kanban-card"
+                    cdkDrag>
+                    <div class="card-header">
+                        <h3 class="card-title">{{ piece.nom }}</h3>
+                        <button class="card-menu"
+                            (click)="openCardMenu($event, piece)">⋮</button>
+                    </div>
+                    <div class="card-ref">{{ piece.reference }}</div>
+                    <div class="card-footer">
+                        <div class="card-cost">Coût: {{ getCoutTotal(piece) |
+                            number:'1.2-2' }} €</div>
+                        <div class="card-price" *ngIf="piece.prixVente">
+                            Prix: {{ piece.prixVente | number:'1.2-2' }} €
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id]"
+                            title="Voir détail">👁️</button>
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id, 'edit']"
+                            title="Modifier">✏️</button>
+                    </div>
+                    <div class="drag-handle" cdkDragHandle>
+                        ⋮⋮
+                    </div>
+                </div>
+                <div *ngIf="getPiecesByStatut(PieceStatus.Production).length === 0"
+                    class="empty-column">
+                    Aucune pièce
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Commercialisable -->
+        <div class="kanban-column">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="column-icon">💰</span>
+                    <span>Commercialisable</span>
+                    <span class="badge-count">{{
+                        getPiecesByStatut('Commercialisable').length }}</span>
+                </div>
+            </div>
+            <div
+                cdkDropList
+                [cdkDropListData]="getPiecesByStatut('Commercialisable')"
+                (cdkDropListDropped)="onDrop($event)"
+                [cdkDropListConnectedTo]="getConnectedLists()"
+                class="column-content">
+                <div
+                    *ngFor="let piece of getPiecesByStatut('Commercialisable')"
+                    class="kanban-card"
+                    cdkDrag>
+                    <div class="card-header">
+                        <h3 class="card-title">{{ piece.nom }}</h3>
+                        <button class="card-menu"
+                            (click)="openCardMenu($event, piece)">⋮</button>
+                    </div>
+                    <div class="card-ref">{{ piece.reference }}</div>
+                    <div class="card-footer">
+                        <div class="card-price">{{ piece.prixVente |
+                            number:'1.2-2' }} €</div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id]"
+                            title="Voir détail">👁️</button>
+                        <button class="action-icon"
+                            [routerLink]="['/pieces', piece.id, 'edit']"
+                            title="Modifier">✏️</button>
+                    </div>
+                    <div class="drag-handle" cdkDragHandle>
+                        ⋮⋮
+                    </div>
+                </div>
+                <div *ngIf="getPiecesByStatut(PieceStatus.Commercialisable).length === 0"
+                    class="empty-column">
+                    Aucune pièce
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal menu contextuel -->
+    <div class="context-menu" *ngIf="contextMenuVisible"
+        [style.top.px]="contextMenuY" [style.left.px]="contextMenuX">
+        <div class="menu-item" (click)="quickChangeStatus('Conception')">
+            <span>🎨</span> Passer en Conception
+        </div>
+        <div class="menu-item" (click)="quickChangeStatus('Prototypage')">
+            <span>🖨️</span> Passer en Prototypage
+        </div>
+        <div class="menu-item" (click)="quickChangeStatus('Validation')">
+            <span>✅</span> Passer en Validation
+        </div>
+        <div class="menu-item" (click)="quickChangeStatus('Production')">
+            <span>🏭</span> Passer en Production
+        </div>
+        <div class="menu-item" (click)="quickChangeStatus('Commercialisable')">
+            <span>💰</span> Passer en Commercialisable
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item delete" (click)="quickDelete()">
+            <span>🗑️</span> Supprimer
+        </div>
+    </div>
+</div>

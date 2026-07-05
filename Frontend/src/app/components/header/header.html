@@ -1,0 +1,28 @@
+<header class="header">
+    <div class="header-left">
+        <div class="logo">🖨️ PrintFlow3D</div>
+    </div>
+
+    <div class="header-right">
+        <!-- Notification Bell en haut -->
+        <div class="notification-area">
+            <app-notification-bell></app-notification-bell>
+        </div>
+        <div class="user-menu" (click)="toggleMenu()">
+            <div class="user-avatar">{{ getUserInitials() }}</div>
+            <span class="user-name">{{ currentUser?.prenom }} {{
+                currentUser?.nom }}</span>
+            <span class="dropdown-arrow">▼</span>
+        </div>
+
+        <div class="dropdown-menu" *ngIf="menuOpen">
+            <div class="dropdown-item">
+                <strong>{{ currentUser?.email }}</strong>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" (click)="logout()">
+                🚪 Déconnexion
+            </div>
+        </div>
+    </div>
+</header>

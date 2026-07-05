@@ -1,0 +1,283 @@
+<!-- src/app/components/piece-detail/piece-detail.component.html -->
+<div class="container" *ngIf="piece; else loading">
+    <!-- En-tête -->
+    <div class="header">
+        <div>
+            <span class="breadcrumb" style="color:#64748b">📋 Pièces / </span>
+            <span class="breadcrumb" style="color:#64748b">{{ piece.reference
+                }}</span>
+        </div>
+        <div class="title">
+            {{ piece.nom }}
+            <span class="status" [class]="getStatusClass(piece.statut)">{{
+                piece.statut }}</span>
+        </div>
+        <p style="color:#64748b; margin-top:0.25rem">
+            Référence: {{ piece.reference }} | Version: {{ versionNumber }}.0
+        </p>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+            <button class="btn btn-secondary"
+                [routerLink]="['/pieces', piece.id, 'edit']">📝
+                Modifier</button>
+            <button class="btn btn-primary" (click)="lancerImpression()">🖨️
+                Lancer impression</button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'general'"
+            (click)="activeTab = 'general'">📊 Infos générales</button>
+        <button class="tab" [class.active]="activeTab === 'parametres'"
+            (click)="activeTab = 'parametres'">🖨️ Paramètres</button>
+        <button class="tab" [class.active]="activeTab === '3d'"
+            (click)="activeTab = '3d'">🧭 3D</button>
+        <button class="tab" [class.active]="activeTab === 'versions'"
+            (click)="activeTab = 'versions'">📦 Versions</button>
+        <button class="tab" [class.active]="activeTab === 'commercial'"
+            (click)="activeTab = 'commercial'">💰 Commercial</button>
+    </div>
+
+    <!-- Nouvel onglet Versions -->
+    <div *ngIf="activeTab === 'versions'" class="versions-tab">
+        <app-piece-versions [pieceId]="piece.id"></app-piece-versions>
+    </div>
+
+    <!-- Grille 2 colonnes -->
+    <div class="grid-2"
+        [style.gridTemplateColumns]="activeTab === '3d' ? '1fr' : '1fr 420px'">
+        <!-- Colonne gauche -->
+        <div>
+            <!-- Onglet: Infos générales -->
+            <div *ngIf="activeTab === 'general'">
+                <div class="card">
+                    <h3>📊 Informations générales</h3>
+                    <div style="margin-top: 1rem;">
+                        <div class="info-row">
+                            <span>Statut</span>
+                            <span><span class="status"
+                                    [class]="getStatusClass(piece.statut)">{{
+                                    piece.statut }}</span></span>
+                        </div>
+                        <div class="info-row">
+                            <span>Priorité</span>
+                            <span><span class="priority priority-high"
+                                    style="background:#fee2e2;color:#991b1b;padding:0.125rem 0.5rem;border-radius:1rem">Haute</span></span>
+                        </div>
+                        <div class="info-row">
+                            <span>Date création</span>
+                            <span>{{ piece.dateCreation | date:'dd/MM/yyyy'
+                                }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Dernière modification</span>
+                            <span>{{ (piece.dateModification ||
+                                piece.dateCreation) | date:'dd/MM/yyyy'
+                                }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.description">
+                            <span>Description</span>
+                            <span>{{ piece.description }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>💰 Analyse des coûts</h3>
+                    <div style="margin-top: 1rem;">
+                        <div class="info-row">
+                            <span>Matière ({{ getMatiereNom() }})</span>
+                            <span>{{ piece.coutMatiere | number:'1.2-2' }}
+                                €</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Temps machine</span>
+                            <span>{{ piece.coutMachine | number:'1.2-2' }}
+                                €</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Main d'œuvre</span>
+                            <span>{{ piece.coutMainOeuvre | number:'1.2-2' }}
+                                €</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Électricité / usure</span>
+                            <span>{{ getElectricite() | number:'1.2-2' }}
+                                €</span>
+                        </div>
+                        <div class="info-row" style="font-weight:700">
+                            <span>Coût de revient</span>
+                            <span>{{ getCoutTotal() | number:'1.2-2' }} €</span>
+                        </div>
+                        <div class="info-row"
+                            style="background:#f0fdf4; margin-top:0.5rem; border-radius:0.5rem">
+                            <span>💶 Prix de vente</span>
+                            <span><strong style="color:#16a34a">{{
+                                    (piece.prixVente || getPrixRecommande()) |
+                                    number:'1.2-2' }} €</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet: Paramètres -->
+            <div *ngIf="activeTab === 'parametres'">
+                <div class="card">
+                    <h3>🖨️ Paramètres d'impression</h3>
+                    <div style="margin-top:1rem">
+                        <div class="info-row"><span>Hauteur
+                                couche</span><span>0.20 mm</span></div>
+                        <div class="info-row"><span>Remplissage</span><span>20%
+                                (Gyroid)</span></div>
+                        <div class="info-row"><span>Supports</span><span>Tree
+                                support</span></div>
+                        <div
+                            class="info-row"><span>Température</span><span>210°C
+                                / 60°C</span></div>
+                        <div class="info-row"><span>Temps estimé</span><span>{{
+                                getTempsImpression() }}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet: Versions -->
+            <div *ngIf="activeTab === 'versions'">
+                <div class="card">
+                    <h3>📦 Historique des versions</h3>
+                    <div style="margin-top:1rem">
+                        <div class="version-item"
+                            *ngFor="let version of versions; let i = index">
+                            <div class="version-marker"
+                                [class.current]="i === 0">v{{ versions.length -
+                                i }}</div>
+                            <div class="version-info">
+                                <div class="version-date">{{ version.date |
+                                    date:'dd/MM/yyyy' }}</div>
+                                <div class="version-comment">{{ version.comment
+                                    }}</div>
+                            </div>
+                        </div>
+                        <button class="btn-new-version"
+                            (click)="createNewVersion()">+ Créer une nouvelle
+                            version</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet: Commercial -->
+            <div *ngIf="activeTab === 'commercial'">
+                <div class="card">
+                    <h3>💰 Informations commerciales</h3>
+                    <div style="margin-top:1rem">
+                        <div class="info-row"><span>Prix de vente
+                                HT</span><span><strong>{{ (piece.prixVente ||
+                                    getPrixRecommande()) | number:'1.2-2' }}
+                                    €</strong></span></div>
+                        <div class="info-row"><span>Prix
+                                recommandé</span><span>{{ getPrixRecommande() |
+                                number:'1.2-2' }} €</span></div>
+                        <div class="info-row"><span>Marge</span><span
+                                [style.color]="getMarge() >= 0 ? '#10b981' : '#ef4444'">{{
+                                getMarge() | number:'1.2-2' }} € ({{
+                                getMargePourcentage() | number:'1.0-0'
+                                }}%)</span></div>
+                        <div class="info-row"><span>Stock
+                                disponible</span><span>{{ getStock() }}
+                                unités</span></div>
+                    </div>
+                    <button class="btn-primary"
+                        style="width:100%; margin-top:1rem"
+                        (click)="rendreCommercialisable()"
+                        *ngIf="piece.statut === PieceStatus.Production">
+                        Rendre commercialisable
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="activeTab === '3d'" class="card">
+                <h3>🧭 Vue 3D</h3>
+                <div *ngIf="piece.stlFileName; else noStl3d">
+                    <app-three-d-viewer
+                        [stlUrl]="getStlUrl()"
+                        height="650px">
+                    </app-three-d-viewer>
+                </div>
+                <ng-template #noStl3d>
+                    <div class="no-stl-message"
+                        style="text-align:center; padding:2rem">
+                        <div class="message-icon">🖨️</div>
+                        <h3>Aucun fichier 3D</h3>
+                        <p>Aucun fichier STL n'est associé à cette pièce.</p>
+                        <button class="btn-primary"
+                            [routerLink]="['/pieces', piece.id, 'edit']">
+                            📁 Ajouter un fichier STL
+                        </button>
+                    </div>
+                </ng-template>
+
+                <div class="upload-zone" (click)="fileInput.click()"
+                    (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
+                    <input type="file" #fileInput accept=".stl,.step,.3mf"
+                        style="display: none" (change)="onFileSelected($event)">
+                    <div class="upload-icon">📁</div>
+                    <p>{{ piece.stlFileName ? 'Remplacer le fichier' :
+                        'Ajouter un fichier STL' }}</p>
+                    <span>STL, STEP ou 3MF</span>
+                </div>
+
+                <button class="btn btn-secondary"
+                    style="width:100%; margin-top:1rem" (click)="downloadStl()"
+                    *ngIf="piece.stlFileName">
+                    📥 Télécharger STL
+                </button>
+            </div>
+        </div>
+        <div *ngIf="activeTab !== '3d'">
+            <div class="card" *ngIf="activeTab === 'general'">
+                <h3>🖼️ Aperçu 3D</h3>
+                <div class="viewer3d" #viewerContainer>
+                    <div *ngIf="!piece.stlFileName; else viewer3dPreview"
+                        style="text-align:center">
+                        <div style="font-size:4rem">🖨️</div>
+                        <div>Visualisation 3D</div>
+                        <div style="font-size:0.75rem; margin-top:0.5rem">Aucun
+                            fichier STL</div>
+                    </div>
+                    <ng-template #viewer3dPreview>
+                        <canvas #canvas3d class="viewer-canvas"></canvas>
+                        <div class="viewer-controls">
+                            <button class="control-btn"
+                                (click)="resetView()">↻</button>
+                            <button class="control-btn"
+                                (click)="toggleWireframe()">🔲</button>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚡ Actions rapides</h3>
+                <div class="quick-actions">
+                    <button class="action-btn" (click)="nextStatus()"
+                        *ngIf="piece.statut !== PieceStatus.Commercialisable">⏩ Passer à
+                        l'étape suivante</button>
+                    <button class="action-btn" (click)="previousStatus()"
+                        *ngIf="piece.statut !== PieceStatus.Brouillon">⏪ Revenir à l'étape
+                        précédente</button>
+                    <button class="action-btn delete"
+                        (click)="deletePiece()">🗑️ Supprimer la pièce</button>
+                    <!-- Ajouter dans header-actions -->
+                    <button class="btn-pdf" (click)="exportPdf()">📄 Exporter
+                        PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement de la pièce...</p>
+    </div>
+</ng-template>

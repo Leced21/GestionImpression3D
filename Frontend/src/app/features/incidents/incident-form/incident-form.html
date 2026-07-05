@@ -1,0 +1,68 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/incidents">← Retour</button>
+        <h1>🚨 Nouvel incident</h1>
+    </div>
+
+    <form [formGroup]="incidentForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📋 Informations</h3>
+
+            <div class="form-group">
+                <label>Titre *</label>
+                <input type="text" formControlName="title"
+                    placeholder="Ex: Buse bouchée">
+            </div>
+
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea formControlName="description" rows="4"
+                    placeholder="Description détaillée de l'incident..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sévérité *</label>
+                    <select formControlName="severity">
+                        <option value="Critique">🔴 Critique</option>
+                        <option value="Haute">🟠 Haute</option>
+                        <option value="Moyenne">🟡 Moyenne</option>
+                        <option value="Basse">🟢 Basse</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🖨️ Équipement concerné</h3>
+
+            <div class="form-group">
+                <label>Imprimante</label>
+                <select formControlName="printerId">
+                    <option value>-- Sélectionner une imprimante --</option>
+                    <option *ngFor="let printer of printers"
+                        [value]="printer.id">
+                        {{ printer.nom }} ({{ printer.status }})
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Job d'impression</label>
+                <select formControlName="printJobId">
+                    <option value>-- Sélectionner un job --</option>
+                    <option *ngFor="let job of printJobs" [value]="job.id">
+                        {{ job.jobNumber }} - {{ job.pieceName }}
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/incidents">Annuler</button>
+            <button type="submit" class="btn-primary"
+                [disabled]="incidentForm.invalid">Signaler l'incident</button>
+        </div>
+    </form>
+</div>

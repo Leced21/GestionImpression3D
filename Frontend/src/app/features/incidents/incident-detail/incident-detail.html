@@ -1,0 +1,64 @@
+<div class="detail-container" *ngIf="incident; else loading">
+    <div class="detail-header">
+        <button class="btn-back" routerLink="/incidents">← Retour</button>
+        <h1>{{ incident.title }}</h1>
+        <div class="actions">
+            <button class="btn-delete" (click)="deleteIncident()"
+                *ngIf="incident.status !== 'Résolu'">🗑️ Supprimer</button>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="info-card">
+            <h3>🚨 Informations</h3>
+            <div class="info-row"><span>Sévérité</span><span
+                    class="severity-badge" [class]="incident.severity">{{
+                    incident.severity }}</span></div>
+            <div class="info-row"><span>Statut</span><span class="status-badge"
+                    [class]="incident.status">{{ incident.status }}</span></div>
+            <div class="info-row"><span>Description</span><span>{{
+                    incident.description }}</span></div>
+        </div>
+
+        <div class="info-card">
+            <h3>📅 Dates</h3>
+            <div class="info-row"><span>Signalé le</span><strong>{{
+                    incident.occurredAt | date:'dd/MM/yyyy HH:mm'
+                    }}</strong></div>
+            <div class="info-row" *ngIf="incident.resolvedAt"><span>Résolu
+                    le</span><strong>{{ incident.resolvedAt |
+                    date:'dd/MM/yyyy HH:mm' }}</strong></div>
+            <div class="info-row" *ngIf="incident.reportedByName"><span>Signalé
+                    par</span><strong>{{ incident.reportedByName
+                    }}</strong></div>
+            <div class="info-row" *ngIf="incident.resolvedByName"><span>Résolu
+                    par</span><strong>{{ incident.resolvedByName
+                    }}</strong></div>
+        </div>
+
+        <div class="info-card">
+            <h3>🖨️ Équipement</h3>
+            <div class="info-row"><span>Imprimante</span><strong>{{
+                    incident.printerName || 'Non spécifiée' }}</strong></div>
+            <div class="info-row" *ngIf="incident.printJobNumber"><span>Job
+                    associé</span><strong>{{ incident.printJobNumber
+                    }}</strong></div>
+        </div>
+
+        <div class="info-card" *ngIf="incident.resolution">
+            <h3>✅ Résolution</h3>
+            <p>{{ incident.resolution }}</p>
+        </div>
+    </div>
+
+    <div class="actions-card" *ngIf="incident.status === IncidentStatus.Ouvert">
+        <button class="action-btn" (click)="updateStatus(IncidentStatus.EnCours)">🔄 Prendre
+            en charge</button>
+    </div>
+    <div class="actions-card" *ngIf="incident.status === IncidentStatus.EnCours">
+        <button class="action-btn success" (click)="resolveIncident()">✅
+            Résoudre l'incident</button>
+    </div>
+</div>
+
+<ng-template #loading><div class="loading">Chargement...</div></ng-template>

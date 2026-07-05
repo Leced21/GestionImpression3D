@@ -1,0 +1,66 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/print-jobs">← Retour</button>
+        <h1>➕ Nouveau job d'impression</h1>
+    </div>
+
+    <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>📦 Pièce à imprimer</h3>
+            <div class="form-group">
+                <label>Sélectionner une pièce *</label>
+                <select formControlName="pieceId" (change)="onPieceChange()">
+                    <option value>-- Choisir une pièce --</option>
+                    <option *ngFor="let piece of pieces" [value]="piece.id">
+                        {{ piece.nom }} ({{ piece.reference }}) - {{
+                        piece.prixVente }} €
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>⚙️ Paramètres d'impression</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quantité *</label>
+                    <input type="number" formControlName="quantity" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Priorité</label>
+                    <select formControlName="priority">
+                        <option value="Low">Basse</option>
+                        <option value="Normal">Normale</option>
+                        <option value="High">Haute</option>
+                        <option value="Urgent">Urgente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Durée estimée (minutes) *</label>
+                    <input type="number"
+                        formControlName="estimatedDurationMinutes" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Matériau estimé (grammes) *</label>
+                    <input type="number"
+                        formControlName="estimatedMaterialGrams" min="0"
+                        step="0.1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea formControlName="notes" rows="3"
+                    placeholder="Informations complémentaires..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/print-jobs">Annuler</button>
+            <button type="submit" class="btn-primary"
+                [disabled]="jobForm.invalid">Créer le job</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,13 @@
+<div class="app">
+  <app-sidebar *ngIf="isLoggedIn"></app-sidebar>
+
+  <div class="content-wrapper">
+    <app-header *ngIf="isLoggedIn"></app-header>
+    
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+
+<app-toasts></app-toasts>

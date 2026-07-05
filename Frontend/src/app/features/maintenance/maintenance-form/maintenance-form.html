@@ -1,0 +1,87 @@
+<div class="form-container">
+    <div class="form-header">
+        <button class="btn-back" routerLink="/maintenances">← Retour</button>
+        <h1>{{ isEditMode ? '✏️ Modifier la maintenance' :
+            '➕ Nouvelle maintenance' }}</h1>
+    </div>
+
+    <form [formGroup]="maintenanceForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+            <h3>🔧 Informations générales</h3>
+
+            <div class="form-group">
+                <label>Imprimante *</label>
+                <select formControlName="printerId">
+                    <option value>-- Sélectionner une imprimante --</option>
+                    <option *ngFor="let printer of printers"
+                        [value]="printer.id">
+                        {{ printer.nom }} ({{ printer.status }})
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Type de maintenance *</label>
+                <select formControlName="type">
+                    <option value="Preventive">🔧 Préventive</option>
+                    <option value="Corrective">⚠️ Corrective</option>
+                    <option value="Calibration">📏 Calibration</option>
+                    <option value="Cleaning">🧹 Nettoyage</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Titre *</label>
+                <input type="text" formControlName="title"
+                    placeholder="Ex: Lubrification des axes">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea formControlName="description" rows="3"
+                    placeholder="Description détaillée..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>📅 Planification</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date planifiée *</label>
+                    <input type="datetime-local"
+                        formControlName="scheduledDate">
+                </div>
+                <div class="form-group">
+                    <label>Durée (minutes) *</label>
+                    <input type="number" formControlName="durationMinutes"
+                        min="1">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>💰 Coûts</h3>
+
+            <div class="form-group">
+                <label>Coût (€) *</label>
+                <input type="number" formControlName="cost" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea formControlName="notes" rows="2"
+                    placeholder="Informations complémentaires..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary"
+                routerLink="/maintenances">Annuler</button>
+            <button type="submit" class="btn-primary"
+                [disabled]="maintenanceForm.invalid || isSubmitting">
+                {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+        </div>
+    </form>
+</div>

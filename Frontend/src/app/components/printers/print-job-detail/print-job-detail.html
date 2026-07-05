@@ -1,0 +1,245 @@
+<div class="detail-container" *ngIf="job; else loading">
+    <!-- En-tête -->
+    <div class="detail-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/print-jobs">← Retour à la
+                liste</button>
+            <div class="job-title">
+                <h1>{{ job.jobNumber }}</h1>
+                <span class="piece-name">{{ job.pieceName }} ({{
+                    job.pieceReference }})</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-delete" (click)="deleteJob()"
+                *ngIf="canDelete">🗑️ Supprimer</button>
+        </div>
+    </div>
+
+    <!-- Grille 2 colonnes -->
+    <div class="grid-2">
+        <!-- Colonne gauche -->
+        <div class="left-column">
+            <!-- Informations générales -->
+            <div class="info-card">
+                <h3>📋 Informations générales</h3>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span>Statut</span>
+                        <span class="status-badge"
+                            [style.backgroundColor]="job.statusColor">
+                            {{ job.statusLabel }}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span>Priorité</span>
+                        <span class="priority-badge"
+                            [class.urgent]="job.priority === 'Urgent'"
+                            [class.high]="job.priority === 'High'">
+                            {{ job.priorityLabel }}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span>Quantité</span>
+                        <strong>{{ job.quantityCompleted }}/{{ job.quantity
+                            }}</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Date création</span>
+                        <span>{{ job.createdAt | date:'dd/MM/yyyy HH:mm'
+                            }}</span>
+                    </div>
+                    <div class="info-row" *ngIf="job.startedAt">
+                        <span>Début impression</span>
+                        <span>{{ job.startedAt | date:'dd/MM/yyyy HH:mm'
+                            }}</span>
+                    </div>
+                    <div class="info-row" *ngIf="job.completedAt">
+                        <span>Fin impression</span>
+                        <span>{{ job.completedAt | date:'dd/MM/yyyy HH:mm'
+                            }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="info-card" *ngIf="job.notes">
+                <h3>📝 Notes</h3>
+                <p class="notes-text">{{ job.notes }}</p>
+            </div>
+
+            <!-- Message d'erreur -->
+            <div class="info-card error" *ngIf="job.failureReason">
+                <h3>❌ Raison de l'échec</h3>
+                <p class="error-text">{{ job.failureReason }}</p>
+            </div>
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="right-column">
+            <!-- Progression -->
+            <div class="info-card">
+                <h3>📊 Progression</h3>
+                <div class="progress-section">
+                    <div class="progress-bar-large">
+                        <div class="progress-fill"
+                            [style.width.%]="job.progressPercent"></div>
+                    </div>
+                    <div class="progress-percent">{{ job.progressPercent
+                        }}%</div>
+                </div>
+            </div>
+
+            <!-- Temps et matériau -->
+            <div class="info-card">
+                <h3>⏱️ Temps d'impression</h3>
+                <div class="stats-list">
+                    <div class="stat-item">
+                        <span>Estimé</span>
+                        <strong>{{
+                            getDurationString(job.estimatedDurationMinutes)
+                            }}</strong>
+                    </div>
+                    <div class="stat-item" *ngIf="job.actualDurationMinutes">
+                        <span>Réel</span>
+                        <strong>{{ getDurationString(job.actualDurationMinutes)
+                            }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>🧪 Matériau consommé</h3>
+                <div class="stats-list">
+                    <div class="stat-item">
+                        <span>Estimé</span>
+                        <strong>{{ job.estimatedMaterialGrams }} g</strong>
+                    </div>
+                    <div class="stat-item" *ngIf="job.actualMaterialGrams">
+                        <span>Réel</span>
+                        <strong>{{ job.actualMaterialGrams }} g</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignation imprimante -->
+            <div class="info-card" *ngIf="canAssign">
+                <h3>🖨️ Imprimante</h3>
+                <div class="assign-section">
+                    <div class="current-printer" *ngIf="job.printerName">
+                        <span>Imprimante actuelle:</span>
+                        <strong>{{ job.printerName }}</strong>
+                    </div>
+                    <div class="assign-form"
+                        *ngIf="!job.printerName || job.status === 'Pending'">
+                        <select [(ngModel)]="selectedPrinterId"
+                            class="printer-select">
+                            <option [value]="null">-- Sélectionner une
+                                imprimante --</option>
+                            <option *ngFor="let printer of availablePrinters"
+                                [value]="printer.id">
+                                {{ printer.nom }} ({{ printer.statusLabel }})
+                            </option>
+                        </select>
+                        <button class="btn-assign" (click)="assignPrinter()"
+                            [disabled]="!selectedPrinterId">
+                            Assigner
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="info-card">
+                <h3>⚡ Actions</h3>
+                <div class="quick-actions">
+                    <button class="action-btn" (click)="startJob()"
+                        *ngIf="canStart">
+                        ▶️ Démarrer
+                    </button>
+                    <button class="action-btn warning" (click)="pauseJob()"
+                        *ngIf="canPause">
+                        ⏸️ Pause
+                    </button>
+                    <button class="action-btn" (click)="resumeJob()"
+                        *ngIf="canResume">
+                        ▶️ Reprendre
+                    </button>
+                    <button class="action-btn success" (click)="completeJob()"
+                        *ngIf="canComplete">
+                        ✅ Terminer
+                    </button>
+                    <button class="action-btn danger" (click)="failJob()"
+                        *ngIf="canFail">
+                        ❌ Échouer
+                    </button>
+                    <button class="action-btn cancel" (click)="cancelJob()"
+                        *ngIf="canCancel">
+                        ❌ Annuler
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modale terminé -->
+<div class="modal" [class.show]="showCompleteModal"
+    (click)="closeModalOnOverlay($event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Terminer le job</h3>
+            <button class="modal-close"
+                (click)="closeCompleteModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Durée réelle (minutes)</label>
+                <input type="number" [(ngModel)]="completeData.duration"
+                    class="modal-input">
+            </div>
+            <div class="form-group">
+                <label>Matériau consommé (grammes)</label>
+                <input type="number" step="0.1"
+                    [(ngModel)]="completeData.material" class="modal-input">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary"
+                (click)="closeCompleteModal()">Annuler</button>
+            <button class="btn-primary"
+                (click)="confirmComplete()">Valider</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale échec -->
+<div class="modal" [class.show]="showFailModal"
+    (click)="closeModalOnOverlay($event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Échec du job</h3>
+            <button class="modal-close" (click)="closeFailModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Raison de l'échec</label>
+                <textarea [(ngModel)]="failReason" rows="3"
+                    class="modal-input"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary"
+                (click)="closeFailModal()">Annuler</button>
+            <button class="btn-primary danger" (click)="confirmFail()">Confirmer
+                l'échec</button>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement du job...</p>
+    </div>
+</ng-template>

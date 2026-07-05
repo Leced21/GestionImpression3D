@@ -1,0 +1,58 @@
+<div class="detail-container" *ngIf="ordre; else loading">
+    <div class="detail-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/ordres">← Retour</button>
+            <h1>{{ ordre.reference }}</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn-edit"
+                [routerLink]="['/ordres', ordre.id, 'edit']">✏️
+                Modifier</button>
+            <button class="btn-delete" (click)="deleteOrdre()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="info-card">
+            <h3>📋 Informations</h3>
+            <div class="info-row"><span>Statut</span><span class="status-badge"
+                    [class]="getStatusClass(ordre.statut)">{{ ordre.statut
+                    }}</span></div>
+            <div class="info-row"><span>Priorité</span><span>{{ ordre.priorite
+                    }}</span></div>
+            <div class="info-row"><span>Projet</span><span>{{ ordre.projetNom
+                    }}</span></div>
+            <div class="info-row"><span>Pièce</span><span>{{ ordre.pieceNom
+                    }}</span></div>
+            <div class="info-row"><span>Quantité</span><span>{{
+                    ordre.quantiteProduite }}/{{ ordre.quantite }}</span></div>
+        </div>
+
+        <div class="info-card">
+            <h3>📅 Dates</h3>
+            <div class="info-row"><span>Création</span><span>{{
+                    ordre.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span></div>
+            <div class="info-row"
+                *ngIf="ordre.dateDebut"><span>Début</span><span>{{
+                    ordre.dateDebut | date:'dd/MM/yyyy HH:mm' }}</span></div>
+            <div class="info-row" *ngIf="ordre.dateFin"><span>Fin</span><span>{{
+                    ordre.dateFin | date:'dd/MM/yyyy HH:mm' }}</span></div>
+            <div class="info-row"
+                *ngIf="ordre.dateEcheance"><span>Échéance</span><span
+                    [class.retard]="ordre.estEnRetard">{{ ordre.dateEcheance |
+                    date:'dd/MM/yyyy' }}</span></div>
+        </div>
+    </div>
+
+    <div class="actions-card">
+        <button class="action-btn" (click)="startProduction()"
+            *ngIf="ordre.statut === OrdreStatus.EnAttente">▶️ Démarrer la
+            production</button>
+        <button class="action-btn success" (click)="completeProduction()"
+            *ngIf="ordre.statut === OrdreStatus.EnCours">✅ Terminer la
+            production</button>
+    </div>
+</div>
+
+<ng-template #loading><div class="loading">Chargement...</div></ng-template>

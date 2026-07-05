@@ -1,0 +1,258 @@
+<div class="settings-container">
+    <div class="header">
+        <h1>⚙️ Paramètres</h1>
+        <p class="subtitle">Personnalisez votre expérience PrintFlow3D</p>
+    </div>
+
+    <!-- Navigation des onglets -->
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'general'"
+            (click)="activeTab = 'general'">
+            📋 Général
+        </button>
+        <button class="tab" [class.active]="activeTab === 'profile'"
+            (click)="activeTab = 'profile'">
+            👤 Profil
+        </button>
+        <button class="tab" [class.active]="activeTab === 'notifications'"
+            (click)="activeTab = 'notifications'">
+            🔔 Notifications
+        </button>
+        <button class="tab" [class.active]="activeTab === 'security'"
+            (click)="activeTab = 'security'">
+            🔒 Sécurité
+        </button>
+        <button class="tab" [class.active]="activeTab === 'appearance'"
+            (click)="activeTab = 'appearance'">
+            🎨 Apparence
+        </button>
+        <button class="tab" [class.active]="activeTab === 'system'"
+            (click)="activeTab = 'system'" *ngIf="isAdmin">
+            🖥️ Système
+        </button>
+    </div>
+
+    <!-- Onglet Général -->
+    <div *ngIf="activeTab === 'general'" class="tab-content">
+        <div class="settings-card">
+            <h3>📋 Informations générales</h3>
+            <div class="setting-group">
+                <label>Langue par défaut</label>
+                <select [(ngModel)]="settings.language">
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Fuseau horaire</label>
+                <select [(ngModel)]="settings.timezone">
+                    <option value="Europe/Paris">Europe/Paris (UTC+1)</option>
+                    <option value="Europe/London">Europe/London (UTC+0)</option>
+                    <option value="America/New_York">America/New_York
+                        (UTC-5)</option>
+                    <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Format de date</label>
+                <select [(ngModel)]="settings.dateFormat">
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet Profil -->
+    <div *ngIf="activeTab === 'profile'" class="tab-content">
+        <div class="settings-card">
+            <h3>👤 Informations personnelles</h3>
+            <div class="profile-avatar">
+                <div class="avatar">{{ getInitials() }}</div>
+                <button class="btn-upload">📷 Changer la photo</button>
+            </div>
+            <div class="setting-group">
+                <label>Prénom</label>
+                <input type="text" [(ngModel)]="user.prenom">
+            </div>
+            <div class="setting-group">
+                <label>Nom</label>
+                <input type="text" [(ngModel)]="user.nom">
+            </div>
+            <div class="setting-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="user.email" disabled>
+            </div>
+            <div class="setting-group">
+                <label>Rôle</label>
+                <input type="text" [value]="user.role" disabled>
+            </div>
+            <button class="btn-primary" (click)="updateProfile()">💾 Mettre à
+                jour</button>
+        </div>
+    </div>
+
+    <!-- Onglet Notifications -->
+    <div *ngIf="activeTab === 'notifications'" class="tab-content">
+        <div class="settings-card">
+            <h3>🔔 Préférences de notifications</h3>
+            <div class="setting-toggle">
+                <label>Notifications par email</label>
+                <input type="checkbox"
+                    [(ngModel)]="settings.emailNotifications">
+            </div>
+            <div class="setting-toggle">
+                <label>Notifications de stock bas</label>
+                <input type="checkbox" [(ngModel)]="settings.stockAlerts">
+            </div>
+            <div class="setting-toggle">
+                <label>Notifications de production</label>
+                <input type="checkbox" [(ngModel)]="settings.productionAlerts">
+            </div>
+            <div class="setting-toggle">
+                <label>Rapports hebdomadaires</label>
+                <input type="checkbox" [(ngModel)]="settings.weeklyReports">
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet Sécurité -->
+    <div *ngIf="activeTab === 'security'" class="tab-content">
+        <div class="settings-card">
+            <h3>🔒 Sécurité</h3>
+
+            <div class="setting-group">
+                <label>Mot de passe actuel</label>
+                <input type="password" [(ngModel)]="security.currentPassword">
+            </div>
+            <div class="setting-group">
+                <label>Nouveau mot de passe</label>
+                <input type="password" [(ngModel)]="security.newPassword">
+            </div>
+            <div class="setting-group">
+                <label>Confirmer le nouveau mot de passe</label>
+                <input type="password" [(ngModel)]="security.confirmPassword">
+            </div>
+            <button class="btn-primary" (click)="changePassword()">🔑 Changer le
+                mot de passe</button>
+
+            <div class="divider"></div>
+
+            <div class="setting-group">
+                <label>Authentification à deux facteurs (2FA)</label>
+                <div class="twofa-status">
+                    <span class="status-badge"
+                        [class.enabled]="settings.twoFactorEnabled">
+                        {{ settings.twoFactorEnabled ? '✅ Activé' :
+                        '❌ Désactivé' }}
+                    </span>
+                    <button class="btn-secondary" (click)="toggle2FA()">
+                        {{ settings.twoFactorEnabled ? 'Désactiver' : 'Activer'
+                        }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet Apparence -->
+    <div *ngIf="activeTab === 'appearance'" class="tab-content">
+        <div class="settings-card">
+            <h3>🎨 Thème et apparence</h3>
+
+            <div class="theme-options">
+                <div class="theme-option"
+                    [class.active]="settings.theme === 'light'"
+                    (click)="setTheme('light')">
+                    <div class="theme-preview light">
+                        <div class="theme-header"></div>
+                        <div class="theme-body"></div>
+                    </div>
+                    <span>☀️ Clair</span>
+                </div>
+                <div class="theme-option"
+                    [class.active]="settings.theme === 'dark'"
+                    (click)="setTheme('dark')">
+                    <div class="theme-preview dark">
+                        <div class="theme-header"></div>
+                        <div class="theme-body"></div>
+                    </div>
+                    <span>🌙 Sombre</span>
+                </div>
+                <div class="theme-option"
+                    [class.active]="settings.theme === 'system'"
+                    (click)="setTheme('system')">
+                    <div class="theme-preview system">
+                        <div class="theme-header"></div>
+                        <div class="theme-body"></div>
+                    </div>
+                    <span>🔄 Système</span>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Couleur principale</label>
+                <div class="color-options">
+                    <button class="color-btn" [style.background]="'#3b82f6'"
+                        (click)="setPrimaryColor('#3b82f6')"></button>
+                    <button class="color-btn" [style.background]="'#10b981'"
+                        (click)="setPrimaryColor('#10b981')"></button>
+                    <button class="color-btn" [style.background]="'#8b5cf6'"
+                        (click)="setPrimaryColor('#8b5cf6')"></button>
+                    <button class="color-btn" [style.background]="'#ef4444'"
+                        (click)="setPrimaryColor('#ef4444')"></button>
+                    <button class="color-btn" [style.background]="'#f59e0b'"
+                        (click)="setPrimaryColor('#f59e0b')"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet Système (Admin seulement) -->
+    <div *ngIf="activeTab === 'system' && isAdmin" class="tab-content">
+        <div class="settings-card">
+            <h3>🖥️ Informations système</h3>
+
+            <div class="system-info">
+                <div class="info-item">
+                    <span>Version</span>
+                    <strong>v{{ appVersion }}</strong>
+                </div>
+                <div class="info-item">
+                    <span>Environnement</span>
+                    <strong>{{ environment }}</strong>
+                </div>
+                <div class="info-item">
+                    <span>Base de données</span>
+                    <strong>{{ dbStatus }}</strong>
+                </div>
+                <div class="info-item">
+                    <span>Espace disque</span>
+                    <strong>{{ diskSpace }}</strong>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="system-actions">
+                <button class="btn-secondary" (click)="clearCache()">🧹 Vider le
+                    cache</button>
+                <button class="btn-secondary" (click)="exportData()">📤 Exporter
+                    les données</button>
+                <button class="btn-danger" (click)="resetApp()">🔄 Réinitialiser
+                    l'application</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions globales -->
+    <div class="actions-bar">
+        <button class="btn-secondary" (click)="resetSettings()">↩️
+            Réinitialiser</button>
+        <button class="btn-primary" (click)="saveSettings()">💾
+            Sauvegarder</button>
+    </div>
+</div>

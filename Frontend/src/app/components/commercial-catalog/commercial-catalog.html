@@ -1,0 +1,127 @@
+<div class="catalog-container">
+    <!-- En-tête -->
+    <div class="catalog-header">
+        <div>
+            <h1>💰 Catalogue commercial</h1>
+            <p class="subtitle">Pièces certifiées prêtes à la vente</p>
+        </div>
+        <button class="btn-cart" (click)="toggleCart()">
+            🛒 Panier
+            <span class="cart-badge" *ngIf="cartItems.length > 0">{{
+                cartItems.length }}</span>
+        </button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-bar">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                placeholder="Rechercher une pièce..."
+                [(ngModel)]="searchTerm"
+                (input)="filterPieces()" />
+        </div>
+        <select class="filter-select" [(ngModel)]="filtreCategorie"
+            (change)="filterPieces()">
+            <option value>Toutes les catégories</option>
+            <option value="Mécanique">🔧 Mécanique</option>
+            <option value="Électronique">⚡ Électronique</option>
+            <option value="Décoration">🎨 Décoration</option>
+            <option value="Outillage">🔨 Outillage</option>
+        </select>
+        <select class="filter-select" [(ngModel)]="filtreMateriau"
+            (change)="filterPieces()">
+            <option value>Tous les matériaux</option>
+            <option value="PLA">PLA</option>
+            <option value="PETG">PETG</option>
+            <option value="ABS">ABS</option>
+            <option value="Résine">Résine</option>
+        </select>
+    </div>
+
+    <!-- Grille produits -->
+    <div class="products-grid" *ngIf="filteredPieces.length > 0; else empty">
+        <div class="product-card" *ngFor="let piece of filteredPieces">
+            <div class="product-image">
+                <span class="product-icon">{{ getProductIcon(piece) }}</span>
+            </div>
+            <div class="product-info">
+                <h3 class="product-title">{{ piece.nom }}</h3>
+                <div class="product-ref">{{ piece.reference }}</div>
+                <div class="product-category">{{ piece.categorie || 'Mécanique'
+                    }}</div>
+                <div class="product-price">{{ piece.prixVente | number:'1.2-2'
+                    }} €</div>
+                <div class="product-stock" [class.low]="getStock(piece) < 10">
+                    📦 {{ getStock(piece) }} en stock
+                </div>
+            </div>
+            <div class="product-actions">
+                <button class="btn-detail" (click)="voirDetail(piece.id)">🔍
+                    Détail</button>
+                <button class="btn-add" (click)="ajouterAuPanier(piece)"
+                    [disabled]="getStock(piece) === 0">
+                    🛒 Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <ng-template #empty>
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>Aucune pièce commercialisable</h3>
+            <p>Aucune pièce n'est actuellement disponible à la vente.</p>
+        </div>
+    </ng-template>
+
+    <!-- Panier latéral -->
+    <div class="cart-sidebar" [class.open]="cartOpen">
+        <div class="cart-header">
+            <h3>🛒 Mon panier</h3>
+            <button class="cart-close" (click)="toggleCart()">✕</button>
+        </div>
+
+        <div class="cart-items" *ngIf="cartItems.length > 0; else emptyCart">
+            <div class="cart-item"
+                *ngFor="let item of cartItems; let i = index">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">{{ item.nom }}</div>
+                    <div class="cart-item-price">{{ item.prix | number:'1.2-2'
+                        }} € x {{ item.quantite }}</div>
+                </div>
+                <div class="cart-item-actions">
+                    <button class="qty-btn"
+                        (click)="modifierQuantite(i, item.quantite - 1)">-</button>
+                    <span class="qty">{{ item.quantite }}</span>
+                    <button class="qty-btn"
+                        (click)="modifierQuantite(i, item.quantite + 1)">+</button>
+                    <button class="remove-btn"
+                        (click)="retirerDuPanier(i)">🗑️</button>
+                </div>
+            </div>
+        </div>
+
+        <ng-template #emptyCart>
+            <div class="empty-cart">
+                <div class="empty-cart-icon">🛒</div>
+                <p>Votre panier est vide</p>
+            </div>
+        </ng-template>
+
+        <div class="cart-footer" *ngIf="cartItems.length > 0">
+            <div class="cart-total">
+                <span>Total :</span>
+                <strong>{{ getTotalPanier() | number:'1.2-2' }} €</strong>
+            </div>
+            <button class="btn-checkout" (click)="passerCommande()">
+                📦 Passer commande
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay panier -->
+    <div class="cart-overlay" [class.show]="cartOpen"
+        (click)="toggleCart()"></div>
+</div>

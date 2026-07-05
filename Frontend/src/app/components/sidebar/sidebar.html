@@ -1,0 +1,63 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <span style="font-size: 1.5rem;">🖨️</span>
+            <span>PrintFlow3D</span>
+        </div>
+    </div>
+    <nav class="nav">
+        <div class="nav-item active" routerLink="/dashboard"
+            routerLinkActive="active">📊 Tableau de bord</div>
+        <div class="nav-item" routerLink="/kanban" routerLinkActive="active">🔄
+            Cycle de vie</div>
+        <div class="nav-item" routerLink="/pieces" routerLinkActive="active">📦
+            Pièces</div>
+        <div class="nav-item" routerLink="/projets" routerLinkActive="active">📁
+            Projets</div>
+        <div class="nav-item" routerLink="/commercial"
+            routerLinkActive="active">💰 Commercial</div>
+        <div class="nav-item" routerLink="/admin/audit-logs"
+            routerLinkActive="active" *ngIf="isAdmin">
+            📋 Journal d'audit
+        </div>
+        <div class="nav-item" routerLink="/printers" routerLinkActive="active">
+            🖨️ Imprimantes
+        </div>
+        <div class="nav-item" routerLink="/print-jobs"
+            routerLinkActive="active">
+            🖨️ Jobs d'impression
+        </div>
+        <div class="nav-item" routerLink="/stock" routerLinkActive="active">
+            📦 Stocks
+        </div>
+        <div class="nav-item" routerLink="/admin/users"
+            routerLinkActive="active" *ngIf="isAdmin">
+            👥 Utilisateurs
+        </div>
+        <div class="nav-item" routerLink="/ordres" routerLinkActive="active">
+            📋 Ordres de fabrication
+        </div>
+        <div class="nav-item" routerLink="/profils-impression"
+            routerLinkActive="active">
+            ⚙️ Profils d'impression
+        </div>
+        <div class="nav-item" routerLink="/consommations"
+            routerLinkActive="active">
+            📊 Consommation matière
+        </div>
+        <div class="nav-item" routerLink="/maintenances"
+            routerLinkActive="active">
+            🛠️ Maintenance
+        </div>
+        <div class="nav-item" routerLink="/incidents" routerLinkActive="active">
+            ⚠️ Incidents
+        </div>
+        <div class="nav-item" routerLink="/clients" routerLinkActive="active">
+            👥 Clients
+        </div>
+        <div class="nav-item" routerLink="/devis" routerLinkActive="active">
+            📄 Devis
+        </div>
+        <div class="nav-item" routerLink="/settings" routerLinkActive="active">⚙️ Paramètres</div>
+    </nav>
+</aside>

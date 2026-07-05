@@ -1,0 +1,187 @@
+<div class="detail-container" *ngIf="projet; else loading">
+    <!-- En-tête -->
+    <div class="detail-header">
+        <div class="header-left">
+            <button class="btn-back" routerLink="/projets">
+                ← Retour à la liste
+            </button>
+            <div class="projet-title">
+                <h1>{{ projet.nom }}</h1>
+                <span class="reference">Réf: {{ projet.reference }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-edit"
+                [routerLink]="['/projets', projet.id, 'edit']">✏️
+                Modifier</button>
+            <button class="btn-delete" (click)="deleteProjet()">🗑️
+                Supprimer</button>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid" *ngIf="stats">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value">{{ stats.nombrePieces }}</div>
+            <div class="stat-label">Pièces différentes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔢</div>
+            <div class="stat-value">{{ stats.quantiteTotale }}</div>
+            <div class="stat-label">Quantité totale</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">{{ stats.coutTotal | number:'1.2-2' }}
+                €</div>
+            <div class="stat-label">Coût total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💶</div>
+            <div class="stat-value">{{ stats.prixTotal | number:'1.2-2' }}
+                €</div>
+            <div class="stat-label">Prix total</div>
+        </div>
+    </div>
+
+    <!-- Grille 2 colonnes -->
+    <div class="grid-2">
+        <!-- Colonne gauche - Infos projet -->
+        <div class="left-column">
+            <div class="info-card">
+                <h3>📊 Informations projet</h3>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span>Statut</span>
+                        <span class="status-badge"
+                            [class]="getBadgeClass(projet.statut)">
+                            {{ getStatutLabel(projet.statut) }}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span>Date création</span>
+                        <span>{{ projet.dateCreation | date:'dd/MM/yyyy'
+                            }}</span>
+                    </div>
+                    <div class="info-row" *ngIf="projet.dateLivraisonPrevue">
+                        <span>Livraison prévue</span>
+                        <span>{{ projet.dateLivraisonPrevue | date:'dd/MM/yyyy'
+                            }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Budget</span>
+                        <span>{{ projet.budget | number:'1.2-2' }} €</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Description</span>
+                        <span class="description-text">{{ projet.description ||
+                            'Aucune description' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>👤 Informations client</h3>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span>Nom</span>
+                        <span>{{ projet.clientNom || 'Non renseigné' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Email</span>
+                        <span>{{ projet.clientEmail || 'Non renseigné' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite - Liste des pièces -->
+        <div class="right-column">
+            <div class="info-card">
+                <h3>📦 Pièces du projet</h3>
+
+                <!-- Formulaire ajout pièce -->
+                <div class="add-piece-form">
+                    <select [(ngModel)]="selectedPieceId" class="piece-select">
+                        <option value>-- Sélectionner une pièce --</option>
+                        <option *ngFor="let piece of availablePieces"
+                            [value]="piece.id">
+                            {{ piece.nom }} ({{ piece.reference }}) - {{
+                            piece.prixVente }} €
+                        </option>
+                    </select>
+                    <input type="number" [(ngModel)]="selectedQuantite" min="1"
+                        value="1" class="qty-input">
+                    <button class="btn-add" (click)="ajouterPiece()"
+                        [disabled]="!selectedPieceId">
+                        ➕ Ajouter
+                    </button>
+                </div>
+
+                <!-- Liste des pièces -->
+                <div class="pieces-list"
+                    *ngIf="projet.projetPieces && projet.projetPieces.length > 0; else emptyPieces">
+                    <div class="piece-item"
+                        *ngFor="let item of projet.projetPieces">
+                        <div class="piece-info">
+                            <div class="piece-name">{{ item.piece?.nom }}</div>
+                            <div class="piece-ref">{{ item.piece?.reference
+                                }}</div>
+                            <div class="piece-price">{{ (item.piece?.prixVente
+                                || 0) | number:'1.2-2' }} €</div>
+                        </div>
+                        <div class="piece-quantity">
+                            <span>Quantité: {{ item.quantite }}</span>
+                            <div class="piece-actions">
+                                <button class="btn-icon"
+                                    (click)="modifierQuantite(item, item.quantite + 1)">➕</button>
+                                <button class="btn-icon"
+                                    (click)="modifierQuantite(item, item.quantite - 1)"
+                                    [disabled]="item.quantite <= 1">➖</button>
+                                <button class="btn-icon delete"
+                                    (click)="retirerPiece(item.pieceId)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <ng-template #emptyPieces>
+                    <div class="empty-pieces">
+                        <p>Aucune pièce dans ce projet</p>
+                        <p class="hint">Ajoutez des pièces depuis le
+                            catalogue</p>
+                    </div>
+                </ng-template>
+
+                <!-- Total -->
+                <div class="total-section"
+                    *ngIf="projet.projetPieces && projet.projetPieces.length > 0">
+                    <div class="total-row">
+                        <span>Total HT :</span>
+                        <strong>{{ stats?.prixTotal || 0 | number:'1.2-2' }}
+                            €</strong>
+                    </div>
+                </div>
+                <!-- Ajouter dans header-actions -->
+                <div class="header-actions">
+                    <button class="btn-pdf" (click)="exportPdf()">📄 Exporter
+                        PDF</button>
+                    <button class="btn-devis" (click)="exportDevis()">📑 Générer
+                        devis</button>
+                    <button class="btn-edit"
+                        [routerLink]="['/projets', projet.id, 'edit']">✏️
+                        Modifier</button>
+                    <button class="btn-delete" (click)="deleteProjet()">🗑️
+                        Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement du projet...</p>
+    </div>
+</ng-template>

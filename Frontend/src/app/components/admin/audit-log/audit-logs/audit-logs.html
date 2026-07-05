@@ -1,0 +1,46 @@
+<div class="audit-container">
+    <div class="header">
+        <h2>📋 Journal d'audit</h2>
+        <button class="btn-refresh" (click)="refresh()">🔄</button>
+    </div>
+
+    <app-audit-log-filters
+        (filtersChange)="applyFilters($event)"></app-audit-log-filters>
+
+    <div *ngIf="isLoading" class="loading">Chargement...</div>
+
+    <div class="timeline" *ngIf="!isLoading">
+        <div class="timeline-item" *ngFor="let log of filteredLogs">
+            <div class="timeline-marker"
+                [class]="formatter.getActionClass(log.action)">
+                {{ formatter.getActionIcon(log.action) }}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-header">
+                    <span class="user">{{ log.userEmail || 'Système' }}</span>
+                    <span class="date">{{ log.timestamp |
+                        date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                </div>
+                <div class="timeline-body">
+                    <span class="entity">
+                        {{ formatter.getEntityIcon(log.entityType) }}
+                        {{ formatter.getEntityTypeLabel(log.entityType) }}
+                        #{{ log.entityId }}
+                    </span>
+                    <span class="action">{{ formatter.getActionLabel(log.action)
+                        }}</span>
+                    <span class="message">{{ formatter.formatChangeMessage(log)
+                        }}</span>
+                </div>
+                <div class="timeline-footer" *ngIf="log.ipAddress">
+                    <span class="ip">IP: {{ log.ipAddress }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="filteredLogs.length === 0" class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>Aucun log trouvé</p>
+        </div>
+    </div>
+</div>

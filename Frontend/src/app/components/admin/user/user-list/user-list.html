@@ -1,0 +1,152 @@
+<div class="admin-container">
+    <div class="header">
+        <h1>👥 Administration</h1>
+        <div class="tabs">
+            <button class="tab" [class.active]="activeTab === 'users'"
+                (click)="activeTab = 'users'">Utilisateurs</button>
+            <button class="tab" [class.active]="activeTab === 'invitations'"
+                (click)="activeTab = 'invitations'">Invitations</button>
+            <button class="tab" [class.active]="activeTab === 'permissions'"
+                (click)="activeTab = 'permissions'">Permissions</button>
+        </div>
+    </div>
+
+    <!-- Onglet Utilisateurs -->
+    <div *ngIf="activeTab === 'users'" class="users-tab">
+        <div class="actions-bar">
+            <button class="btn-primary" (click)="showInviteModal = true">+
+                Inviter un utilisateur</button>
+            <input type="text" placeholder="Rechercher..."
+                [(ngModel)]="searchTerm" class="search-input">
+        </div>
+
+        <div class="users-table">
+            <div class="table-header">
+                <span>Utilisateur</span>
+                <span>Email</span>
+                <span>Rôle</span>
+                <span>Statut</span>
+                <span>Date création</span>
+                <span>Actions</span>
+            </div>
+            <div class="table-row" *ngFor="let user of filteredUsers">
+                <span class="user-name">
+                    <div class="user-avatar">{{ getUserInitials(user) }}</div>
+                    {{ user.fullName }}
+                </span>
+                <span>{{ user.email }}</span>
+                <span>
+                    <select [(ngModel)]="user.role" (change)="updateRole(user)"
+                        class="role-select">
+                        <option value="Admin">👑 Admin</option>
+                        <option value="ProductionManager">🏭 Production
+                            Manager</option>
+                        <option value="Operator">🖨️ Operator</option>
+                        <option value="Commercial">💰 Commercial</option>
+                        <option value="Viewer">👁️ Viewer</option>
+                    </select>
+                </span>
+                <span>
+                    <span class="status-badge" [class.active]="user.isActive">
+                        {{ user.isActive ? 'Actif' : 'Inactif' }}
+                    </span>
+                </span>
+                <span>{{ user.dateCreation | date:'dd/MM/yyyy' }}</span>
+                <span class="actions">
+                    <button class="btn-icon" (click)="toggleStatus(user)"
+                        [title]="user.isActive ? 'Désactiver' : 'Activer'">
+                        {{ user.isActive ? '🔴' : '🟢' }}
+                    </button>
+                    <button class="btn-icon danger" (click)="deleteUser(user)"
+                        title="Supprimer">🗑️</button>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet Invitations -->
+    <div *ngIf="activeTab === 'invitations'" class="invitations-tab">
+        <div class="invitations-list">
+            <div class="invitation-card" *ngFor="let inv of invitations">
+                <div class="invitation-info">
+                    <div class="invitation-email">{{ inv.email }}</div>
+                    <div class="invitation-details">
+                        <span class="role-badge">{{ inv.role }}</span>
+                        <span>Expire le {{ inv.expiresAt | date:'dd/MM/yyyy'
+                            }}</span>
+                    </div>
+                </div>
+                <div class="invitation-actions">
+                    <button class="btn-sm" (click)="copyInvitationLink(inv)">📋
+                        Copier lien</button>
+                    <button class="btn-sm danger"
+                        (click)="cancelInvitation(inv.id)">Annuler</button>
+                </div>
+            </div>
+            <div *ngIf="invitations.length === 0" class="empty-state">
+                <p>Aucune invitation en attente</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet Permissions -->
+    <div *ngIf="activeTab === 'permissions'" class="permissions-tab">
+        <div class="permissions-grid">
+            <div class="permission-card"
+                *ngFor="let category of permissionCategories">
+                <h3>{{ category.name }}</h3>
+                <div class="permission-list">
+                    <div class="permission-item"
+                        *ngFor="let perm of category.permissions">
+                        <span class="permission-name">{{ perm.name }}</span>
+                        <span class="permission-desc">{{ perm.description
+                            }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Invitation -->
+    <div class="modal" [class.show]="showInviteModal"
+        (click)="closeModalOnOverlay($event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Inviter un utilisateur</h3>
+                <button class="modal-close"
+                    (click)="closeInviteModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" [(ngModel)]="inviteEmail"
+                        class="modal-input"
+                        placeholder="utilisateur@exemple.com">
+                </div>
+                <div class="form-group">
+                    <label>Rôle</label>
+                    <select [(ngModel)]="inviteRole" class="modal-input">
+                        <option value="Admin">👑 Admin</option>
+                        <option value="ProductionManager">🏭 Production
+                            Manager</option>
+                        <option value="Operator">🖨️ Operator</option>
+                        <option value="Commercial">💰 Commercial</option>
+                        <option value="Viewer">👁️ Viewer</option>
+                    </select>
+                </div>
+                <div class="info-message" *ngIf="inviteLink">
+                    <strong>Lien d'invitation :</strong>
+                    <code>{{ inviteLink }}</code>
+                    <button class="btn-copy"
+                        (click)="copyToClipboard(inviteLink)">Copier</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary"
+                    (click)="closeInviteModal()">Annuler</button>
+                <button class="btn-primary" (click)="sendInvitation()">Envoyer
+                    l'invitation</button>
+            </div>
+        </div>
+    </div>
+</div>

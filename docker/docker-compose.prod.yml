@@ -1,0 +1,11 @@
+services:
+
+  backend:
+
+    ports:
+      - "5002:8080"
+
+  frontend:
+
+    ports:
+      - "80:80"
