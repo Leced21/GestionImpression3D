@@ -114,15 +114,25 @@ export class OrdreForm implements OnInit {
   onSubmit(): void {
     if (this.ordreForm.invalid) return;
 
+    const formValue = this.ordreForm.getRawValue();
+    const payload = {
+      ...formValue,
+      projetId: Number(formValue.projetId),
+      pieceId: Number(formValue.pieceId),
+      quantite: Number(formValue.quantite),
+      dateEcheance: formValue.dateEcheance || null,
+      notes: formValue.notes?.trim() || null,
+    };
+
     if (this.isEditMode && this.ordreId) {
-      this.ordreService.update(this.ordreId, this.ordreForm.value).subscribe({
+      this.ordreService.update(this.ordreId, payload).subscribe({
         next: () => this.router.navigate(['/ordres']),
-        error: (err) => console.error(err)
+        error: (err) => console.error('Erreur lors de la modification de l\'ordre', err.error?.errors ?? err)
       });
     } else {
-      this.ordreService.create(this.ordreForm.value).subscribe({
+      this.ordreService.create(payload).subscribe({
         next: () => this.router.navigate(['/ordres']),
-        error: (err) => console.error(err)
+        error: (err) => console.error('Erreur lors de la création de l\'ordre', err.error?.errors ?? err)
       });
     }
   }
