@@ -125,6 +125,8 @@ builder.Services.AddScoped<IDevisRepository, DevisRepository>();
 builder.Services.AddScoped<IPrintIncidentService, PrintIncidentService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IDevisService, DevisService>();
+builder.Services.AddScoped<IFactureRepository, FactureRepository>();
+builder.Services.AddScoped<IFactureService, FactureService>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 

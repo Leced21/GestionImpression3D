@@ -11,13 +11,15 @@ namespace Backend.Services
         private readonly IClientRepository _clientRepository;
         private readonly IPieceRepository _pieceRepository;
         private readonly IOrdreFabricationService _ordreFabricationService;
+        private readonly IFactureService _factureService;
         private readonly IAuditLogger _auditLogger;
-        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IOrdreFabricationService ordreFabricationService, IAuditLogger auditLogger)
+        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IOrdreFabricationService ordreFabricationService, IFactureService factureService, IAuditLogger auditLogger)
         {
             _devisRepository = devisRepository;
             _clientRepository = clientRepository;
             _pieceRepository = pieceRepository;
             _ordreFabricationService = ordreFabricationService;
+            _factureService = factureService;
             _auditLogger = auditLogger;
         }
         public async Task<Devis> CreateAsync(CreateDevisRequest request)
@@ -137,7 +139,10 @@ namespace Backend.Services
             await _auditLogger.LogStatusChangeAsync(EntityType.Devis, id, oldStatut.ToString(), statut.ToString());
 
             if (isNewlyAccepted && updated != null)
+            {
                 await GenerateOrdresFabricationAsync(updated);
+                await GenerateFactureAsync(updated);
+            }
 
             return updated;
         }
@@ -159,6 +164,15 @@ namespace Backend.Services
                     Notes = $"Généré automatiquement depuis le devis {devis.NumeroDevis}"
                 });
             }
+        }
+
+        private async Task GenerateFactureAsync(Devis devis)
+        {
+            // Idempotence : évite de régénérer une facture si le statut "Accepté" est renvoyé plusieurs fois.
+            if (await _factureService.ExistsForDevisAsync(devis.Id))
+                return;
+
+            await _factureService.CreateFromDevisAsync(devis);
         }
     }
 }

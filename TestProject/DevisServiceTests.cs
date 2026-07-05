@@ -14,6 +14,7 @@ namespace TestProject
         private readonly Mock<IClientRepository> _clientRepositoryMock;
         private readonly Mock<IPieceRepository> _pieceRepositoryMock;
         private readonly Mock<IOrdreFabricationService> _ordreFabricationServiceMock;
+        private readonly Mock<IFactureService> _factureServiceMock;
         private readonly Mock<IAuditLogger> _auditLoggerMock;
 
         public DevisServiceTests()
@@ -22,6 +23,7 @@ namespace TestProject
             _clientRepositoryMock = new Mock<IClientRepository>();
             _pieceRepositoryMock = new Mock<IPieceRepository>();
             _ordreFabricationServiceMock = new Mock<IOrdreFabricationService>();
+            _factureServiceMock = new Mock<IFactureService>();
             _auditLoggerMock = new Mock<IAuditLogger>();
 
             _devisService = new DevisService(
@@ -29,6 +31,7 @@ namespace TestProject
                 _clientRepositoryMock.Object,
                 _pieceRepositoryMock.Object,
                 _ordreFabricationServiceMock.Object,
+                _factureServiceMock.Object,
                 _auditLoggerMock.Object
             );
         }
@@ -86,6 +89,47 @@ namespace TestProject
             );
             _devisRepositoryMock.Verify(x => x.UpdateStatutAsync(It.IsAny<int>(), It.IsAny<DevisStatus>()), Times.Never);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWithProjet_GeneratesFacture()
+        {
+            // Arrange
+            var lignes = new[] { new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 } };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+            _factureServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.Is<Devis>(d => d.Id == 1)), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWhenFactureAlreadyExistsForDevis_SkipsGeneration()
+        {
+            // Arrange : facture déjà générée précédemment (rejeu du statut Accepté)
+            var lignes = new[] { new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 } };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+            _factureServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(true);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
         }
 
         [Fact]
@@ -169,6 +213,7 @@ namespace TestProject
             // Assert
             Assert.NotNull(result);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
         }
 
         [Fact]
@@ -180,6 +225,7 @@ namespace TestProject
 
             Assert.Null(result);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
         }
     }
 }

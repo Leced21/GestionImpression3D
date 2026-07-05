@@ -33,6 +33,8 @@ namespace Backend.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Devis> Devis { get; set; }
         public DbSet<DevisLigne> DevisLignes { get; set; }
+        public DbSet<Facture> Factures { get; set; }
+        public DbSet<FactureLigne> FactureLignes { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -356,6 +358,40 @@ namespace Backend.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Description).HasMaxLength(500);
             });
+
+            modelBuilder.Entity<Facture>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.NumeroFacture).IsRequired().HasMaxLength(20);
+                entity.HasIndex(e => e.NumeroFacture).IsUnique();
+
+                entity.HasOne(e => e.Devis)
+                      .WithMany(d => d.Factures)
+                      .HasForeignKey(e => e.DevisId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Client)
+                      .WithMany(c => c.Factures)
+                      .HasForeignKey(e => e.ClientId)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<FactureLigne>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.HasOne(e => e.Facture)
+                      .WithMany(f => f.Lignes)
+                      .HasForeignKey(e => e.FactureId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Piece)
+                      .WithMany()
+                      .HasForeignKey(e => e.PieceId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
             modelBuilder.Entity<UserSettings>(entity =>
             {
                 entity.HasKey(e => e.Id);
