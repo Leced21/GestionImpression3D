@@ -3,6 +3,7 @@ using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace Backend.Services
 {
@@ -108,8 +109,8 @@ namespace Backend.Services
             {
                 await _auditLogger.LogUpdateAsync(
                     EntityType.Piece, id, "PrixVente",
-                    existingPiece.PrixVente.ToString("F2"),
-                    piece.PrixVente.ToString("F2")
+                    existingPiece.PrixVente.ToString("F2", CultureInfo.InvariantCulture),
+                    piece.PrixVente.ToString("F2", CultureInfo.InvariantCulture)
                 );
             }
 
