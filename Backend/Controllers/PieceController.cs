@@ -18,12 +18,14 @@ namespace Backend.Controllers
         private readonly IPdfExportService _pdfExportService;
         private readonly IExcelExportService _excelExportService;
         private readonly ISTLAnalyzerService _stlAnalyzerService;
-        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService)
+        private readonly IWebHostEnvironment _env;
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService, IWebHostEnvironment env)
         {
             _pieceService = pieceService;
             _pdfExportService = pdfExportService;
             _excelExportService = excelExportService;
             _stlAnalyzerService = stlAnalyzerService;
+            _env = env;
         }
 
         [HttpGet]
@@ -176,7 +178,7 @@ namespace Backend.Controllers
             {
                 return BadRequest(new { error = "Format non supporté. Utilisez STL, STEP ou 3MF" });
             }
-            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            var uploadDir = Path.Combine(_env.ContentRootPath, "uploads");
             if (!Directory.Exists(uploadDir))
                 Directory.CreateDirectory(uploadDir);
 
@@ -215,7 +217,7 @@ namespace Backend.Controllers
             if (!string.Equals(safeFileName, piece.StlFileName, StringComparison.Ordinal))
                 return BadRequest(new { error = "Nom de fichier invalide" });
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", safeFileName);
+            var filePath = Path.Combine(_env.ContentRootPath, "uploads", safeFileName);
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new { error = "Fichier introuvable sur le serveur" });
 
