@@ -46,10 +46,10 @@ export class Settings implements OnInit {
   };
 
   // Système
-  appVersion = '2.0.0';
-  environment = 'Développement';
-  dbStatus = '🟢 Connectée';
-  diskSpace = '2.4 Go / 50 Go';
+  appVersion = '';
+  environment = '';
+  dbStatus = '';
+  diskSpace = '';
 
   constructor(
     private settingsService: SettingsService,
@@ -62,11 +62,27 @@ export class Settings implements OnInit {
     this.loadSettings();
   }
 
+  private loadSystemInfo(): void {
+    this.settingsService.getSystemInfo().subscribe({
+      next: (data) => {
+        this.appVersion = data.appVersion;
+        this.environment = data.environment;
+        this.dbStatus = data.dbStatus;
+        this.diskSpace = data.diskSpace;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
+    });
+  }
+
   loadUser(): void {
     this.userService.getProfile().subscribe({
       next: (data) => {
         this.user = data;
         this.isAdmin = data.role === "Admin";
+        if (this.isAdmin) {
+          this.loadSystemInfo();
+        }
         this.cdr.detectChanges()
       },
       error: (err) => console.error(err)
@@ -112,8 +128,13 @@ export class Settings implements OnInit {
   }
 
   toggle2FA(): void {
-    this.settings.twoFactorEnabled = !this.settings.twoFactorEnabled;
-    alert(`2FA ${this.settings.twoFactorEnabled ? 'activé' : 'désactivé'}`);
+    this.settingsService.toggleTwoFactor().subscribe({
+      next: (result) => {
+        this.settings.twoFactorEnabled = result.enabled;
+        alert(`2FA ${this.settings.twoFactorEnabled ? 'activé' : 'désactivé'}`);
+      },
+      error: (err) => console.error(err)
+    });
   }
 
   setTheme(theme: string): void {
@@ -168,6 +189,10 @@ export class Settings implements OnInit {
   // Actions système (Admin)
   clearCache(): void {
     if (confirm('Vider le cache ?')) {
+      localStorage.removeItem('cart');
+      localStorage.removeItem('printflow3d_first_visit_tutorial_seen');
+      sessionStorage.clear();
+      this.loadSettings();
       alert('🧹 Cache vidé avec succès');
     }
   }
