@@ -22,7 +22,7 @@
                     <span class="client">{{ commande.clientNom }}</span>
                     <span class="date">{{ commande.dateCommande | date:'dd/MM/yyyy HH:mm' }}</span>
                     <span class="total">{{ commande.total | number:'1.2-2' }} €</span>
-                    <span class="badge" [class]="getStatutClass(commande.statut)">{{ commande.statut }}</span>
+                    <span class="badge" [class]="getStatutClass(commande.statut)">{{ getStatutLabel(commande.statut) }}</span>
                 </div>
                 <span class="expand-icon">{{ expandedId === commande.id ? '▲' : '▼' }}</span>
             </div>
@@ -63,7 +63,7 @@
                     <div class="statut-select" *ngIf="commande.statut !== 'Annulée'; else annuleeMessage">
                         <label>Statut</label>
                         <select [ngModel]="commande.statut" (ngModelChange)="changerStatut(commande, $event)">
-                            <option *ngFor="let s of statuts" [ngValue]="s">{{ s }}</option>
+                            <option *ngFor="let s of statuts" [ngValue]="s">{{ getStatutLabel(s) }}</option>
                         </select>
                     </div>
                     <ng-template #annuleeMessage>

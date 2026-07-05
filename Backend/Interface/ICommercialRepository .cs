@@ -1,4 +1,5 @@
-﻿using Backend.Models;
+﻿using Backend.Enums;
+using Backend.Models;
 
 namespace Backend.Interface
 {
@@ -6,7 +7,7 @@ namespace Backend.Interface
     {
         Task<Commande?> GetByIdAsync(int id);
         Task<IEnumerable<Commande>> GetAllAsync();
-        Task<IEnumerable<Commande>> GetByStatutAsync(string statut);
+        Task<IEnumerable<Commande>> GetByStatutAsync(CommandeStatus statut);
         Task<IEnumerable<Commande>> GetByClientAsync(int clientId);
     }
 
@@ -14,7 +15,7 @@ namespace Backend.Interface
     {
         Task<Commande> CreateAsync(Commande commande);
         Task<CommandeLigne> AddLigneAsync(CommandeLigne ligne);
-        Task<Commande?> UpdateStatutAsync(int id, string nouveauStatut);
+        Task<Commande?> UpdateStatutAsync(int id, CommandeStatus nouveauStatut);
         Task<bool> DeleteAsync(int id);
     }
     public interface ICommercialRepository : ICommandeReader, ICommandeWriter
@@ -23,7 +24,7 @@ namespace Backend.Interface
         Task<bool> UpdateStockAsync(int pieceId, int quantite);
         Task<bool> RestoreStockAsync(int pieceId, int quantite);
         Task<decimal> GetChiffreAffairesAsync();
-        Task<Dictionary<string, int>> GetStatistiquesCommandesAsync();
+        Task<Dictionary<CommandeStatus, int>> GetStatistiquesCommandesAsync();
         Task<string> GenerateNumeroCommandeAsync();
     }
 }

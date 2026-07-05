@@ -67,7 +67,6 @@ namespace Backend.Data
                 entity.Property(e => e.NumeroCommande).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.ClientNom).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.ClientEmail).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Statut).HasMaxLength(50);
 
                 // Rattache la commande à la fiche client centralisée (mêmes clé/comportement que la
                 // relation shadow générée précédemment par convention : aucun changement de schéma).

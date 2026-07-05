@@ -144,7 +144,7 @@ namespace TestProject
             {
                 Id = 1,
                 NumeroCommande = "CMD-2026-0001",
-                Statut = "En attente",
+                Statut = CommandeStatus.EnAttente,
                 Lignes = new List<CommandeLigne>
                 {
                     new CommandeLigne { PieceId = 10, Quantite = 3 },
@@ -158,24 +158,24 @@ namespace TestProject
         {
             var commande = CreateCommandeEnAttente();
             _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
-            _commercialRepositoryMock.Setup(x => x.UpdateStatutAsync(1, "Annulée"))
-                .ReturnsAsync(new Commande { Id = 1, Statut = "Annulée" });
+            _commercialRepositoryMock.Setup(x => x.UpdateStatutAsync(1, CommandeStatus.Annulée))
+                .ReturnsAsync(new Commande { Id = 1, Statut = CommandeStatus.Annulée });
 
             var result = await _commercialService.AnnulerCommandeAsync(1);
 
             Assert.True(result);
             _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(10, 3), Times.Once);
             _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(11, 1), Times.Once);
-            _commercialRepositoryMock.Verify(x => x.UpdateStatutAsync(1, "Annulée"), Times.Once);
+            _commercialRepositoryMock.Verify(x => x.UpdateStatutAsync(1, CommandeStatus.Annulée), Times.Once);
             _commercialRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<int>()), Times.Never);
-            _auditLoggerMock.Verify(x => x.LogStatusChangeAsync(EntityType.Commande, 1, "En attente", "Annulée"), Times.Once);
+            _auditLoggerMock.Verify(x => x.LogStatusChangeAsync(EntityType.Commande, 1, "EnAttente", "Annulée"), Times.Once);
         }
 
         [Fact]
         public async Task AnnulerCommande_WithNonCancellableStatus_ThrowsAndDoesNotRestoreStock()
         {
             var commande = CreateCommandeEnAttente();
-            commande.Statut = "Livrée";
+            commande.Statut = CommandeStatus.Livrée;
             _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => _commercialService.AnnulerCommandeAsync(1));
@@ -197,7 +197,7 @@ namespace TestProject
         public async Task UpdateStatutCommande_WithInvalidStatut_ThrowsArgumentException()
         {
             await Assert.ThrowsAsync<ArgumentException>(
-                () => _commercialService.UpdateStatutCommandeAsync(1, "Statut inconnu"));
+                () => _commercialService.UpdateStatutCommandeAsync(1, (CommandeStatus)999));
         }
 
         [Fact]
@@ -206,11 +206,11 @@ namespace TestProject
             var commande = CreateCommandeEnAttente();
             _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
 
-            var result = await _commercialService.UpdateStatutCommandeAsync(1, "En attente");
+            var result = await _commercialService.UpdateStatutCommandeAsync(1, CommandeStatus.EnAttente);
 
             Assert.Equal(commande, result);
             _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-            _commercialRepositoryMock.Verify(x => x.UpdateStatutAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+            _commercialRepositoryMock.Verify(x => x.UpdateStatutAsync(It.IsAny<int>(), It.IsAny<CommandeStatus>()), Times.Never);
             _auditLoggerMock.Verify(x => x.LogStatusChangeAsync(It.IsAny<EntityType>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
@@ -219,10 +219,10 @@ namespace TestProject
         {
             var commande = CreateCommandeEnAttente();
             _commercialRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(commande);
-            _commercialRepositoryMock.Setup(x => x.UpdateStatutAsync(1, "En production"))
-                .ReturnsAsync(new Commande { Id = 1, Statut = "En production" });
+            _commercialRepositoryMock.Setup(x => x.UpdateStatutAsync(1, CommandeStatus.EnProduction))
+                .ReturnsAsync(new Commande { Id = 1, Statut = CommandeStatus.EnProduction });
 
-            await _commercialService.UpdateStatutCommandeAsync(1, "En production");
+            await _commercialService.UpdateStatutCommandeAsync(1, CommandeStatus.EnProduction);
 
             _commercialRepositoryMock.Verify(x => x.RestoreStockAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
         }

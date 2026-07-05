@@ -5,7 +5,16 @@ import { Commande, CommandeStatut } from '../../models/cart.model';
 import { CommercialService } from '../../services/commercial.service';
 import { ToastService } from '../../services/toast.service';
 
-const STATUTS_ANNULABLES: CommandeStatut[] = ['En attente', 'Confirmée'];
+const STATUTS_ANNULABLES: CommandeStatut[] = ['EnAttente', 'Confirmée'];
+
+const STATUT_LABELS: Record<CommandeStatut, string> = {
+  EnAttente: 'En attente',
+  Confirmée: 'Confirmée',
+  EnProduction: 'En production',
+  Expédiée: 'Expédiée',
+  Livrée: 'Livrée',
+  Annulée: 'Annulée'
+};
 
 @Component({
   selector: 'app-commande-list',
@@ -22,7 +31,7 @@ export class CommandeList implements OnInit {
   // "Annulée" n'est volontairement pas proposée ici : elle ne doit être atteinte
   // que via l'action dédiée "Annuler la commande" (peutAnnuler), pas par un
   // simple changement de statut qui contournerait la règle métier.
-  readonly statuts: CommandeStatut[] = ['En attente', 'Confirmée', 'En production', 'Expédiée', 'Livrée'];
+  readonly statuts: CommandeStatut[] = ['EnAttente', 'Confirmée', 'EnProduction', 'Expédiée', 'Livrée'];
 
   constructor(
     private commercialService: CommercialService,
@@ -87,11 +96,15 @@ export class CommandeList implements OnInit {
     });
   }
 
+  getStatutLabel(statut: CommandeStatut): string {
+    return STATUT_LABELS[statut] || statut;
+  }
+
   getStatutClass(statut: string): string {
     const classes: Record<string, string> = {
-      'En attente': 'badge-warning',
+      'EnAttente': 'badge-warning',
       'Confirmée': 'badge-info',
-      'En production': 'badge-info',
+      'EnProduction': 'badge-info',
       'Expédiée': 'badge-info',
       'Livrée': 'badge-success',
       'Annulée': 'badge-danger'

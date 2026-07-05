@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Enums;
 using Backend.Models;
 using Backend.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +68,53 @@ namespace TestProject
             var result = await _repository.RestoreStockAsync(999999, 3);
 
             Assert.False(result);
+        }
+
+        [Fact]
+        public async Task UpdateStatutAsync_ToLivree_SetsDateLivraisonAndPersistsEnum()
+        {
+            var commande = new Commande { NumeroCommande = "CMD-2026-0010", DateCommande = DateTime.Now };
+            _context.Commandes.Add(commande);
+            await _context.SaveChangesAsync();
+
+            var updated = await _repository.UpdateStatutAsync(commande.Id, CommandeStatus.Livrée);
+
+            Assert.NotNull(updated);
+            Assert.Equal(CommandeStatus.Livrée, updated!.Statut);
+            Assert.NotNull(updated.DateLivraison);
+
+            var reloaded = await _context.Commandes.FindAsync(commande.Id);
+            Assert.Equal(CommandeStatus.Livrée, reloaded!.Statut);
+        }
+
+        [Fact]
+        public async Task GetChiffreAffairesAsync_OnlySumsLivreeCommandes()
+        {
+            _context.Commandes.AddRange(
+                new Commande { NumeroCommande = "CMD-A", DateCommande = DateTime.Now, Statut = CommandeStatus.Livrée, Total = 100m },
+                new Commande { NumeroCommande = "CMD-B", DateCommande = DateTime.Now, Statut = CommandeStatus.EnAttente, Total = 999m }
+            );
+            await _context.SaveChangesAsync();
+
+            var ca = await _repository.GetChiffreAffairesAsync();
+
+            Assert.Equal(100m, ca);
+        }
+
+        [Fact]
+        public async Task GetStatistiquesCommandesAsync_GroupsByEnumStatut()
+        {
+            _context.Commandes.AddRange(
+                new Commande { NumeroCommande = "CMD-A", DateCommande = DateTime.Now, Statut = CommandeStatus.EnAttente },
+                new Commande { NumeroCommande = "CMD-B", DateCommande = DateTime.Now, Statut = CommandeStatus.EnAttente },
+                new Commande { NumeroCommande = "CMD-C", DateCommande = DateTime.Now, Statut = CommandeStatus.Livrée }
+            );
+            await _context.SaveChangesAsync();
+
+            var stats = await _repository.GetStatistiquesCommandesAsync();
+
+            Assert.Equal(2, stats[CommandeStatus.EnAttente]);
+            Assert.Equal(1, stats[CommandeStatus.Livrée]);
         }
 
         public void Dispose()

@@ -23,10 +23,10 @@ namespace Backend.Services
             var commande = await _repository.GetByIdAsync(id);
             if (commande == null) return false;
 
-            if (commande.Statut != "En attente" && commande.Statut != "Confirmée")
+            if (commande.Statut != CommandeStatus.EnAttente && commande.Statut != CommandeStatus.Confirmée)
                 throw new InvalidOperationException("Seules les commandes en attente ou confirmées peuvent être annulées");
 
-            await UpdateStatutCommandeAsync(id, "Annulée");
+            await UpdateStatutCommandeAsync(id, CommandeStatus.Annulée);
             return true;
         }
 
@@ -89,7 +89,7 @@ namespace Backend.Services
                 ClientTelephone = client?.Telephone ?? request.ClientTelephone,
                 AdresseLivraison = request.AdresseLivraison,
                 Total = total,
-                Statut = "En attente",
+                Statut = CommandeStatus.EnAttente,
                 DateCommande = DateTime.Now,
                 Notes = request.Notes,
                 Lignes = lignes
@@ -136,18 +136,17 @@ namespace Backend.Services
             return new
             {
                 TotalCommandes = commandes.Count(),
-                CommandesEnAttente = statsParStatut.GetValueOrDefault("En attente", 0),
-                CommandesEnProduction = statsParStatut.GetValueOrDefault("En production", 0),
-                CommandesLivrees = statsParStatut.GetValueOrDefault("Livrée", 0),
+                CommandesEnAttente = statsParStatut.GetValueOrDefault(CommandeStatus.EnAttente, 0),
+                CommandesEnProduction = statsParStatut.GetValueOrDefault(CommandeStatus.EnProduction, 0),
+                CommandesLivrees = statsParStatut.GetValueOrDefault(CommandeStatus.Livrée, 0),
                 ChiffreAffaires = ca,
                 ChiffreAffairesMois = await GetChiffreAffairesMoisAsync()
             };
         }
 
-        public async Task<Commande?> UpdateStatutCommandeAsync(int id, string nouveauStatut)
+        public async Task<Commande?> UpdateStatutCommandeAsync(int id, CommandeStatus nouveauStatut)
         {
-            var statutsValides = new[] { "En attente", "Confirmée", "En production", "Expédiée", "Livrée", "Annulée" };
-            if (!statutsValides.Contains(nouveauStatut))
+            if (!Enum.IsDefined(nouveauStatut))
                 throw new ArgumentException("Statut invalide");
 
             var commande = await _repository.GetByIdAsync(id);
@@ -158,7 +157,7 @@ namespace Backend.Services
 
             // Restituer le stock consommé quand une commande passe (pour la première fois) à Annulée,
             // quel que soit le chemin emprunté (annulation dédiée ou changement de statut direct).
-            if (nouveauStatut == "Annulée")
+            if (nouveauStatut == CommandeStatus.Annulée)
             {
                 foreach (var ligne in commande.Lignes)
                 {
@@ -168,7 +167,7 @@ namespace Backend.Services
 
             var updated = await _repository.UpdateStatutAsync(id, nouveauStatut);
 
-            await _auditLogger.LogStatusChangeAsync(EntityType.Commande, id, ancienStatut, nouveauStatut);
+            await _auditLogger.LogStatusChangeAsync(EntityType.Commande, id, ancienStatut.ToString(), nouveauStatut.ToString());
 
             return updated;
         }
@@ -178,7 +177,7 @@ namespace Backend.Services
         {
             var commandes = await _repository.GetAllAsync();
             return commandes
-                .Where(c => c.Statut == "Livrée" &&
+                .Where(c => c.Statut == CommandeStatus.Livrée &&
                             c.DateCommande.Month == DateTime.Now.Month &&
                             c.DateCommande.Year == DateTime.Now.Year)
                 .Sum(c => c.Total);

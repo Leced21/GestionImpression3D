@@ -1,4 +1,6 @@
-﻿namespace Backend.Models
+﻿using Backend.Enums;
+
+namespace Backend.Models
 {
     public class Commande
     {
@@ -10,7 +12,7 @@
         public string ClientTelephone { get; set; } = string.Empty;
         public string AdresseLivraison { get; set; } = string.Empty;
         public decimal Total { get; set; }
-        public string Statut { get; set; } = "En attente";
+        public CommandeStatus Statut { get; set; } = CommandeStatus.EnAttente;
         public DateTime DateCommande { get; set; }
         public DateTime? DateLivraison { get; set; }
         public string? Notes { get; set; }

@@ -95,11 +95,12 @@ export class PortalHome implements OnInit {
 
   commandeStatusLabel(statut: string): string {
     const labels: Record<string, string> = {
-      'En attente': '⏳ En attente',
+      EnAttente: '⏳ En attente',
       Confirmée: '✅ Confirmée',
-      'En production': '🛠️ En production',
+      EnProduction: '🛠️ En production',
       Expédiée: '📦 Expédiée',
       Livrée: '🎉 Livrée',
+      Annulée: '❌ Annulée',
     };
     return labels[statut] || statut;
   }

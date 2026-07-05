@@ -7,7 +7,10 @@ export interface CartItem {
   stlFileName?: string;
 }
 
-export type CommandeStatut = 'En attente' | 'Confirmée' | 'En production' | 'Expédiée' | 'Livrée' | 'Annulée';
+// Correspond aux noms de l'enum Backend.Enums.CommandeStatus (sérialisé par son nom via
+// JsonStringEnumConverter) : EnAttente/EnProduction n'ont pas d'espace, contrairement aux
+// anciennes valeurs "En attente"/"En production" stockées avant la migration vers l'enum.
+export type CommandeStatut = 'EnAttente' | 'Confirmée' | 'EnProduction' | 'Expédiée' | 'Livrée' | 'Annulée';
 
 // Correspond exactement à Backend.Models.CommandeLigne.
 export interface CommandeLigneResponse {
