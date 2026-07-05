@@ -12,9 +12,12 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const isApi = req.url.startsWith(API_BASE_URL);
+    // Le portail client a sa propre session/JWT (ClientPortalInterceptor) : ne jamais y
+    // attacher le token interne, ni tenter un refresh/logout interne dessus.
+    const isClientPortal = req.url.startsWith(`${API_BASE_URL}/client-portal/`);
     const token = this.authService.getToken();
 
-    if (!isApi) {
+    if (!isApi || isClientPortal) {
       return next.handle(req);
     }
 

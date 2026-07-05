@@ -35,6 +35,7 @@ namespace Backend.Data
         public DbSet<DevisLigne> DevisLignes { get; set; }
         public DbSet<Facture> Factures { get; set; }
         public DbSet<FactureLigne> FactureLignes { get; set; }
+        public DbSet<ClientMagicLink> ClientMagicLinks { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -390,6 +391,18 @@ namespace Backend.Data
                       .WithMany()
                       .HasForeignKey(e => e.PieceId)
                       .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<ClientMagicLink>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+
+                entity.HasOne(e => e.Client)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClientId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<UserSettings>(entity =>

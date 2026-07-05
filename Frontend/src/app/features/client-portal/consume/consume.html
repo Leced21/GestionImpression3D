@@ -1,0 +1,18 @@
+<div class="portal-container">
+    <div class="portal-card">
+        <div class="logo">🖨️ PrintFlow3D</div>
+
+        <div *ngIf="isValidating" class="status">
+            <div class="spinner"></div>
+            <p>Vérification de ton lien d'accès...</p>
+        </div>
+
+        <div *ngIf="!isValidating && hasError" class="status error">
+            <div class="status-icon">⚠️</div>
+            <h2>Lien invalide ou expiré</h2>
+            <p>Ce lien n'est plus valable. Demande un nouveau lien d'accès.</p>
+            <a routerLink="/portail/demande-acces" class="btn-primary">Demander
+                un nouveau lien</a>
+        </div>
+    </div>
+</div>

@@ -36,6 +36,8 @@ if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
     throw new InvalidOperationException("La clé JWT ('Jwt:Key') est manquante dans la configuration ou est trop courte (minimum 32 caractères).");
 }
 
+var clientPortalAudience = builder.Configuration.GetValue("ClientPortal:JwtAudience", "PrintFlow3DClientPortal");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -49,6 +51,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.Zero // Optionnel : Élimine la tolérance par défaut de 5 minutes pour l'expiration du token
+        };
+    })
+    // Schéma distinct pour le portail client externe : audience différente de celle des
+    // Users internes, afin qu'un token client ne puisse jamais être accepté par un endpoint
+    // interne (et inversement), même si les deux partagent la même clé de signature.
+    .AddJwtBearer("ClientPortal", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = clientPortalAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -165,6 +184,9 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IDevisService, DevisService>();
 builder.Services.AddScoped<IFactureRepository, FactureRepository>();
 builder.Services.AddScoped<IFactureService, FactureService>();
+builder.Services.AddScoped<IClientMagicLinkRepository, ClientMagicLinkRepository>();
+builder.Services.AddScoped<IClientPortalAuthService, ClientPortalAuthService>();
+builder.Services.AddScoped<IClientPortalMailSender, LoggingClientPortalMailSender>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 

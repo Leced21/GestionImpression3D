@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { ClientPortalGuard } from './guards/client-portal.guard';
 import { Settings } from './features/settings/settings';
 
 export const routes: Routes = [
@@ -7,6 +8,19 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./components/login/login').then((m) => m.Login),
+  },
+  {
+    path: 'portail/demande-acces',
+    loadComponent: () => import('./features/client-portal/request-access/request-access').then((m) => m.RequestAccess),
+  },
+  {
+    path: 'portail/acces',
+    loadComponent: () => import('./features/client-portal/consume/consume').then((m) => m.Consume),
+  },
+  {
+    path: 'portail',
+    loadComponent: () => import('./features/client-portal/portal-home/portal-home').then((m) => m.PortalHome),
+    canActivate: [ClientPortalGuard],
   },
   {
     path: 'register',
