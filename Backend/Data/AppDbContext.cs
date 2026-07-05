@@ -244,6 +244,12 @@ namespace Backend.Data
                       .WithMany()
                       .HasForeignKey(e => e.ProjetId)
                       .OnDelete(DeleteBehavior.NoAction);
+
+                // Ordre généré automatiquement depuis un devis accepté : traçabilité devis -> production.
+                entity.HasOne(e => e.Devis)
+                      .WithMany(d => d.OrdresFabrication)
+                      .HasForeignKey(e => e.DevisId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<PrintProfile>(entity =>

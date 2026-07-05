@@ -10,12 +10,14 @@ namespace Backend.Services
         private readonly IDevisRepository _devisRepository;
         private readonly IClientRepository _clientRepository;
         private readonly IPieceRepository _pieceRepository;
+        private readonly IOrdreFabricationService _ordreFabricationService;
         private readonly IAuditLogger _auditLogger;
-        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IAuditLogger auditLogger)
+        public DevisService(IDevisRepository devisRepository, IClientRepository clientRepository, IPieceRepository pieceRepository, IOrdreFabricationService ordreFabricationService, IAuditLogger auditLogger)
         {
             _devisRepository = devisRepository;
             _clientRepository = clientRepository;
             _pieceRepository = pieceRepository;
+            _ordreFabricationService = ordreFabricationService;
             _auditLogger = auditLogger;
         }
         public async Task<Devis> CreateAsync(CreateDevisRequest request)
@@ -125,11 +127,38 @@ namespace Backend.Services
             if (devis == null) return null;
 
             var oldStatut = devis.Statut;
+            var isNewlyAccepted = statut == DevisStatus.Accepté && oldStatut != DevisStatus.Accepté;
+
+            if (isNewlyAccepted && !devis.ProjetId.HasValue)
+                throw new InvalidOperationException("Un projet doit être associé au devis avant de pouvoir l'accepter.");
+
             var updated = await _devisRepository.UpdateStatutAsync(id, statut);
 
             await _auditLogger.LogStatusChangeAsync(EntityType.Devis, id, oldStatut.ToString(), statut.ToString());
 
+            if (isNewlyAccepted && updated != null)
+                await GenerateOrdresFabricationAsync(updated);
+
             return updated;
+        }
+
+        private async Task GenerateOrdresFabricationAsync(Devis devis)
+        {
+            // Idempotence : évite de régénérer des ordres si le statut "Accepté" est renvoyé plusieurs fois.
+            if (await _ordreFabricationService.ExistsForDevisAsync(devis.Id))
+                return;
+
+            foreach (var ligne in devis.Lignes.Where(l => l.PieceId.HasValue))
+            {
+                await _ordreFabricationService.CreateAsync(new CreateOrdreRequest
+                {
+                    ProjetId = devis.ProjetId!.Value,
+                    PieceId = ligne.PieceId!.Value,
+                    DevisId = devis.Id,
+                    Quantite = ligne.Quantite,
+                    Notes = $"Généré automatiquement depuis le devis {devis.NumeroDevis}"
+                });
+            }
         }
     }
 }

@@ -13,5 +13,6 @@ namespace Backend.Interface
         Task<OrdreFabrication> UpdateAsync(OrdreFabrication ordre);
         Task<bool> DeleteAsync(int id);
         Task<int> GetNextReferenceNumberAsync();
+        Task<bool> ExistsForDevisAsync(int devisId);
     }
 }

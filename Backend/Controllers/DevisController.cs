@@ -64,9 +64,16 @@ namespace Backend.Controllers
         [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> UpdateStatut(int id, [FromBody] DevisStatus statut)
         {
-            var devis = await _devisService.UpdateStatutAsync(id, statut);
-            if (devis == null) return NotFound();
-            return Ok(devis);
+            try
+            {
+                var devis = await _devisService.UpdateStatutAsync(id, statut);
+                if (devis == null) return NotFound();
+                return Ok(devis);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpGet("{id}/pdf")]

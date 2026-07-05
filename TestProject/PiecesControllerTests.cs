@@ -133,6 +133,102 @@ namespace TestProject
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         }
 
+        [Fact]
+        public async Task GetPieceById_WithInvalidId_ReturnsNotFound()
+        {
+            var request = CreateAuthorizedRequest(HttpMethod.Get, "/api/piece/999999");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePieceStatus_WithInvalidId_ReturnsNotFound()
+        {
+            var request = CreateAuthorizedRequest(HttpMethod.Patch, "/api/piece/999999/statut");
+            request.Content = new StringContent("\"Conception\"", Encoding.UTF8, "application/json");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePieceStatus_WithInvalidTransition_ReturnsBadRequest()
+        {
+            var piece = await CreatePieceAsync("Test Invalid Transition", $"TEST-INVALID-{DateTime.UtcNow.Ticks}");
+            var request = CreateAuthorizedRequest(HttpMethod.Patch, $"/api/piece/{piece.Id}/statut");
+            request.Content = new StringContent("\"Production\"", Encoding.UTF8, "application/json");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task DeletePiece_WithInvalidId_ReturnsNotFound()
+        {
+            var request = CreateAuthorizedRequest(HttpMethod.Delete, "/api/piece/999999");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePiece_WithValidData_ReturnsOkResult()
+        {
+            var piece = await CreatePieceAsync("Test Update", $"TEST-UPDATE-{DateTime.UtcNow.Ticks}");
+            var updatedPiece = new
+            {
+                Id = piece.Id,
+                Nom = "Test Update Modifié",
+                Reference = $"TEST-UPDATE-{DateTime.UtcNow.Ticks}",
+                Description = "Description modifiée"
+            };
+            var request = CreateAuthorizedRequest(HttpMethod.Put, $"/api/piece/{piece.Id}");
+            request.Content = new StringContent(JsonSerializer.Serialize(updatedPiece), Encoding.UTF8, "application/json");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePiece_WithMismatchedId_ReturnsBadRequest()
+        {
+            var piece = await CreatePieceAsync("Test Mismatch", $"TEST-MISMATCH-{DateTime.UtcNow.Ticks}");
+            var updatedPiece = new { Id = piece.Id + 1, Nom = "Test", Reference = piece.Nom };
+            var request = CreateAuthorizedRequest(HttpMethod.Put, $"/api/piece/{piece.Id}");
+            request.Content = new StringContent(JsonSerializer.Serialize(updatedPiece), Encoding.UTF8, "application/json");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetPrixRecommande_WithValidId_ReturnsOkResult()
+        {
+            var piece = await CreatePieceAsync("Test Prix", $"TEST-PRIX-{DateTime.UtcNow.Ticks}");
+            var request = CreateAuthorizedRequest(HttpMethod.Get, $"/api/piece/{piece.Id}/prix-recommande");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetPrixRecommande_WithInvalidId_ReturnsNotFound()
+        {
+            var request = CreateAuthorizedRequest(HttpMethod.Get, "/api/piece/999999/prix-recommande");
+
+            var response = await _client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
         private async Task<PieceResponse> CreatePieceAsync(string nom, string reference)
         {
             var response = await SendJsonAsync(HttpMethod.Post, "/api/piece", new { Nom = nom, Reference = reference });

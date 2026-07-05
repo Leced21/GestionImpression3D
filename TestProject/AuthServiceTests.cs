@@ -160,5 +160,163 @@ namespace TestProject
             // Assert
             Assert.Null(result);
         }
+
+        [Fact]
+        public async Task Login_WithNullRequest_ReturnsNull()
+        {
+            var result = await _authService.LoginAsync(null!);
+
+            Assert.Null(result);
+            _userRepositoryMock.Verify(x => x.GetByEmailAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Login_WithEmptyEmail_ReturnsNull()
+        {
+            var request = new LoginRequest { Email = "", Password = "Test123!" };
+
+            var result = await _authService.LoginAsync(request);
+
+            Assert.Null(result);
+            _userRepositoryMock.Verify(x => x.GetByEmailAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Login_WithValidCredentials_SetsRefreshTokenOnUser()
+        {
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+            var user = new User
+            {
+                Id = 1,
+                Email = "admin@test.com",
+                PasswordHash = hashedPassword,
+                Nom = "Admin",
+                Prenom = "System",
+                Role = "Admin",
+                IsActive = true
+            };
+            var request = new LoginRequest { Email = "admin@test.com", Password = "Admin123!" };
+
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync(request.Email)).ReturnsAsync(user);
+
+            var result = await _authService.LoginAsync(request);
+
+            Assert.NotNull(result);
+            Assert.False(string.IsNullOrEmpty(result.RefreshToken));
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u =>
+                u.RefreshToken == result.RefreshToken && u.RefreshTokenExpiry.HasValue)), Times.Once);
+        }
+
+        [Fact]
+        public async Task RefreshAsync_WithValidToken_ReturnsNewTokenAndRotatesRefreshToken()
+        {
+            var user = new User
+            {
+                Id = 1,
+                Email = "admin@test.com",
+                Nom = "Admin",
+                Prenom = "System",
+                Role = "Admin",
+                RefreshToken = "old-refresh-token",
+                RefreshTokenExpiry = DateTime.UtcNow.AddDays(1)
+            };
+
+            _userRepositoryMock.Setup(x => x.GetByRefreshTokenAsync("old-refresh-token")).ReturnsAsync(user);
+
+            var result = await _authService.RefreshAsync("old-refresh-token");
+
+            Assert.NotNull(result);
+            Assert.Equal("admin@test.com", result.Email);
+            Assert.NotNull(result.Token);
+            Assert.NotEqual("old-refresh-token", result.RefreshToken);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u => u.RefreshToken == result.RefreshToken)), Times.Once);
+        }
+
+        [Fact]
+        public async Task RefreshAsync_WithExpiredToken_ReturnsNull()
+        {
+            var user = new User
+            {
+                Id = 1,
+                Email = "admin@test.com",
+                RefreshToken = "expired-token",
+                RefreshTokenExpiry = DateTime.UtcNow.AddDays(-1)
+            };
+
+            _userRepositoryMock.Setup(x => x.GetByRefreshTokenAsync("expired-token")).ReturnsAsync(user);
+
+            var result = await _authService.RefreshAsync("expired-token");
+
+            Assert.Null(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task RefreshAsync_WithUnknownToken_ReturnsNull()
+        {
+            _userRepositoryMock.Setup(x => x.GetByRefreshTokenAsync("unknown-token")).ReturnsAsync((User?)null);
+
+            var result = await _authService.RefreshAsync("unknown-token");
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task RefreshAsync_WithNullOrEmptyToken_ReturnsNull()
+        {
+            Assert.Null(await _authService.RefreshAsync(""));
+            Assert.Null(await _authService.RefreshAsync(null!));
+            _userRepositoryMock.Verify(x => x.GetByRefreshTokenAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UserExistsAsync_WithExistingEmail_ReturnsTrue()
+        {
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync("admin@test.com")).ReturnsAsync(new User { Id = 1, Email = "admin@test.com" });
+
+            var result = await _authService.UserExistsAsync("admin@test.com");
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task UserExistsAsync_WithUnknownEmail_ReturnsFalse()
+        {
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync("nobody@test.com")).ReturnsAsync((User?)null);
+
+            var result = await _authService.UserExistsAsync("nobody@test.com");
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public async Task UserExistsAsync_WithNullOrEmptyEmail_ReturnsFalse()
+        {
+            Assert.False(await _authService.UserExistsAsync(""));
+            Assert.False(await _authService.UserExistsAsync(null!));
+            _userRepositoryMock.Verify(x => x.GetByEmailAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetUserByIdAsync_WithExistingUser_ReturnsUser()
+        {
+            var user = new User { Id = 42, Email = "admin@test.com" };
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(42)).ReturnsAsync(user);
+
+            var result = await _authService.GetUserByIdAsync(42);
+
+            Assert.NotNull(result);
+            Assert.Equal(42, result.Id);
+        }
+
+        [Fact]
+        public async Task GetUserByIdAsync_WithNonExistingUser_ReturnsNull()
+        {
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((User?)null);
+
+            var result = await _authService.GetUserByIdAsync(99);
+
+            Assert.Null(result);
+        }
     }
 }

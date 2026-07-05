@@ -8,6 +8,7 @@ namespace Backend.Models
         public string Reference { get; set; } = string.Empty;
         public int ProjetId { get; set; }
         public int PieceId { get; set; }
+        public int? DevisId { get; set; }
         public int Quantite { get; set; }
         public int QuantiteProduite { get; set; }
         public OrdreStatut Statut { get; set; }= OrdreStatut.EnCours;
@@ -21,6 +22,7 @@ namespace Backend.Models
         // Navigation
         public Projet Projet { get; set; } = null!;
         public Piece Piece { get; set; } = null!;
+        public Devis? Devis { get; set; }
         public List<PrintJob> PrintJobs { get; set; } = new();
     }
 }

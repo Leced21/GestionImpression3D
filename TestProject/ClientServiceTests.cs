@@ -74,6 +74,26 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task CreateClient_WithEmptyNom_ThrowsException()
+        {
+            var request = new CreateClientRequest { Nom = "  ", Email = "contact@testsarl.com" };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _clientService.CreateAsync(request)
+            );
+        }
+
+        [Fact]
+        public async Task CreateClient_WithEmptyEmail_ThrowsException()
+        {
+            var request = new CreateClientRequest { Nom = "Test SARL", Email = "  " };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _clientService.CreateAsync(request)
+            );
+        }
+
+        [Fact]
         public async Task GetClientById_ExistingClient_ReturnsClient()
         {
             // Arrange
@@ -102,6 +122,19 @@ namespace TestProject
 
             // Act
             var result = await _clientService.GetByIdAsync(99);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetClientByEmail_NonExistingClient_ReturnsNull()
+        {
+            // Arrange
+            _clientRepositoryMock.Setup(x => x.GetByEmailAsync("nobody@test.com")).ReturnsAsync((Client?)null);
+
+            // Act
+            var result = await _clientService.GetByEmailAsync("nobody@test.com");
 
             // Assert
             Assert.Null(result);
@@ -155,6 +188,102 @@ namespace TestProject
             Assert.NotNull(result);
             Assert.Equal("New Name", result.Nom);
             Assert.Equal("new@test.com", result.Email);
+        }
+
+        [Fact]
+        public async Task UpdateClient_NonExistingClient_ReturnsNull()
+        {
+            // Arrange
+            _clientRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Client?)null);
+            var updateRequest = new UpdateClientRequest { Nom = "New Name", Email = "new@test.com" };
+
+            // Act
+            var result = await _clientService.UpdateAsync(99, updateRequest);
+
+            // Assert
+            Assert.Null(result);
+            _clientRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Client>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EnsureClient_WithEmptyNomAndEmail_ReturnsNull()
+        {
+            // Arrange
+            var request = new CreateClientRequest { Nom = "  ", Email = "  " };
+
+            // Act
+            var result = await _clientService.EnsureClientAsync(request);
+
+            // Assert
+            Assert.Null(result);
+            _clientRepositoryMock.Verify(x => x.GetByEmailAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EnsureClient_WithNomButNoEmail_ThrowsException()
+        {
+            // Arrange
+            var request = new CreateClientRequest { Nom = "Test SARL", Email = "  " };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _clientService.EnsureClientAsync(request)
+            );
+        }
+
+        [Fact]
+        public async Task EnsureClient_WithExistingEmail_UpdatesChangedFieldsAndReturnsClient()
+        {
+            // Arrange
+            var existingClient = new Client { Id = 1, Nom = "Old Name", Email = "contact@testsarl.com", Telephone = "0000000000" };
+            var request = new CreateClientRequest { Nom = "New Name", Email = "contact@testsarl.com", Telephone = "0000000000" };
+
+            _clientRepositoryMock.Setup(x => x.GetByEmailAsync("contact@testsarl.com")).ReturnsAsync(existingClient);
+            _clientRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Client>())).ReturnsAsync((Client c) => c);
+
+            // Act
+            var result = await _clientService.EnsureClientAsync(request);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("New Name", result.Nom);
+            _clientRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Client>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task EnsureClient_WithExistingEmailAndNoChanges_ReturnsExistingWithoutUpdate()
+        {
+            // Arrange
+            var existingClient = new Client { Id = 1, Nom = "Test SARL", Email = "contact@testsarl.com" };
+            var request = new CreateClientRequest { Nom = "Test SARL", Email = "contact@testsarl.com" };
+
+            _clientRepositoryMock.Setup(x => x.GetByEmailAsync("contact@testsarl.com")).ReturnsAsync(existingClient);
+
+            // Act
+            var result = await _clientService.EnsureClientAsync(request);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(existingClient.Id, result.Id);
+            _clientRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Client>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EnsureClient_WithNewEmailAndNoNom_CreatesClientUsingEmailAsNom()
+        {
+            // Arrange
+            var request = new CreateClientRequest { Nom = "  ", Email = "new@testsarl.com" };
+
+            _clientRepositoryMock.Setup(x => x.GetByEmailAsync("new@testsarl.com")).ReturnsAsync((Client?)null);
+            _clientRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Client>()))
+                .ReturnsAsync((Client c) => { c.Id = 5; return c; });
+
+            // Act
+            var result = await _clientService.EnsureClientAsync(request);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("new@testsarl.com", result.Nom);
         }
 
         [Fact]

@@ -70,6 +70,48 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task CreateOrdre_WithDevisId_PassesDevisIdThrough()
+        {
+            // Arrange
+            var request = new CreateOrdreRequest
+            {
+                ProjetId = 1,
+                PieceId = 1,
+                DevisId = 42,
+                Quantite = 3
+            };
+
+            var projet = new Projet { Id = 1, Nom = "Projet Test" };
+            var piece = new Piece { Id = 1, Nom = "Piece Test" };
+
+            _projetRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(projet);
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(piece);
+            _ordreRepositoryMock.Setup(x => x.GetNextReferenceNumberAsync()).ReturnsAsync(1);
+            _ordreRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<OrdreFabrication>()))
+                .ReturnsAsync((OrdreFabrication o) => o);
+
+            // Act
+            var result = await _ordreService.CreateAsync(request);
+
+            // Assert
+            Assert.Equal(42, result.DevisId);
+            _ordreRepositoryMock.Verify(x => x.CreateAsync(It.Is<OrdreFabrication>(o => o.DevisId == 42)), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsForDevis_DelegatesToRepository()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.ExistsForDevisAsync(42)).ReturnsAsync(true);
+
+            // Act
+            var result = await _ordreService.ExistsForDevisAsync(42);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
         public async Task CreateOrdre_WithInvalidProjet_ThrowsException()
         {
             // Arrange
@@ -179,6 +221,61 @@ namespace TestProject
             Assert.NotNull(result);
             Assert.Equal(15, result.Quantite);
             Assert.Equal("Haute", result.Priorite.ToString());
+        }
+
+        [Fact]
+        public async Task UpdateOrdre_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+            var updateRequest = new UpdateOrdreRequest { Quantite = 15, Priorite = OrdrePriorite.Haute };
+
+            // Act
+            var result = await _ordreService.UpdateAsync(99, updateRequest);
+
+            // Assert
+            Assert.Null(result);
+            _ordreRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdreFabrication>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+
+            // Act
+            var result = await _ordreService.UpdateStatutAsync(99, OrdreStatut.EnCours);
+
+            // Assert
+            Assert.Null(result);
+            _ordreRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdreFabrication>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task StartProduction_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+
+            // Act
+            var result = await _ordreService.StartProductionAsync(99);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task CompleteProduction_NonExistingOrdre_ReturnsNull()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((OrdreFabrication?)null);
+
+            // Act
+            var result = await _ordreService.CompleteProductionAsync(99);
+
+            // Assert
+            Assert.Null(result);
         }
 
         [Fact]
@@ -306,6 +403,20 @@ namespace TestProject
             Assert.Equal(1, result.Termines);
             Assert.Equal(23, result.QuantiteTotale); // 10+5+8
             Assert.Equal(10, result.QuantiteProduite); // 0+2+8
+        }
+
+        [Fact]
+        public async Task GetStatistics_WithNoOrdres_ReturnsZeroedStatsWithoutDivisionByZero()
+        {
+            // Arrange
+            _ordreRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<OrdreFabrication>());
+
+            // Act
+            var result = await _ordreService.GetStatisticsAsync();
+
+            // Assert
+            Assert.Equal(0, result.TotalOrdres);
+            Assert.Equal(0, result.TauxAvancement);
         }
     }
 }

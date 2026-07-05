@@ -93,5 +93,10 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
             return ordre;
         }
+
+        public async Task<bool> ExistsForDevisAsync(int devisId)
+        {
+            return await _context.OrdresFabrication.AnyAsync(o => o.DevisId == devisId);
+        }
     }
 }

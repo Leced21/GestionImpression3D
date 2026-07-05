@@ -122,6 +122,96 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task UpdatePiece_NonExistingPiece_ReturnsNull()
+        {
+            // Arrange
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Piece?)null);
+            var updatedPiece = new Piece { Nom = "Updated" };
+
+            // Act
+            var result = await _pieceService.UpdateAsync(99, updatedPiece);
+
+            // Assert
+            Assert.Null(result);
+            _pieceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<int>(), It.IsAny<Piece>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdatePiece_WithChangedFields_LogsEachChangeAndUpdates()
+        {
+            // Arrange
+            var existingPiece = new Piece
+            {
+                Id = 1,
+                Nom = "Old Name",
+                PrixVente = 10m,
+                Description = "Old Description",
+                DateCreation = new DateTime(2026, 1, 1)
+            };
+            var updatedPiece = new Piece
+            {
+                Nom = "New Name",
+                PrixVente = 20m,
+                Description = "New Description"
+            };
+
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(existingPiece);
+            _pieceRepositoryMock.Setup(x => x.UpdateAsync(1, It.IsAny<Piece>())).ReturnsAsync((int id, Piece p) => p);
+
+            // Act
+            var result = await _pieceService.UpdateAsync(1, updatedPiece);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("New Name", result.Nom);
+            Assert.Equal(existingPiece.DateCreation, result.DateCreation);
+            _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "Nom", "Old Name", "New Name"), Times.Once);
+            _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "PrixVente", "10.00", "20.00"), Times.Once);
+            _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "Description", "Old Description", "New Description"), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdatePiece_WithNoChangedFields_DoesNotLogAnything()
+        {
+            // Arrange
+            var existingPiece = new Piece
+            {
+                Id = 1,
+                Nom = "Same Name",
+                PrixVente = 10m,
+                Description = "Same Description"
+            };
+            var updatedPiece = new Piece
+            {
+                Nom = "Same Name",
+                PrixVente = 10m,
+                Description = "Same Description"
+            };
+
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(existingPiece);
+            _pieceRepositoryMock.Setup(x => x.UpdateAsync(1, It.IsAny<Piece>())).ReturnsAsync((int id, Piece p) => p);
+
+            // Act
+            await _pieceService.UpdateAsync(1, updatedPiece);
+
+            // Assert
+            _auditLoggerMock.Verify(x => x.LogUpdateAsync(It.IsAny<EntityType>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CalculerPrixRecommande_DelegatesToRepository()
+        {
+            // Arrange
+            _pieceRepositoryMock.Setup(x => x.CalculerPrixRecommandéAsync(1)).ReturnsAsync(42.5m);
+
+            // Act
+            var result = await _pieceService.CalculerPrixRecommandéAsync(1);
+
+            // Assert
+            Assert.Equal(42.5m, result);
+        }
+
+        [Fact]
         public async Task GetById_ExistingPiece_ReturnsPiece()
         {
             // Arrange
