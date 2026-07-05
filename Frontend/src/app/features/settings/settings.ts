@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { SettingsService } from '../../services/settings.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { TranslationService } from '../../services/translation.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
 })
@@ -54,6 +56,7 @@ export class Settings implements OnInit {
   constructor(
     private settingsService: SettingsService,
     private userService: UserService,
+    private translationService: TranslationService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -94,9 +97,15 @@ export class Settings implements OnInit {
         this.settings = { ...this.settings, ...data };
         this.applyTheme();
         this.applyColor();
+        this.translationService.use(this.settings.language);
       },
       error: (err) => console.error(err)
     });
+  }
+
+  setLanguage(lang: string): void {
+    this.settings.language = lang;
+    this.translationService.use(lang);
   }
   getInitials(): string {
     return `${this.user.prenom?.charAt(0) || ''}${this.user.nom?.charAt(0) || ''}`;
@@ -175,6 +184,7 @@ export class Settings implements OnInit {
       };
       this.applyTheme();
       this.applyColor();
+      this.translationService.use(this.settings.language);
       alert('✅ Paramètres réinitialisés');
     }
   }

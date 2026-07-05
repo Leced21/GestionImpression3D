@@ -6,11 +6,12 @@ import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NotificationCenter } from '../notification-center/notification-center';
 import { NotificationBell } from '../notification-bell/notification-bell';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, NotificationBell],
+  imports: [CommonModule, RouterModule, NotificationBell, TranslatePipe],
   templateUrl: './header.html',
   styleUrls: ['./header.css'],
 })

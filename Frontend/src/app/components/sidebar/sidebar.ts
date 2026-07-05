@@ -5,11 +5,12 @@ import { Projet } from '../../models/projet.model';
 import { ProjetService } from '../../services/projet.service';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslatePipe],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css'],
 })

@@ -3,28 +3,28 @@
         <div class="tutorial-card">
             <div class="tutorial-header">
                 <div>
-                    <h2>Bienvenue sur PrintFlow3D</h2>
-                    <p>Voici un petit guide rapide pour démarrer dans l'application.</p>
+                    <h2>{{ 'dashboard.welcomeTitle' | translate }}</h2>
+                    <p>{{ 'dashboard.welcomeIntro' | translate }}</p>
                 </div>
                 <button class="close-btn" (click)="closeTutorial()">×</button>
             </div>
             <ol class="tutorial-list">
-                <li><strong>1.</strong> Utilisez le menu pour accéder aux imprimantes et aux pièces.</li>
-                <li><strong>2.</strong> Créez une nouvelle pièce depuis "Pièces" → "Nouveau".</li>
-                <li><strong>3.</strong> Suivez les travaux d'impression et le stock depuis ce tableau de bord.</li>
-                <li><strong>4.</strong> Consultez les projets et l'historique dans le menu latéral.</li>
+                <li><strong>1.</strong> {{ 'dashboard.tutorialStep1' | translate }}</li>
+                <li><strong>2.</strong> {{ 'dashboard.tutorialStep2' | translate }}</li>
+                <li><strong>3.</strong> {{ 'dashboard.tutorialStep3' | translate }}</li>
+                <li><strong>4.</strong> {{ 'dashboard.tutorialStep4' | translate }}</li>
             </ol>
-            <button class="tutorial-ok-btn" (click)="closeTutorial()">J'ai compris</button>
+            <button class="tutorial-ok-btn" (click)="closeTutorial()">{{ 'dashboard.tutorialOk' | translate }}</button>
         </div>
     </div>
 
     <div class="header">
         <div>
-            <h1>📊 Tableau de bord industriel</h1>
-            <p class="subtitle">Vue d'ensemble de la production</p>
+            <h1>📊 {{ 'dashboard.title' | translate }}</h1>
+            <p class="subtitle">{{ 'dashboard.subtitle' | translate }}</p>
         </div>
         <div class="last-updated">
-            Dernière mise à jour: {{ lastUpdated | date:'HH:mm:ss' }}
+            {{ 'dashboard.lastUpdated' | translate }}: {{ lastUpdated | date:'HH:mm:ss' }}
             <button class="refresh-btn" (click)="refresh()">🔄</button>
         </div>
     </div>
@@ -35,7 +35,7 @@
             <div class="kpi-icon blue">📦</div>
             <div class="kpi-content">
                 <div class="kpi-value">{{ stats?.totalPieces || 0 }}</div>
-                <div class="kpi-label">Pièces créées</div>
+                <div class="kpi-label">{{ 'dashboard.piecesCreated' | translate }}</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -43,7 +43,7 @@
             <div class="kpi-content">
                 <div class="kpi-value">{{ stats?.printJobs?.completedJobs || 0
                     }}</div>
-                <div class="kpi-label">Impressions terminées</div>
+                <div class="kpi-label">{{ 'dashboard.printsCompleted' | translate }}</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -51,7 +51,7 @@
             <div class="kpi-content">
                 <div class="kpi-value">{{ stats?.activePrinters || 0 }}/{{
                     stats?.totalPrinters || 0 }}</div>
-                <div class="kpi-label">Imprimantes actives</div>
+                <div class="kpi-label">{{ 'dashboard.activePrinters' | translate }}</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -59,7 +59,7 @@
             <div class="kpi-content">
                 <div class="kpi-value">{{ stats?.printJobs?.successRate || 0 |
                     number:'1.0-0' }}%</div>
-                <div class="kpi-label">Taux de succès</div>
+                <div class="kpi-label">{{ 'dashboard.successRate' | translate }}</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -67,7 +67,7 @@
             <div class="kpi-content">
                 <div class="kpi-value">{{
                     stats?.materialStock?.lowStockMaterials || 0 }}</div>
-                <div class="kpi-label">Stocks bas</div>
+                <div class="kpi-label">{{ 'dashboard.lowStock' | translate }}</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -75,7 +75,7 @@
             <div class="kpi-content">
                 <div class="kpi-value">{{ stats?.materialStock?.totalValue || 0
                     | number:'1.2-2' }} €</div>
-                <div class="kpi-label">Valeur stock</div>
+                <div class="kpi-label">{{ 'dashboard.stockValue' | translate }}</div>
             </div>
         </div>
     </div>
@@ -84,7 +84,7 @@
     <div class="charts-grid">
         <!-- Production trend -->
         <div class="chart-card">
-            <h3>📈 Tendance production (30 jours)</h3>
+            <h3>📈 {{ 'dashboard.productionTrend' | translate }}</h3>
             <canvas baseChart
                 [data]="productionChartData"
                 [options]="lineChartOptions"
@@ -94,7 +94,7 @@
 
         <!-- Status imprimantes -->
         <div class="chart-card">
-            <h3>🖨️ Statut imprimantes</h3>
+            <h3>🖨️ {{ 'dashboard.printerStatus' | translate }}</h3>
             <canvas baseChart
                 [data]="printerStatusChartData"
                 [options]="doughnutChartOptions"
@@ -104,7 +104,7 @@
 
         <!-- Matériaux consommés -->
         <div class="chart-card">
-            <h3>🧪 Top matériaux consommés</h3>
+            <h3>🧪 {{ 'dashboard.topMaterials' | translate }}</h3>
             <canvas baseChart
                 [data]="materialChartData"
                 [options]="barChartOptions"
@@ -114,7 +114,7 @@
 
         <!-- Activité imprimantes -->
         <div class="chart-card">
-            <h3>📊 Activité imprimantes</h3>
+            <h3>📊 {{ 'dashboard.printerActivity' | translate }}</h3>
             <div class="printers-list">
                 <div class="printer-item"
                     *ngFor="let printer of printersActivity">
@@ -135,14 +135,14 @@
 
     <!-- Derniers jobs -->
     <div class="recent-jobs">
-        <h3>🕐 Derniers jobs d'impression</h3>
+        <h3>🕐 {{ 'dashboard.recentJobs' | translate }}</h3>
         <div class="jobs-table">
             <div class="jobs-header">
-                <span>Job</span>
-                <span>Pièce</span>
-                <span>Statut</span>
-                <span>Durée</span>
-                <span>Date</span>
+                <span>{{ 'dashboard.job' | translate }}</span>
+                <span>{{ 'dashboard.piece' | translate }}</span>
+                <span>{{ 'dashboard.status' | translate }}</span>
+                <span>{{ 'dashboard.duration' | translate }}</span>
+                <span>{{ 'dashboard.date' | translate }}</span>
             </div>
             <div class="jobs-row" *ngFor="let job of recentJobs">
                 <span class="job-number">{{ job.jobNumber }}</span>

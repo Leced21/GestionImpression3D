@@ -1,44 +1,44 @@
 <div class="settings-container">
     <div class="header">
-        <h1>⚙️ Paramètres</h1>
-        <p class="subtitle">Personnalisez votre expérience PrintFlow3D</p>
+        <h1>⚙️ {{ 'settings.title' | translate }}</h1>
+        <p class="subtitle">{{ 'settings.subtitle' | translate }}</p>
     </div>
 
     <!-- Navigation des onglets -->
     <div class="tabs">
         <button class="tab" [class.active]="activeTab === 'general'"
             (click)="activeTab = 'general'">
-            📋 Général
+            📋 {{ 'settings.tab.general' | translate }}
         </button>
         <button class="tab" [class.active]="activeTab === 'profile'"
             (click)="activeTab = 'profile'">
-            👤 Profil
+            👤 {{ 'settings.tab.profile' | translate }}
         </button>
         <button class="tab" [class.active]="activeTab === 'notifications'"
             (click)="activeTab = 'notifications'">
-            🔔 Notifications
+            🔔 {{ 'settings.tab.notifications' | translate }}
         </button>
         <button class="tab" [class.active]="activeTab === 'security'"
             (click)="activeTab = 'security'">
-            🔒 Sécurité
+            🔒 {{ 'settings.tab.security' | translate }}
         </button>
         <button class="tab" [class.active]="activeTab === 'appearance'"
             (click)="activeTab = 'appearance'">
-            🎨 Apparence
+            🎨 {{ 'settings.tab.appearance' | translate }}
         </button>
         <button class="tab" [class.active]="activeTab === 'system'"
             (click)="activeTab = 'system'" *ngIf="isAdmin">
-            🖥️ Système
+            🖥️ {{ 'settings.tab.system' | translate }}
         </button>
     </div>
 
     <!-- Onglet Général -->
     <div *ngIf="activeTab === 'general'" class="tab-content">
         <div class="settings-card">
-            <h3>📋 Informations générales</h3>
+            <h3>📋 {{ 'settings.general.title' | translate }}</h3>
             <div class="setting-group">
-                <label>Langue par défaut</label>
-                <select [(ngModel)]="settings.language">
+                <label>{{ 'settings.general.language' | translate }}</label>
+                <select [ngModel]="settings.language" (ngModelChange)="setLanguage($event)">
                     <option value="fr">🇫🇷 Français</option>
                     <option value="en">🇬🇧 English</option>
                     <option value="es">🇪🇸 Español</option>
@@ -46,7 +46,7 @@
                 </select>
             </div>
             <div class="setting-group">
-                <label>Fuseau horaire</label>
+                <label>{{ 'settings.general.timezone' | translate }}</label>
                 <select [(ngModel)]="settings.timezone">
                     <option value="Europe/Paris">Europe/Paris (UTC+1)</option>
                     <option value="Europe/London">Europe/London (UTC+0)</option>
@@ -56,7 +56,7 @@
                 </select>
             </div>
             <div class="setting-group">
-                <label>Format de date</label>
+                <label>{{ 'settings.general.dateFormat' | translate }}</label>
                 <select [(ngModel)]="settings.dateFormat">
                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -69,51 +69,50 @@
     <!-- Onglet Profil -->
     <div *ngIf="activeTab === 'profile'" class="tab-content">
         <div class="settings-card">
-            <h3>👤 Informations personnelles</h3>
+            <h3>👤 {{ 'settings.profile.title' | translate }}</h3>
             <div class="profile-avatar">
                 <div class="avatar">{{ getInitials() }}</div>
-                <button class="btn-upload">📷 Changer la photo</button>
+                <button class="btn-upload">📷 {{ 'settings.profile.changePhoto' | translate }}</button>
             </div>
             <div class="setting-group">
-                <label>Prénom</label>
+                <label>{{ 'settings.profile.firstName' | translate }}</label>
                 <input type="text" [(ngModel)]="user.prenom">
             </div>
             <div class="setting-group">
-                <label>Nom</label>
+                <label>{{ 'settings.profile.lastName' | translate }}</label>
                 <input type="text" [(ngModel)]="user.nom">
             </div>
             <div class="setting-group">
-                <label>Email</label>
+                <label>{{ 'settings.profile.email' | translate }}</label>
                 <input type="email" [(ngModel)]="user.email" disabled>
             </div>
             <div class="setting-group">
-                <label>Rôle</label>
+                <label>{{ 'settings.profile.role' | translate }}</label>
                 <input type="text" [value]="user.role" disabled>
             </div>
-            <button class="btn-primary" (click)="updateProfile()">💾 Mettre à
-                jour</button>
+            <button class="btn-primary" (click)="updateProfile()">💾 {{ 'settings.profile.update' | translate }}</button>
         </div>
     </div>
 
     <!-- Onglet Notifications -->
     <div *ngIf="activeTab === 'notifications'" class="tab-content">
         <div class="settings-card">
-            <h3>🔔 Préférences de notifications</h3>
+            <h3>🔔 {{ 'settings.notifications.title' | translate }}</h3>
             <div class="setting-toggle">
-                <label>Notifications par email</label>
+                <label>{{ 'settings.notifications.email' | translate }}</label>
                 <input type="checkbox"
                     [(ngModel)]="settings.emailNotifications">
             </div>
             <div class="setting-toggle">
-                <label>Notifications de stock bas</label>
+                <label>{{ 'settings.notifications.stock' | translate }}</label>
                 <input type="checkbox" [(ngModel)]="settings.stockAlerts">
             </div>
             <div class="setting-toggle">
-                <label>Notifications de production</label>
+                <label>{{ 'settings.notifications.production' | translate }}</label>
                 <input type="checkbox" [(ngModel)]="settings.productionAlerts">
             </div>
             <div class="setting-toggle">
-                <label>Rapports hebdomadaires</label>
+                <label>{{ 'settings.notifications.weekly' | translate }}</label>
                 <input type="checkbox" [(ngModel)]="settings.weeklyReports">
             </div>
         </div>
@@ -122,35 +121,34 @@
     <!-- Onglet Sécurité -->
     <div *ngIf="activeTab === 'security'" class="tab-content">
         <div class="settings-card">
-            <h3>🔒 Sécurité</h3>
+            <h3>🔒 {{ 'settings.security.title' | translate }}</h3>
 
             <div class="setting-group">
-                <label>Mot de passe actuel</label>
+                <label>{{ 'settings.security.currentPassword' | translate }}</label>
                 <input type="password" [(ngModel)]="security.currentPassword">
             </div>
             <div class="setting-group">
-                <label>Nouveau mot de passe</label>
+                <label>{{ 'settings.security.newPassword' | translate }}</label>
                 <input type="password" [(ngModel)]="security.newPassword">
             </div>
             <div class="setting-group">
-                <label>Confirmer le nouveau mot de passe</label>
+                <label>{{ 'settings.security.confirmPassword' | translate }}</label>
                 <input type="password" [(ngModel)]="security.confirmPassword">
             </div>
-            <button class="btn-primary" (click)="changePassword()">🔑 Changer le
-                mot de passe</button>
+            <button class="btn-primary" (click)="changePassword()">🔑 {{ 'settings.security.changePassword' | translate }}</button>
 
             <div class="divider"></div>
 
             <div class="setting-group">
-                <label>Authentification à deux facteurs (2FA)</label>
+                <label>{{ 'settings.security.twoFactor' | translate }}</label>
                 <div class="twofa-status">
                     <span class="status-badge"
                         [class.enabled]="settings.twoFactorEnabled">
-                        {{ settings.twoFactorEnabled ? '✅ Activé' :
-                        '❌ Désactivé' }}
+                        {{ settings.twoFactorEnabled ? '✅ ' + ('settings.security.enabled' | translate) :
+                        '❌ ' + ('settings.security.disabled' | translate) }}
                     </span>
                     <button class="btn-secondary" (click)="toggle2FA()">
-                        {{ settings.twoFactorEnabled ? 'Désactiver' : 'Activer'
+                        {{ settings.twoFactorEnabled ? ('settings.security.disable' | translate) : ('settings.security.enable' | translate)
                         }}
                     </button>
                 </div>
@@ -161,7 +159,7 @@
     <!-- Onglet Apparence -->
     <div *ngIf="activeTab === 'appearance'" class="tab-content">
         <div class="settings-card">
-            <h3>🎨 Thème et apparence</h3>
+            <h3>🎨 {{ 'settings.appearance.title' | translate }}</h3>
 
             <div class="theme-options">
                 <div class="theme-option"
@@ -171,7 +169,7 @@
                         <div class="theme-header"></div>
                         <div class="theme-body"></div>
                     </div>
-                    <span>☀️ Clair</span>
+                    <span>☀️ {{ 'settings.appearance.light' | translate }}</span>
                 </div>
                 <div class="theme-option"
                     [class.active]="settings.theme === 'dark'"
@@ -180,7 +178,7 @@
                         <div class="theme-header"></div>
                         <div class="theme-body"></div>
                     </div>
-                    <span>🌙 Sombre</span>
+                    <span>🌙 {{ 'settings.appearance.dark' | translate }}</span>
                 </div>
                 <div class="theme-option"
                     [class.active]="settings.theme === 'system'"
@@ -189,12 +187,12 @@
                         <div class="theme-header"></div>
                         <div class="theme-body"></div>
                     </div>
-                    <span>🔄 Système</span>
+                    <span>🔄 {{ 'settings.appearance.system' | translate }}</span>
                 </div>
             </div>
 
             <div class="setting-group">
-                <label>Couleur principale</label>
+                <label>{{ 'settings.appearance.primaryColor' | translate }}</label>
                 <div class="color-options">
                     <button class="color-btn" [style.background]="'#3b82f6'"
                         (click)="setPrimaryColor('#3b82f6')"></button>
@@ -214,23 +212,23 @@
     <!-- Onglet Système (Admin seulement) -->
     <div *ngIf="activeTab === 'system' && isAdmin" class="tab-content">
         <div class="settings-card">
-            <h3>🖥️ Informations système</h3>
+            <h3>🖥️ {{ 'settings.system.title' | translate }}</h3>
 
             <div class="system-info">
                 <div class="info-item">
-                    <span>Version</span>
+                    <span>{{ 'settings.system.version' | translate }}</span>
                     <strong>v{{ appVersion }}</strong>
                 </div>
                 <div class="info-item">
-                    <span>Environnement</span>
+                    <span>{{ 'settings.system.environment' | translate }}</span>
                     <strong>{{ environment }}</strong>
                 </div>
                 <div class="info-item">
-                    <span>Base de données</span>
+                    <span>{{ 'settings.system.database' | translate }}</span>
                     <strong>{{ dbStatus }}</strong>
                 </div>
                 <div class="info-item">
-                    <span>Espace disque</span>
+                    <span>{{ 'settings.system.diskSpace' | translate }}</span>
                     <strong>{{ diskSpace }}</strong>
                 </div>
             </div>
@@ -238,12 +236,9 @@
             <div class="divider"></div>
 
             <div class="system-actions">
-                <button class="btn-secondary" (click)="clearCache()">🧹 Vider le
-                    cache</button>
-                <button class="btn-secondary" (click)="exportData()">📤 Exporter
-                    les données</button>
-                <button class="btn-danger" (click)="resetApp()">🔄 Réinitialiser
-                    l'application</button>
+                <button class="btn-secondary" (click)="clearCache()">🧹 {{ 'settings.system.clearCache' | translate }}</button>
+                <button class="btn-secondary" (click)="exportData()">📤 {{ 'settings.system.exportData' | translate }}</button>
+                <button class="btn-danger" (click)="resetApp()">🔄 {{ 'settings.system.resetApp' | translate }}</button>
             </div>
         </div>
     </div>
@@ -251,8 +246,8 @@
     <!-- Actions globales -->
     <div class="actions-bar">
         <button class="btn-secondary" (click)="resetSettings()">↩️
-            Réinitialiser</button>
+            {{ 'settings.reset' | translate }}</button>
         <button class="btn-primary" (click)="saveSettings()">💾
-            Sauvegarder</button>
+            {{ 'settings.save' | translate }}</button>
     </div>
 </div>

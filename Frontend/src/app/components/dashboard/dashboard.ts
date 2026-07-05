@@ -7,11 +7,12 @@ import { PrinterStatus } from '../../models/printer.model';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { DashboardService } from '../../services/dashboard.service';
 import { PrintJobService } from '../../services/print-job.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, BaseChartDirective],
+  imports: [CommonModule, RouterModule, BaseChartDirective, TranslatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
