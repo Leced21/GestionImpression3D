@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { API_BASE_URL } from '../config/api.config';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 import { Devis, DevisStatistics, DevisStatus } from '../models/devis.model';
 
@@ -36,7 +36,8 @@ export class DevisService {
   }
 
   updateStatut(id: number, statut: DevisStatus): Observable<Devis> {
-    return this.http.patch<Devis>(`${this.apiUrl}/${id}/statut`, statut);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.patch<Devis>(`${this.apiUrl}/${id}/statut`, JSON.stringify(statut), { headers });
   }
 
   generatePdf(id: number): Observable<Blob> {
