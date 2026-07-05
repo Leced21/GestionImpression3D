@@ -63,7 +63,7 @@
                     *ngIf="devis.statut === DevisStatus.Envoye">✅ Accepter</button>
                 <button class="btn-sm danger"
                     (click)="updateStatut(devis, DevisStatus.Refuse)"
-                    *ngIf="devis.statut === DevisStatus.Refuse">❌ Refuser</button>
+                    *ngIf="devis.statut === DevisStatus.Envoye">❌ Refuser</button>
                 <button class="btn-sm" (click)="generatePdf(devis)">📄
                     PDF</button>
             </div>
