@@ -81,6 +81,64 @@ namespace Backend.Services
             return created;
         }
 
+        public async Task<Devis?> UpdateAsync(int id, UpdateDevisRequest request)
+        {
+            var existing = await _devisRepository.GetByIdAsync(id);
+            if (existing == null) return null;
+
+            if (existing.Statut == DevisStatus.Accepté)
+                throw new InvalidOperationException("Un devis accepté ne peut plus être modifié.");
+
+            var client = await _clientRepository.GetByIdAsync(request.ClientId);
+            if (client == null)
+                throw new InvalidOperationException("Client non trouvé");
+
+            var lignes = new List<DevisLigne>();
+            decimal totalHT = 0;
+
+            foreach (var ligneReq in request.Lignes)
+            {
+                decimal prixUnitaire = ligneReq.PrixUnitaire;
+                string description = ligneReq.Description;
+
+                if (ligneReq.PieceId.HasValue)
+                {
+                    var piece = await _pieceRepository.GetByIdAsync(ligneReq.PieceId.Value);
+                    if (piece != null)
+                    {
+                        prixUnitaire = piece.PrixVente;
+                        description = piece.Nom;
+                    }
+                }
+
+                var ligne = new DevisLigne
+                {
+                    PieceId = ligneReq.PieceId,
+                    Description = description,
+                    Quantite = ligneReq.Quantite,
+                    PrixUnitaire = prixUnitaire
+                };
+                lignes.Add(ligne);
+                totalHT += ligne.Total;
+            }
+
+            existing.ClientId = request.ClientId;
+            existing.ProjetId = request.ProjetId;
+            existing.DateValidite = request.DateValidite;
+            existing.TVA = request.TVA;
+            existing.TotalHT = totalHT;
+            existing.TotalTTC = totalHT * (1 + request.TVA / 100);
+            existing.Notes = request.Notes;
+            existing.Conditions = request.Conditions;
+            existing.Lignes = lignes;
+
+            var updated = await _devisRepository.UpdateAsync(existing);
+
+            await _auditLogger.LogUpdateAsync(EntityType.Devis, id, "Devis", "Modifié", updated.NumeroDevis);
+
+            return updated;
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var devis = await _devisRepository.GetByIdAsync(id);

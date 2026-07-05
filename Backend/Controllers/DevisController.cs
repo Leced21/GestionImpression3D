@@ -60,6 +60,22 @@ namespace Backend.Controllers
             }
         }
 
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Commercial")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateDevisRequest request)
+        {
+            try
+            {
+                var devis = await _devisService.UpdateAsync(id, request);
+                if (devis == null) return NotFound();
+                return Ok(devis);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
         [HttpPatch("{id}/statut")]
         [Authorize(Roles = "Admin,Commercial")]
         public async Task<IActionResult> UpdateStatut(int id, [FromBody] DevisStatus statut)
