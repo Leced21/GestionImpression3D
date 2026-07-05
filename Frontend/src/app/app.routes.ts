@@ -286,6 +286,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/devis/devis-detail/devis-detail').then((m) => m.DevisDetail),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'devis/:id/edit',
+    loadComponent: () => import('./features/devis/devis-form/devis-form').then((m) => m.DevisForm),
+    canActivate: [AuthGuard],
+  },
   { path: 'settings', component: Settings, canActivate: [AuthGuard] },
   {
     path: '**',
