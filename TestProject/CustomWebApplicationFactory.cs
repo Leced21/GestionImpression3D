@@ -17,6 +17,12 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("Jwt:Key", "integration-tests-only-secret-key-32-characters");
         builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
+        // La factory est partagée par toute une classe de tests (IClassFixture) : chaque test
+        // relance un login dans son constructeur, donc la limite d'auth par défaut serait
+        // atteinte en quelques tests. On la désactive de fait ici ; RateLimitingTests.cs
+        // utilise sa propre factory avec une limite volontairement basse.
+        builder.UseSetting("RateLimiting:Global:PermitLimit", "100000");
+        builder.UseSetting("RateLimiting:Auth:PermitLimit", "100000");
 
         builder.ConfigureServices(services =>
         {
