@@ -44,6 +44,7 @@ export class MaterialstockList implements OnInit {
     this.materialStockService.getAll().subscribe({
       next: (data) => {
         this.materials = data;
+        this.filterMaterials();
         this.cdr.detectChanges();
       },
       error: (err) => {
