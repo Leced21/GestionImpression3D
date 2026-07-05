@@ -16,6 +16,10 @@
             {{ 'sidebar.projects' | translate }}</div>
         <div class="nav-item" routerLink="/commercial"
             routerLinkActive="active">💰 {{ 'sidebar.commercial' | translate }}</div>
+        <div class="nav-item" routerLink="/commercial/commandes"
+            routerLinkActive="active" *ngIf="canManageCommandes">
+            📦 {{ 'sidebar.commandes' | translate }}
+        </div>
         <div class="nav-item" routerLink="/admin/audit-logs"
             routerLinkActive="active" *ngIf="isAdmin">
             📋 {{ 'sidebar.auditLog' | translate }}

@@ -1,0 +1,76 @@
+<div class="commandes-container">
+    <div class="header">
+        <div>
+            <h1>📦 Commandes</h1>
+            <p class="subtitle">Suivi des commandes du catalogue commercial</p>
+        </div>
+        <button class="btn-refresh" (click)="loadCommandes()">🔄</button>
+    </div>
+
+    <div *ngIf="isLoading" class="loading">Chargement...</div>
+
+    <div *ngIf="!isLoading && commandes.length === 0" class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>Aucune commande pour le moment</p>
+    </div>
+
+    <div class="commandes-list" *ngIf="!isLoading && commandes.length > 0">
+        <div class="commande-card" *ngFor="let commande of commandes">
+            <div class="commande-row" (click)="toggleDetail(commande)">
+                <div class="commande-main">
+                    <span class="numero">{{ commande.numeroCommande }}</span>
+                    <span class="client">{{ commande.clientNom }}</span>
+                    <span class="date">{{ commande.dateCommande | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="total">{{ commande.total | number:'1.2-2' }} €</span>
+                    <span class="badge" [class]="getStatutClass(commande.statut)">{{ commande.statut }}</span>
+                </div>
+                <span class="expand-icon">{{ expandedId === commande.id ? '▲' : '▼' }}</span>
+            </div>
+
+            <div class="commande-detail" *ngIf="expandedId === commande.id" (click)="$event.stopPropagation()">
+                <div class="detail-info">
+                    <div><strong>Email :</strong> {{ commande.clientEmail }}</div>
+                    <div><strong>Téléphone :</strong> {{ commande.clientTelephone }}</div>
+                    <div><strong>Adresse de livraison :</strong> {{ commande.adresseLivraison }}</div>
+                    <div *ngIf="commande.notes"><strong>Notes :</strong> {{ commande.notes }}</div>
+                    <div *ngIf="commande.dateLivraison">
+                        <strong>Livrée le :</strong> {{ commande.dateLivraison | date:'dd/MM/yyyy' }}
+                    </div>
+                </div>
+
+                <table class="lignes-table">
+                    <thead>
+                        <tr>
+                            <th>Pièce</th>
+                            <th>Référence</th>
+                            <th>Quantité</th>
+                            <th>Prix unitaire</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let ligne of commande.lignes">
+                            <td>{{ ligne.nom }}</td>
+                            <td>{{ ligne.reference }}</td>
+                            <td>{{ ligne.quantite }}</td>
+                            <td>{{ ligne.prixUnitaire | number:'1.2-2' }} €</td>
+                            <td>{{ ligne.total | number:'1.2-2' }} €</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="detail-actions">
+                    <div class="statut-select">
+                        <label>Statut</label>
+                        <select [ngModel]="commande.statut" (ngModelChange)="changerStatut(commande, $event)">
+                            <option *ngFor="let s of statuts" [ngValue]="s">{{ s }}</option>
+                        </select>
+                    </div>
+                    <button class="btn-danger" *ngIf="peutAnnuler(commande)" (click)="annuler(commande)">
+                        🗑️ Annuler la commande
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

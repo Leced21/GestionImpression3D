@@ -57,6 +57,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'commercial/commandes',
+    loadComponent: () => import('./components/commande-list/commande-list').then((m) => m.CommandeList),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'Commercial'] },
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./components/dashboard/dashboard').then((m) => m.Dashboard),
     canActivate: [AuthGuard],

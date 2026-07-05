@@ -7,16 +7,35 @@ export interface CartItem {
   stlFileName?: string;
 }
 
+export type CommandeStatut = 'En attente' | 'Confirmée' | 'En production' | 'Expédiée' | 'Livrée';
+
+// Correspond exactement à Backend.Models.CommandeLigne.
+export interface CommandeLigneResponse {
+  id: number;
+  commandeId: number;
+  pieceId: number;
+  nom: string;
+  reference: string;
+  quantite: number;
+  prixUnitaire: number;
+  total: number;
+}
+
+// Correspond exactement à Backend.Models.Commande.
 export interface Commande {
   id: number;
-  date: Date;
-  client: string;
-  email: string;
-  telephone: string;
-  adresse: string;
-  items: CartItem[];
+  numeroCommande: string;
+  clientId?: number;
+  clientNom: string;
+  clientEmail: string;
+  clientTelephone: string;
+  adresseLivraison: string;
   total: number;
-  statut: 'En attente' | 'Confirmée' | 'En production' | 'Expédiée' | 'Livrée';
+  statut: CommandeStatut;
+  dateCommande: string;
+  dateLivraison?: string;
+  notes?: string;
+  lignes: CommandeLigneResponse[];
 }
 
 // Correspond exactement au DTO Backend.Models.CommandeItem / CommandeRequest

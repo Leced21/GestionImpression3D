@@ -17,6 +17,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 export class Sidebar implements OnInit, OnDestroy {
   recentProjets: Projet[] = [];
   isAdmin = false;
+  canManageCommandes = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -25,7 +26,9 @@ export class Sidebar implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.authService.currentUser$.subscribe(user => {
-      this.isAdmin = user?.role?.toLowerCase() === 'admin';
+      const role = user?.role?.toLowerCase();
+      this.isAdmin = role === 'admin';
+      this.canManageCommandes = role === 'admin' || role === 'commercial';
     });
   }
 

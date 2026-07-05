@@ -4,13 +4,14 @@ import { PieceService } from '../../services/piece.service';
 import { CartItem, CommandeRequest } from '../../models/cart.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { CommercialService } from '../../services/commercial.service';
 import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-commercial-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './commercial-catalog.html',
   styleUrls: ['./commercial-catalog.css'],
 })

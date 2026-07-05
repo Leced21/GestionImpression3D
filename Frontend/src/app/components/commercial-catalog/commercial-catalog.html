@@ -5,11 +5,14 @@
             <h1>💰 Catalogue commercial</h1>
             <p class="subtitle">Pièces certifiées prêtes à la vente</p>
         </div>
-        <button class="btn-cart" (click)="toggleCart()">
-            🛒 Panier
-            <span class="cart-badge" *ngIf="cartItems.length > 0">{{
-                cartItems.length }}</span>
-        </button>
+        <div class="header-actions">
+            <a class="btn-orders" routerLink="/commercial/commandes">📦 Commandes</a>
+            <button class="btn-cart" (click)="toggleCart()">
+                🛒 Panier
+                <span class="cart-badge" *ngIf="cartItems.length > 0">{{
+                    cartItems.length }}</span>
+            </button>
+        </div>
     </div>
 
     <!-- Filtres -->

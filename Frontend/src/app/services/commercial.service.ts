@@ -14,6 +14,10 @@ export class CommercialService {
     return this.http.get<Commande[]>(`${this.apiUrl}/commandes`).pipe(catchError(this.handleError));
   }
 
+  getCommande(id: number): Observable<Commande> {
+    return this.http.get<Commande>(`${this.apiUrl}/commandes/${id}`).pipe(catchError(this.handleError));
+  }
+
   creerCommande(commande: CommandeRequest): Observable<CommandeCreatedResponse> {
     return this.http.post<CommandeCreatedResponse>(`${this.apiUrl}/commande`, commande).pipe(catchError(this.handleError));
   }
@@ -22,6 +26,10 @@ export class CommercialService {
     return this.http.patch<Commande>(`${this.apiUrl}/commandes/${id}/statut`, JSON.stringify(statut), {
       headers: { 'Content-Type': 'application/json' },
     }).pipe(catchError(this.handleError));
+  }
+
+  annulerCommande(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/commandes/${id}`).pipe(catchError(this.handleError));
   }
 
   getChiffreAffaires(): Observable<{ total: number; mois: number; annee: number }> {
