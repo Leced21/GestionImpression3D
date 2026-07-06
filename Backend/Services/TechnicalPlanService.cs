@@ -114,11 +114,24 @@ namespace Backend.Services
                                             columns.RelativeColumn(3);
                                         });
 
-                                        CreateTableCell(table, "Désignation:", piece.Nom, true);
-                                        CreateTableCell(table, "Catégorie:", piece.Categorie ?? "N/A", false);
+                                        // Désignation / Nom
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Désignation:").Bold().FontSize(9);
+                                        table.Cell().Padding(5).Text(piece.Nom).FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Catégorie:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text(piece.Categorie ?? "N/A").FontSize(9);
 
-                                        CreateTableCell(table, "Matériau:", piece.Materiau ?? "N/A", true);
-                                        CreateTableCell(table, "Statut:", piece.Statut.ToString(), false);
+                                        // Matériau / Statut
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Matériau:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text(piece.Materiau ?? "N/A").FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Statut:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text(piece.Statut.ToString()).FontSize(9);
                                     });
                                 });
 
@@ -245,12 +258,35 @@ namespace Backend.Services
                                             columns.RelativeColumn(1);
                                         });
 
-                                        CreateTableCell(table, "Coût matière:", $"{piece.CoutMatiere:F2} €", true);
-                                        CreateTableCell(table, "Coût machine:", $"{piece.CoutMachine:F2} €", false);
-                                        CreateTableCell(table, "Coût main-d'œuvre:", $"{piece.CoutMainOeuvre:F2} €", true);
-                                        CreateTableCell(table, "Coût total:", $"{piece.CoutTotal:F2} €", false);
-                                        CreateTableCell(table, "Prix de vente:", $"{piece.PrixVente:F2} €", true);
-                                        CreateTableCell(table, "Marge:", $"{piece.Marge:F2} € ({piece.MargePourcentage:F1}%)", false);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Coût matière:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text($"{piece.CoutMatiere:F2} €").FontSize(9);
+
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Coût machine:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text($"{piece.CoutMachine:F2} €").FontSize(9);
+
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Coût main-d'œuvre:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text($"{piece.CoutMainOeuvre:F2} €").FontSize(9);
+
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Coût total:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text($"{piece.CoutTotal:F2} €").FontSize(9);
+
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Prix de vente:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text($"{piece.PrixVente:F2} €").FontSize(9);
+
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Marge:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text($"{piece.Marge:F2} € ({piece.MargePourcentage:F1}%)").FontSize(9);
                                     });
                                 });
 
@@ -272,10 +308,25 @@ namespace Backend.Services
                                             columns.RelativeColumn(3);
                                         });
 
-                                        CreateTableCell(table, "Surface:", $"{metadata.SurfaceArea:F2} mm²", true);
-                                        CreateTableCell(table, "Étanche:", metadata.IsWatertight ? "Oui" : "Non", false);
-                                        CreateTableCell(table, "Nb triangles:", metadata.TriangleCount.ToString(), true);
-                                        CreateTableCell(table, "Temps imp.:", $"{metadata.EstimatedPrintTime:F0} min", false);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Surface:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text($"{metadata.SurfaceArea:F2} mm²").FontSize(9);
+
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Étanche:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text(metadata.IsWatertight ? "Oui" : "Non").FontSize(9);
+
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text("Nb triangles:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                            .Text(metadata.TriangleCount.ToString()).FontSize(9);
+
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text("Temps imp.:").Bold().FontSize(9);
+                                        table.Cell().Background(Colors.White).Padding(5)
+                                            .Text($"{metadata.EstimatedPrintTime:F0} min").FontSize(9);
                                     });
                                 });
                         });
