@@ -99,9 +99,8 @@ namespace Backend.Services
                             column.Item()
                                 .Column(inner =>
                                 {
-                                    inner.Item().Text("INFORMATIONS GÉNÉRALES")
-                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium)
-                                        .PaddingBottom(5);
+                                    inner.Item().PaddingBottom(5).Text("INFORMATIONS GÉNÉRALES")
+                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium);
 
                                     inner.Item().Table(table =>
                                     {
@@ -137,9 +136,8 @@ namespace Backend.Services
                             column.Item().PaddingTop(15)
                                 .Column(inner =>
                                 {
-                                    inner.Item().Text("DIMENSIONS (mm)")
-                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium)
-                                        .PaddingBottom(5);
+                                    inner.Item().PaddingBottom(5).Text("DIMENSIONS (mm)")
+                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium);
 
                                     inner.Item().Table(table =>
                                     {
@@ -185,9 +183,8 @@ namespace Backend.Services
                             column.Item().PaddingTop(15)
                                 .Column(inner =>
                                 {
-                                    inner.Item().Text("VUES ORTHOGONALES")
-                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium)
-                                        .PaddingBottom(10);
+                                    inner.Item().PaddingBottom(10).Text("VUES ORTHOGONALES")
+                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium);
 
                                     // Vue de face
                                     inner.Item()
@@ -196,9 +193,8 @@ namespace Backend.Services
                                             row.RelativeColumn()
                                                 .Column(col =>
                                                 {
-                                                    col.Item().Text("Vue de face (XY)")
-                                                        .SemiBold().FontSize(10)
-                                                        .PaddingBottom(5);
+                                                    col.Item().PaddingBottom(5).Text("Vue de face (XY)")
+                                                        .SemiBold().FontSize(10);
 
                                                     col.Item().Background(Colors.Grey.Lighten4)
                                                         .Padding(10)
@@ -211,9 +207,8 @@ namespace Backend.Services
                                             row.RelativeColumn()
                                                 .Column(col =>
                                                 {
-                                                    col.Item().Text("Vue de côté (XZ)")
-                                                        .SemiBold().FontSize(10)
-                                                        .PaddingBottom(5);
+                                                    col.Item().PaddingBottom(5).Text("Vue de côté (XZ)")
+                                                        .SemiBold().FontSize(10);
 
                                                     col.Item().Background(Colors.Grey.Lighten4)
                                                         .Padding(10)
@@ -228,9 +223,8 @@ namespace Backend.Services
                                     inner.Item().PaddingTop(10)
                                         .Column(col =>
                                         {
-                                            col.Item().Text("Vue du dessus (YZ)")
-                                                .SemiBold().FontSize(10)
-                                                .PaddingBottom(5);
+                                            col.Item().PaddingBottom(5).Text("Vue du dessus (YZ)")
+                                                .SemiBold().FontSize(10);
 
                                             col.Item().Background(Colors.Grey.Lighten4)
                                                 .Padding(10)
@@ -245,9 +239,8 @@ namespace Backend.Services
                             column.Item().PaddingTop(15)
                                 .Column(inner =>
                                 {
-                                    inner.Item().Text("COÛTS DE PRODUCTION")
-                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium)
-                                        .PaddingBottom(5);
+                                    inner.Item().PaddingBottom(5).Text("COÛTS DE PRODUCTION")
+                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium);
 
                                     inner.Item().Table(table =>
                                     {
@@ -293,9 +286,8 @@ namespace Backend.Services
                             column.Item().PaddingTop(15)
                                 .Column(inner =>
                                 {
-                                    inner.Item().Text("CARACTÉRISTIQUES STL")
-                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium)
-                                        .PaddingBottom(5);
+                                    inner.Item().PaddingBottom(5).Text("CARACTÉRISTIQUES STL")
+                                        .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium);
 
                                     inner.Item().Table(table =>
                                     {
@@ -407,9 +399,8 @@ namespace Backend.Services
                             .PaddingVertical(10)
                             .Column(column =>
                             {
-                                column.Item().Text(piece.Nom)
-                                    .SemiBold().FontSize(14)
-                                    .PaddingBottom(10);
+                                column.Item().PaddingBottom(10).Text(piece.Nom)
+                                    .SemiBold().FontSize(14);
 
                                 // Informations principales
                                 column.Item().Table(table =>
@@ -438,9 +429,8 @@ namespace Backend.Services
                                                 row.RelativeColumn()
                                                     .Column(col =>
                                                     {
-                                                        col.Item().Text("Face")
-                                                            .SemiBold().FontSize(9)
-                                                            .PaddingBottom(3);
+                                                        col.Item().PaddingBottom(3).Text("Face")
+                                                            .SemiBold().FontSize(9);
                                                         col.Item().Background(Colors.Grey.Lighten4)
                                                             .Padding(8)
                                                             .AlignCenter()
@@ -452,9 +442,8 @@ namespace Backend.Services
                                                 row.RelativeColumn()
                                                     .Column(col =>
                                                     {
-                                                        col.Item().Text("Côté")
-                                                            .SemiBold().FontSize(9)
-                                                            .PaddingBottom(3);
+                                                        col.Item().PaddingBottom(3).Text("Côté")
+                                                            .SemiBold().FontSize(9);
                                                         col.Item().Background(Colors.Grey.Lighten4)
                                                             .Padding(8)
                                                             .AlignCenter()
@@ -466,9 +455,8 @@ namespace Backend.Services
                                                 row.RelativeColumn()
                                                     .Column(col =>
                                                     {
-                                                        col.Item().Text("Dessus")
-                                                            .SemiBold().FontSize(9)
-                                                            .PaddingBottom(3);
+                                                        col.Item().PaddingBottom(3).Text("Dessus")
+                                                            .SemiBold().FontSize(9);
                                                         col.Item().Background(Colors.Grey.Lighten4)
                                                             .Padding(8)
                                                             .AlignCenter()
