@@ -131,8 +131,10 @@ namespace Backend.Services
                 .Select(t => (V1: Rotate(t.V1), V2: Rotate(t.V2), V3: Rotate(t.V3)))
                 .ToList();
 
-            var minX = float.MaxValue, maxX = float.MinValue;
-            var minY = float.MaxValue, maxY = float.MinValue;
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
 
             foreach (var t in rotated)
             {
