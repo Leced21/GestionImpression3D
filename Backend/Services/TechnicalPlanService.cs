@@ -6,6 +6,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 
 namespace Backend.Services
 {
@@ -218,7 +219,7 @@ namespace Backend.Services
                                                     col.Item().PaddingBottom(5).Text("Vue de face (XY)")
                                                         .SemiBold().FontSize(10);
 
-                                                    RenderDimensionBox(
+                                                    RenderTechnicalView(
                                                         col.Item().Background(Colors.Grey.Lighten4).Padding(10),
                                                         metadata.BoundingBoxX, metadata.BoundingBoxZ,
                                                         $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm");
@@ -230,7 +231,7 @@ namespace Backend.Services
                                                     col.Item().PaddingBottom(5).Text("Vue de côté (XZ)")
                                                         .SemiBold().FontSize(10);
 
-                                                    RenderDimensionBox(
+                                                    RenderTechnicalView(
                                                         col.Item().Background(Colors.Grey.Lighten4).Padding(10),
                                                         metadata.BoundingBoxY, metadata.BoundingBoxZ,
                                                         $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm");
@@ -244,7 +245,7 @@ namespace Backend.Services
                                             col.Item().PaddingBottom(5).Text("Vue du dessus (YZ)")
                                                 .SemiBold().FontSize(10);
 
-                                            RenderDimensionBox(
+                                            RenderTechnicalView(
                                                 col.Item().Background(Colors.Grey.Lighten4).Padding(10),
                                                 metadata.BoundingBoxX, metadata.BoundingBoxY,
                                                 $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm");
@@ -440,7 +441,7 @@ namespace Backend.Services
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Face")
                                                             .SemiBold().FontSize(9);
-                                                        RenderDimensionBox(
+                                                        RenderTechnicalView(
                                                             col.Item().Background(Colors.Grey.Lighten4).Padding(8),
                                                             metadata.BoundingBoxX, metadata.BoundingBoxZ,
                                                             $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm", 60f);
@@ -451,7 +452,7 @@ namespace Backend.Services
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Côté")
                                                             .SemiBold().FontSize(9);
-                                                        RenderDimensionBox(
+                                                        RenderTechnicalView(
                                                             col.Item().Background(Colors.Grey.Lighten4).Padding(8),
                                                             metadata.BoundingBoxY, metadata.BoundingBoxZ,
                                                             $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm", 60f);
@@ -462,7 +463,7 @@ namespace Backend.Services
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Dessus")
                                                             .SemiBold().FontSize(9);
-                                                        RenderDimensionBox(
+                                                        RenderTechnicalView(
                                                             col.Item().Background(Colors.Grey.Lighten4).Padding(8),
                                                             metadata.BoundingBoxX, metadata.BoundingBoxY,
                                                             $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm", 60f);
@@ -482,24 +483,112 @@ namespace Backend.Services
             return document.GeneratePdf();
         }
 
-        // Dessine un rectangle à l'échelle réelle des deux dimensions données (au lieu de
-        // l'ancien rendu ASCII, qui ne reflétait ni les proportions ni la forme de la pièce).
-        private void RenderDimensionBox(IContainer container, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float maxSize = 100f)
+        // Dessine une vue technique cotée (silhouette à l'échelle + lignes de cote avec
+        // flèches et valeurs) au lieu de l'ancien rendu ASCII, qui ne reflétait ni les
+        // proportions ni la forme de la pièce et ne portait aucune cotation exploitable.
+        private void RenderTechnicalView(IContainer container, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float maxSize = 100f)
         {
-            var width = Math.Max((float)widthMm, 0.1f);
-            var height = Math.Max((float)heightMm, 0.1f);
-            var scale = maxSize / Math.Max(width, height);
-            var boxWidth = Math.Max(width * scale, 15f);
-            var boxHeight = Math.Max(height * scale, 15f);
+            var realWidth = Math.Max((float)widthMm, 0.1f);
+            var realHeight = Math.Max((float)heightMm, 0.1f);
 
-            container.Column(col =>
+            container.Height(maxSize + 32f).Canvas((canvas, size) =>
+                DrawTechnicalView(canvas, size, realWidth, realHeight, widthLabel, heightLabel));
+        }
+
+        private static void DrawTechnicalView(SKCanvas canvas, Size size, float realWidth, float realHeight, string widthLabel, string heightLabel)
+        {
+            const float marginLeft = 42f;
+            const float marginBottom = 22f;
+            const float marginTop = 8f;
+            const float marginRight = 8f;
+
+            var availableWidth = size.Width - marginLeft - marginRight;
+            var availableHeight = size.Height - marginTop - marginBottom;
+            if (availableWidth <= 0 || availableHeight <= 0) return;
+
+            var scale = Math.Min(availableWidth / realWidth, availableHeight / realHeight);
+            var w = realWidth * scale;
+            var h = realHeight * scale;
+
+            var left = marginLeft + (availableWidth - w) / 2f;
+            var top = marginTop + (availableHeight - h) / 2f;
+            var right = left + w;
+            var bottom = top + h;
+
+            using var outlinePaint = new SKPaint
             {
-                col.Item().AlignCenter().Width(boxWidth).Height(boxHeight)
-                    .Border(1).BorderColor(Colors.Blue.Medium).Background(Colors.Grey.Lighten3);
-                col.Item().AlignCenter().PaddingTop(3)
-                    .Text($"{widthLabel} x {heightLabel}")
-                    .FontSize(7).FontColor(Colors.Grey.Medium);
-            });
+                Color = new SKColor(0x1B, 0x3A, 0x5C),
+                StrokeWidth = 1.5f,
+                Style = SKPaintStyle.Stroke,
+                IsAntialias = true
+            };
+            using var fillPaint = new SKPaint
+            {
+                Color = new SKColor(0xEA, 0xF0, 0xF6),
+                Style = SKPaintStyle.Fill
+            };
+            using var dimPaint = new SKPaint
+            {
+                Color = new SKColor(0x60, 0x60, 0x60),
+                StrokeWidth = 0.75f,
+                Style = SKPaintStyle.Stroke,
+                IsAntialias = true
+            };
+            using var textPaint = new SKPaint
+            {
+                Color = new SKColor(0x30, 0x30, 0x30),
+                IsAntialias = true,
+                TextSize = 8.5f,
+                TextAlign = SKTextAlign.Center
+            };
+
+            // Silhouette de la pièce, à l'échelle
+            canvas.DrawRect(left, top, w, h, fillPaint);
+            canvas.DrawRect(left, top, w, h, outlinePaint);
+
+            // Cotation horizontale (largeur), sous la pièce : lignes d'attache + ligne de
+            // cote avec flèches aux deux extrémités + valeur centrée.
+            var dimY = bottom + 14f;
+            canvas.DrawLine(left, bottom, left, dimY + 4f, dimPaint);
+            canvas.DrawLine(right, bottom, right, dimY + 4f, dimPaint);
+            canvas.DrawLine(left, dimY, right, dimY, dimPaint);
+            DrawArrowhead(canvas, dimPaint.Color, left, dimY, 1f, 0f);
+            DrawArrowhead(canvas, dimPaint.Color, right, dimY, -1f, 0f);
+            canvas.DrawText(widthLabel, (left + right) / 2f, dimY - 4f, textPaint);
+
+            // Cotation verticale (hauteur), à gauche de la pièce
+            var dimX = left - 14f;
+            canvas.DrawLine(left, top, dimX - 4f, top, dimPaint);
+            canvas.DrawLine(left, bottom, dimX - 4f, bottom, dimPaint);
+            canvas.DrawLine(dimX, top, dimX, bottom, dimPaint);
+            DrawArrowhead(canvas, dimPaint.Color, dimX, top, 0f, 1f);
+            DrawArrowhead(canvas, dimPaint.Color, dimX, bottom, 0f, -1f);
+
+            canvas.Save();
+            canvas.Translate(dimX - 4f, (top + bottom) / 2f);
+            canvas.RotateDegrees(-90);
+            canvas.DrawText(heightLabel, 0, 0, textPaint);
+            canvas.Restore();
+        }
+
+        // Triangle plein dont la pointe est en (tipX, tipY) et dont la base s'évase dans la
+        // direction (dirX, dirY) : matérialise l'extrémité d'une ligne de cote (norme dessin
+        // technique), la pointe touchant exactement le point mesuré.
+        private static void DrawArrowhead(SKCanvas canvas, SKColor color, float tipX, float tipY, float dirX, float dirY)
+        {
+            const float length = 5f;
+            const float halfWidth = 1.8f;
+            var perpX = -dirY;
+            var perpY = dirX;
+
+            using var path = new SKPath();
+            path.MoveTo(tipX, tipY);
+            path.LineTo(tipX + dirX * length + perpX * halfWidth, tipY + dirY * length + perpY * halfWidth);
+            path.LineTo(tipX + dirX * length - perpX * halfWidth, tipY + dirY * length - perpY * halfWidth);
+            path.Close();
+
+            using var fillPaint = new SKPaint { Color = color, Style = SKPaintStyle.Fill, IsAntialias = true };
+            canvas.DrawPath(path, fillPaint);
         }
 
         private void CreateTableCell(TableDescriptor table, string label, string value, bool isEven)
