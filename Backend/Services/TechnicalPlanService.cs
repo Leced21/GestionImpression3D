@@ -491,8 +491,8 @@ namespace Backend.Services
             var realWidth = Math.Max((float)widthMm, 0.1f);
             var realHeight = Math.Max((float)heightMm, 0.1f);
 
-            container.Height(maxSize + 32f).Canvas((canvas, size) =>
-                DrawTechnicalView(canvas, size, realWidth, realHeight, widthLabel, heightLabel));
+            container.Height(maxSize + 32f).Canvas((canvasObj, size) =>
+                DrawTechnicalView((SKCanvas)canvasObj, size, realWidth, realHeight, widthLabel, heightLabel));
         }
 
         private static void DrawTechnicalView(SKCanvas canvas, Size size, float realWidth, float realHeight, string widthLabel, string heightLabel)
