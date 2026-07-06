@@ -441,6 +441,10 @@ namespace Backend.Services
                                     table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                         .Text("Date:").Bold().FontSize(8);
                                     table.Cell().Padding(5).Text($"{DateTime.Now:dd/MM/yyyy}").FontSize(8);
+
+                                    table.Cell().ColumnSpan(4).Background(Colors.White).Padding(5)
+                                        .Text("Sauf indication contraire : cotes en mm, tolérance générale ±0,2 mm. Lignes pointillées courtes = arêtes cachées, tireté-point = axes.")
+                                        .FontSize(7).Italic().FontColor(Colors.Grey.Medium);
                                 });
                         });
                 });
@@ -647,6 +651,17 @@ namespace Backend.Services
                 IsAntialias = true,
                 PathEffect = dashEffect
             };
+            // Lignes cachées (arêtes vives du côté opposé à l'observateur) : pointillés
+            // courts et réguliers, à distinguer du tireté-point des lignes d'axe.
+            using var hiddenDashEffect = SKPathEffect.CreateDash(new float[] { 4f, 2.5f }, 0);
+            using var hiddenPaint = new SKPaint
+            {
+                Color = BrandNavySK,
+                StrokeWidth = 1f,
+                Style = SKPaintStyle.Stroke,
+                IsAntialias = true,
+                PathEffect = hiddenDashEffect
+            };
             using var dimPaint = new SKPaint
             {
                 Color = new SKColor(0x60, 0x60, 0x60),
@@ -687,7 +702,7 @@ namespace Backend.Services
 
                 foreach (var e in edges)
                 {
-                    canvas.DrawLine(ToScreen(e.X1, e.Y1), ToScreen(e.X2, e.Y2), objectPaint);
+                    canvas.DrawLine(ToScreen(e.X1, e.Y1), ToScreen(e.X2, e.Y2), e.IsHidden ? hiddenPaint : objectPaint);
                 }
             }
             else

@@ -165,20 +165,45 @@ namespace Backend.Services
                 AddEdge(i, t.V3, t.V1);
             }
 
+            // Seuil d'angle dièdre au-delà duquel une arête interne (pas sur le contour de
+            // silhouette) est jugée assez marquée pour être tracée comme arête vive (nervure,
+            // bord de trou, arête d'un chanfrein...), comme le ferait un logiciel de CAO en
+            // mode "silhouette + arêtes vives" plutôt qu'un simple contour extérieur.
+            const float sharpEdgeThresholdRadians = 25f * MathF.PI / 180f;
+
             var edges = new List<SilhouetteEdge>();
 
             foreach (var (key, triIndices) in edgeGroups)
             {
                 bool isSilhouette;
+                bool isHidden = false;
+
                 if (triIndices.Count == 1)
                 {
+                    // Arête de bord du maillage : toujours sur le contour visible de la pièce.
                     isSilhouette = true;
                 }
                 else if (triIndices.Count == 2)
                 {
-                    var facing1 = Vector3.Dot(normals[triIndices[0]], viewDir) >= 0;
-                    var facing2 = Vector3.Dot(normals[triIndices[1]], viewDir) >= 0;
-                    isSilhouette = facing1 != facing2;
+                    var n1 = normals[triIndices[0]];
+                    var n2 = normals[triIndices[1]];
+                    var facing1 = Vector3.Dot(n1, viewDir) >= 0;
+                    var facing2 = Vector3.Dot(n2, viewDir) >= 0;
+
+                    if (facing1 != facing2)
+                    {
+                        // Transition visible/caché : c'est exactement le contour de
+                        // silhouette, toujours visible par définition.
+                        isSilhouette = true;
+                    }
+                    else
+                    {
+                        var angle = MathF.Acos(Math.Clamp(Vector3.Dot(n1, n2), -1f, 1f));
+                        isSilhouette = angle > sharpEdgeThresholdRadians;
+                        // facing1 == facing2 ici : les deux faces sont soit du côté visible,
+                        // soit toutes les deux cachées derrière la pièce vue de cet axe.
+                        isHidden = isSilhouette && !facing1;
+                    }
                 }
                 else
                 {
@@ -193,7 +218,7 @@ namespace Backend.Services
 
                 var (u1, v1) = project(a);
                 var (u2, v2) = project(b);
-                edges.Add(new SilhouetteEdge { X1 = u1, Y1 = v1, X2 = u2, Y2 = v2 });
+                edges.Add(new SilhouetteEdge { X1 = u1, Y1 = v1, X2 = u2, Y2 = v2, IsHidden = isHidden });
             }
 
             return edges;
@@ -293,11 +318,50 @@ namespace Backend.Services
                     };
                     canvas.DrawPath(path, paint);
                 }
+
+                // Repère XYZ dans le coin, à la même orientation que la pièce : aide à situer
+                // les axes, comme le petit repère toujours présent dans les logiciels de CAO.
+                DrawAxisTriad(canvas, Rotate, new SKPoint(55, size - 55));
             }
 
             using var image = SKImage.FromBitmap(bitmap);
             using var data = image.Encode(SKEncodedImageFormat.Png, 100);
             return data.ToArray();
+        }
+
+        private static void DrawAxisTriad(SKCanvas canvas, Func<Vector3, Vector3> rotate, SKPoint origin)
+        {
+            const float axisLength = 35f;
+            var axes = new (Vector3 Dir, string Label, SKColor Color)[]
+            {
+                (new Vector3(1, 0, 0), "X", new SKColor(0xC0, 0x30, 0x30)),
+                (new Vector3(0, 1, 0), "Y", new SKColor(0x20, 0x90, 0x40)),
+                (new Vector3(0, 0, 1), "Z", new SKColor(0x20, 0x40, 0x90))
+            };
+
+            foreach (var (dir, label, color) in axes)
+            {
+                var rotated = rotate(dir);
+                var end = new SKPoint(origin.X + rotated.X * axisLength, origin.Y - rotated.Y * axisLength);
+
+                using var linePaint = new SKPaint
+                {
+                    Color = color,
+                    StrokeWidth = 2f,
+                    IsAntialias = true,
+                    Style = SKPaintStyle.Stroke
+                };
+                canvas.DrawLine(origin, end, linePaint);
+
+                using var textPaint = new SKPaint
+                {
+                    Color = color,
+                    IsAntialias = true,
+                    TextSize = 12f,
+                    TextAlign = SKTextAlign.Center
+                };
+                canvas.DrawText(label, end.X + (end.X - origin.X) * 0.2f, end.Y + (end.Y - origin.Y) * 0.2f, textPaint);
+            }
         }
 
         public async Task<STLMetadata?> GetMetadataByPieceAsync(int pieceId)
