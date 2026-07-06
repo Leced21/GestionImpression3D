@@ -303,6 +303,32 @@ namespace Backend.Controllers
             return Ok(metadata);
         }
 
+        [HttpGet("{id}/technical-plan/pdf")]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
+        public async Task<IActionResult> GenerateTechnicalPlanPdf(int id)
+        {
+            try
+            {
+                var piece = await _pieceService.GetByIdAsync(id);
+                if (piece == null)
+                    return NotFound(new { error = "Pièce non trouvée" });
+
+                var technicalPlanService = HttpContext.RequestServices.GetRequiredService<ITechnicalPlanService>();
+                var pdfBytes = await technicalPlanService.GenerateTechnicalPlanPdfAsync(id);
+
+                return File(pdfBytes, "application/pdf", $"Plan-Technique_{piece.Reference}_{DateTime.Now:yyyyMMdd}.pdf");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur lors de la génération du plan technique pour la pièce {id}");
+                return StatusCode(500, new { error = "Erreur lors de la génération du plan", details = _env.IsDevelopment() ? ex.Message : null });
+            }
+        }
+
         private static string GetContentType(string extension) => extension.ToLowerInvariant() switch
         {
             ".stl" => "model/stl",

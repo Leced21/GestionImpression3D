@@ -165,6 +165,7 @@ builder.Services.AddScoped<ISTLAnalyzerService, STLAnalyzerService>();
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
 builder.Services.AddScoped<IProjetService, ProjetService>();
 builder.Services.AddScoped<IPdfExportService, PdfExportService>();
+builder.Services.AddScoped<ITechnicalPlanService, TechnicalPlanService>();
 
 // Métier : Utilisateurs (Auth, Audit, Users)
 // Note : IAuthRepository a été retiré conformément au nettoyage de l'architecture.

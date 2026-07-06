@@ -165,5 +165,31 @@ namespace Backend.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Projets_{DateTime.Now:yyyyMMdd}.xlsx");
         }
 
+        [HttpGet("{id}/technical-plans/pdf")]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
+        public async Task<IActionResult> GenerateTechnicalPlansPdf(int id)
+        {
+            try
+            {
+                var projet = await _projetService.GetByIdAsync(id);
+                if (projet == null)
+                    return NotFound(new { error = "Projet non trouvé" });
+
+                var technicalPlanService = HttpContext.RequestServices.GetRequiredService<ITechnicalPlanService>();
+                var pdfBytes = await technicalPlanService.GenerateProjectTechnicalPlansPdfAsync(id);
+
+                return File(pdfBytes, "application/pdf", $"Plans-Techniques_{projet.Reference}_{DateTime.Now:yyyyMMdd}.pdf");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur lors de la génération des plans techniques pour le projet {id}");
+                return StatusCode(500, new { error = "Erreur lors de la génération des plans", details = _env.IsDevelopment() ? ex.Message : null });
+            }
+        }
+
     }
 }
