@@ -342,19 +342,12 @@ namespace Backend.Services
         {
             var document = Document.Create(container =>
             {
-                var firstPage = true;
-
                 foreach (var projectPiece in project.ProjetPieces.Where(pp => pp.Piece != null))
                 {
                     var metadata = _context.STLMetadata
                         .FirstOrDefault(m => m.PieceId == projectPiece.Piece.Id);
 
                     if (metadata == null) continue;
-
-                    if (!firstPage)
-                    {
-                        container.Page(page => page.PageBreak());
-                    }
 
                     var piece = projectPiece.Piece;
 
@@ -473,8 +466,6 @@ namespace Backend.Services
                             .Text($"Page {project.ProjetPieces.IndexOf(projectPiece) + 1}/{project.ProjetPieces.Count} - {DateTime.Now:dd/MM/yyyy}")
                             .FontSize(9).FontColor(Colors.Grey.Medium);
                     });
-
-                    firstPage = false;
                 }
             });
 
