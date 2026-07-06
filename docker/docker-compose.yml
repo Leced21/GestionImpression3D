@@ -74,6 +74,9 @@ services:
 
       Database__ApplyMigrationsOnStartup: ${APPLY_MIGRATIONS}
 
+      AdminSeed__Email: ${ADMIN_SEED_EMAIL}
+      AdminSeed__Password: ${ADMIN_SEED_PASSWORD}
+
     volumes:
       - uploads:/app/uploads
 

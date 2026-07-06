@@ -1,4 +1,6 @@
 using Backend.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Backend.Data
 {
@@ -8,6 +10,8 @@ namespace Backend.Data
         {
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
 
             // Ajouter les permissions par défaut
             if (!context.Permissions.Any())
@@ -106,6 +110,42 @@ namespace Backend.Data
 
                 context.RolePermissions.AddRange(rolePermissions);
                 await context.SaveChangesAsync();
+            }
+
+            // Admin par défaut : uniquement sur une base vide, pour amorcer le tout premier
+            // compte (l'inscription publique force toujours le rôle "User" et les invitations
+            // nécessitent déjà un Admin existant, donc sans ça personne ne peut jamais devenir Admin).
+            if (!context.Users.Any())
+            {
+                var email = configuration["AdminSeed:Email"];
+                var password = configuration["AdminSeed:Password"];
+
+                if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+                {
+                    logger.LogWarning(
+                        "Aucun utilisateur en base et AdminSeed:Email/AdminSeed:Password non configurés : " +
+                        "aucun compte Admin par défaut n'a été créé.");
+                }
+                else
+                {
+                    var admin = new User
+                    {
+                        Email = email.Trim(),
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                        Nom = configuration["AdminSeed:Nom"]?.Trim() is { Length: > 0 } nom ? nom : "Admin",
+                        Prenom = configuration["AdminSeed:Prenom"]?.Trim() is { Length: > 0 } prenom ? prenom : "System",
+                        Role = "Admin",
+                        IsActive = true,
+                        DateCreation = DateTime.UtcNow
+                    };
+
+                    context.Users.Add(admin);
+                    await context.SaveChangesAsync();
+
+                    logger.LogWarning(
+                        "Compte Admin par défaut créé ({Email}). Change son mot de passe dès la première connexion.",
+                        admin.Email);
+                }
             }
         }
     }

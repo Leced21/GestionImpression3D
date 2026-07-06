@@ -279,6 +279,8 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         logger.LogInformation("Application des migrations...");
         await context.Database.MigrateAsync();
         logger.LogInformation("Base de données prête.");
+
+        await SeedData.InitializeAsync(app.Services);
     }
     catch (Exception ex)
     {
