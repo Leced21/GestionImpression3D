@@ -271,6 +271,9 @@
                         technique (interne)</button>
                     <button class="btn-pdf" (click)="exportFicheProduitPdf()">🛍️
                         Fiche produit</button>
+                    <button class="btn-pdf" (click)="downloadTechnicalPlan()"
+                        *ngIf="piece.stlFileName" title="Nécessite un fichier STL analysé">📐
+                        Plan technique</button>
                 </div>
             </div>
         </div>

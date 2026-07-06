@@ -168,6 +168,9 @@
                         PDF</button>
                     <button class="btn-devis" (click)="exportDevis()">📑 Générer
                         devis</button>
+                    <button class="btn-pdf" (click)="downloadTechnicalPlans()"
+                        *ngIf="projet.projetPieces?.length">📐 Plans
+                        techniques</button>
                     <button class="btn-edit"
                         [routerLink]="['/projets', projet.id, 'edit']">✏️
                         Modifier</button>
