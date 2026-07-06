@@ -24,8 +24,14 @@ export class ExportService {
   }
 
   exportPiecePdf(pieceId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/Piece/${pieceId}/pdf`, { 
-      responseType: 'blob' 
+    return this.http.get(`${this.apiUrl}/Piece/${pieceId}/pdf`, {
+      responseType: 'blob'
+    });
+  }
+
+  exportFicheProduitPdf(pieceId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/Piece/${pieceId}/fiche-produit-pdf`, {
+      responseType: 'blob'
     });
   }
 

@@ -14,12 +14,13 @@ namespace Backend.Services
         private const decimal DensityPLA = 1.24m; // g/cm³
         private const decimal DensityPETG = 1.27m;
         private const decimal DensityABS = 1.04m;
+        private const decimal DensityResine = 1.10m;
         private const decimal PrintSpeed = 60; // mm/s
         public STLAnalyzerService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
-        public async Task<STLMetadata> AnalyzeAsync(Stream stlStream, string fileName, int pieceId)
+        public async Task<STLMetadata> AnalyzeAsync(Stream stlStream, string fileName, int pieceId, string? materiau = null)
         {
             // Réinitialiser la position du stream
             stlStream.Position = 0;
@@ -45,8 +46,8 @@ namespace Backend.Services
             var bounds = CalculateBoundingBox(triangles);
             var isWatertight = CheckWatertight(triangles);
 
-            // Estimer le poids
-            var estimatedWeight = volume * DensityPLA;
+            // Estimer le poids selon la densité du matériau réellement utilisé
+            var estimatedWeight = volume * GetDensity(materiau);
 
             // Estimer le temps d'impression
             var estimatedPrintTime = EstimatePrintTime(volume, surfaceArea);
@@ -71,6 +72,14 @@ namespace Backend.Services
 
             return metadata;
         }
+
+        private static decimal GetDensity(string? materiau) => materiau?.Trim().ToUpperInvariant() switch
+        {
+            "PETG" => DensityPETG,
+            "ABS" => DensityABS,
+            "RÉSINE" or "RESINE" => DensityResine,
+            _ => DensityPLA
+        };
 
         public async Task<byte[]> GeneratePreviewAsync(Stream stlStream)
         {

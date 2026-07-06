@@ -55,6 +55,14 @@ namespace Backend.Data
                       .HasConversion<string>()
                       .HasMaxLength(30);
 
+                // Champs de la fiche produit
+                entity.Property(e => e.Couleurs).HasMaxLength(200);
+                entity.Property(e => e.CapaciteContenance).HasMaxLength(200);
+                entity.Property(e => e.NormesCertifications).HasMaxLength(200);
+                entity.Property(e => e.PublicCible).HasMaxLength(200);
+                entity.Property(e => e.Conditionnement).HasMaxLength(200);
+                entity.Property(e => e.DimensionsColis).HasMaxLength(100);
+
                 // Ignorer les propriétés calculées
                 entity.Ignore(e => e.CoutTotal);
                 entity.Ignore(e => e.Marge);

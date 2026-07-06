@@ -493,6 +493,19 @@ export class PieceDetail implements OnInit, OnDestroy {
       error: (err) => console.error('Erreur export PDF:', err)
     });
   }
+
+  exportFicheProduitPdf(): void {
+    if (!this.piece) {
+      console.warn("Impossible d'exporter : aucune pièce n'est chargée.");
+      return;
+    }
+    this.exportService.exportFicheProduitPdf(this.piece.id).subscribe({
+      next: (blob) => {
+        this.exportService.downloadPdf(blob, `FicheProduit_${this.piece?.reference}.pdf`);
+      },
+      error: (err) => console.error('Erreur export fiche produit:', err)
+    });
+  }
 }
 
 

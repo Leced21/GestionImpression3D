@@ -61,7 +61,21 @@ export class PieceForm implements OnInit, OnDestroy {
       categorie: ['Mécanique'],
       materiau: ['PLA'],
       stock: [0],
-      estDisponible: [true]
+      estDisponible: [true],
+      couleurs: [''],
+      capaciteContenance: [''],
+      normesCertifications: [''],
+      instructionsUtilisation: [''],
+      precautionsUsage: [''],
+      publicCible: [''],
+      conditionnement: [''],
+      dimensionsColis: [''],
+      poidsColisKg: [null],
+      moqUnites: [null],
+      delaiLivraisonJours: [null],
+      pointsForts: [''],
+      faq: [''],
+      tarifsDegressifs: ['']
     });
 
     // Écouter les changements de coûts
@@ -86,7 +100,21 @@ export class PieceForm implements OnInit, OnDestroy {
           categorie: piece.categorie,
           materiau: piece.materiau,
           stock: piece.stock,
-          estDisponible: piece.estDisponible
+          estDisponible: piece.estDisponible,
+          couleurs: piece.couleurs,
+          capaciteContenance: piece.capaciteContenance,
+          normesCertifications: piece.normesCertifications,
+          instructionsUtilisation: piece.instructionsUtilisation,
+          precautionsUsage: piece.precautionsUsage,
+          publicCible: piece.publicCible,
+          conditionnement: piece.conditionnement,
+          dimensionsColis: piece.dimensionsColis,
+          poidsColisKg: piece.poidsColisKg,
+          moqUnites: piece.moqUnites,
+          delaiLivraisonJours: piece.delaiLivraisonJours,
+          pointsForts: piece.pointsForts,
+          faq: piece.faq,
+          tarifsDegressifs: piece.tarifsDegressifs
         });
         this.updateCoutTotal();
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement

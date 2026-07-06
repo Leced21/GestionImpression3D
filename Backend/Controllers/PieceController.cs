@@ -19,13 +19,15 @@ namespace Backend.Controllers
         private readonly IExcelExportService _excelExportService;
         private readonly ISTLAnalyzerService _stlAnalyzerService;
         private readonly IWebHostEnvironment _env;
-        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService, IWebHostEnvironment env)
+        private readonly ILogger<PieceController> _logger;
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService, IWebHostEnvironment env, ILogger<PieceController> logger)
         {
             _pieceService = pieceService;
             _pdfExportService = pdfExportService;
             _excelExportService = excelExportService;
             _stlAnalyzerService = stlAnalyzerService;
             _env = env;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -199,6 +201,20 @@ namespace Backend.Controllers
             piece.StlFileName = fileName;
             await _pieceService.UpdateAsync(id, piece);
 
+            // Analyse automatique : dimensions/volume/poids doivent être disponibles dès l'upload,
+            // sans dépendre d'un second appel explicite à /analyze-stl.
+            if (string.Equals(extension, ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    await _pieceService.AnalyzeAndSaveStlFileAsync(id, filePath, fileName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Échec de l'analyse automatique du STL pour la pièce {PieceId}", id);
+                }
+            }
+
             return Ok(new
             {
                 fileName = fileName,
@@ -240,6 +256,17 @@ namespace Backend.Controllers
 
             var pdfBytes = await _pdfExportService.ExportPieceToPdfAsync(piece);
             return File(pdfBytes, "application/pdf", $"Piece_{piece.Reference}.pdf");
+        }
+
+        [HttpGet("{id}/fiche-produit-pdf")]
+        public async Task<IActionResult> ExportFicheProduitPdf(int id)
+        {
+            var piece = await _pieceService.GetByIdAsync(id);
+            if (piece == null) return NotFound();
+
+            var stlMetadata = await _stlAnalyzerService.GetMetadataByPieceAsync(id);
+            var pdfBytes = await _pdfExportService.ExportFicheProduitPdfAsync(piece, stlMetadata);
+            return File(pdfBytes, "application/pdf", $"FicheProduit_{piece.Reference}.pdf");
         }
         [HttpGet("export/excel")]
         [Authorize(Roles = "Admin,ProductionManager")]

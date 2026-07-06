@@ -148,7 +148,21 @@ namespace Backend.Services
             if (piece == null) return null;
 
             using var stream = file.OpenReadStream();
-            var metadata = await _stlAnalyzerService.AnalyzeAsync(stream, file.FileName, pieceId);
+            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, file.FileName, piece.Materiau);
+        }
+
+        public async Task<STLMetadata?> AnalyzeAndSaveStlFileAsync(int pieceId, string filePath, string fileName)
+        {
+            var piece = await _pieceRepository.GetByIdAsync(pieceId);
+            if (piece == null) return null;
+
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, fileName, piece.Materiau);
+        }
+
+        private async Task<STLMetadata> AnalyzeAndSaveStlStreamAsync(int pieceId, Stream stream, string fileName, string? materiau)
+        {
+            var metadata = await _stlAnalyzerService.AnalyzeAsync(stream, fileName, pieceId, materiau);
 
             // Sauvegarder les métadonnées
             using var scope = _serviceProvider.CreateScope();

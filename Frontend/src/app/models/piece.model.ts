@@ -25,4 +25,20 @@ export interface Piece {
   stock?: number;
   imageUrl?: string;
   estDisponible?: boolean;
+
+  // Champs de la fiche produit (aucune source automatique, saisis une fois ici)
+  couleurs?: string;
+  capaciteContenance?: string;
+  normesCertifications?: string;
+  instructionsUtilisation?: string;
+  precautionsUsage?: string;
+  publicCible?: string;
+  conditionnement?: string;
+  dimensionsColis?: string;
+  poidsColisKg?: number;
+  moqUnites?: number;
+  delaiLivraisonJours?: number;
+  pointsForts?: string;
+  faq?: string;
+  tarifsDegressifs?: string;
 }

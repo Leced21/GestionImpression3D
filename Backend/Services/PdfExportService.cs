@@ -460,6 +460,183 @@ namespace Backend.Services
             });
         }
 
+        public async Task<byte[]> ExportFicheProduitPdfAsync(Piece piece, STLMetadata? stlMetadata)
+        {
+            return await Task.Run(() =>
+            {
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(2, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(10));
+
+                        page.Header().Column(column =>
+                        {
+                            column.Item().AlignCenter().Text("FICHE PRODUIT")
+                                .SemiBold().FontSize(22).FontColor(Colors.Blue.Medium);
+                            column.Item().AlignCenter().Text(piece.Nom)
+                                .FontSize(14).FontColor(Colors.Grey.Medium);
+                        });
+
+                        page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
+                        {
+                            column.Item().Text("1. Informations générales").SemiBold().FontSize(14);
+                            column.Item().PaddingBottom(10).Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Cell().Text("Nom du produit :").Bold();
+                                table.Cell().Text(piece.Nom);
+
+                                table.Cell().Text("Référence :").Bold();
+                                table.Cell().Text(piece.Reference);
+
+                                table.Cell().Text("Catégorie :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.Categorie);
+
+                                table.Cell().Text("Marque :").Bold();
+                                table.Cell().Text("3D Inspire");
+                            });
+
+                            column.Item().Text("2. Description").SemiBold().FontSize(14);
+                            CellOrPlaceholder(column.Item().PaddingBottom(10), piece.Description);
+
+                            column.Item().Text("3. Caractéristiques techniques").SemiBold().FontSize(14);
+                            column.Item().PaddingBottom(10).Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Cell().Text("Dimensions (L x l x h) :").Bold();
+                                if (stlMetadata != null)
+                                    table.Cell().Text($"{stlMetadata.BoundingBoxX} x {stlMetadata.BoundingBoxY} x {stlMetadata.BoundingBoxZ} mm");
+                                else
+                                    CellOrPlaceholder(table.Cell(), null, "À compléter (fichier STL non analysé)");
+
+                                table.Cell().Text("Volume :").Bold();
+                                if (stlMetadata != null)
+                                    table.Cell().Text($"{stlMetadata.Volume} cm³");
+                                else
+                                    CellOrPlaceholder(table.Cell(), null, "À compléter (fichier STL non analysé)");
+
+                                table.Cell().Text("Poids estimé :").Bold();
+                                if (stlMetadata != null)
+                                    table.Cell().Text($"{stlMetadata.EstimatedWeight} g");
+                                else
+                                    CellOrPlaceholder(table.Cell(), null, "À compléter (fichier STL non analysé)");
+
+                                table.Cell().Text("Matériau(x) :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.Materiau);
+
+                                table.Cell().Text("Couleur(s) :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.Couleurs);
+
+                                table.Cell().Text("Capacité / Contenance :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.CapaciteContenance);
+
+                                table.Cell().Text("Normes / Certifications :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.NormesCertifications);
+                            });
+
+                            column.Item().Text("4. Utilisation").SemiBold().FontSize(14);
+                            column.Item().PaddingBottom(10).Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Cell().Text("Instructions d'utilisation :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.InstructionsUtilisation);
+
+                                table.Cell().Text("Précautions d'usage :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.PrecautionsUsage);
+
+                                table.Cell().Text("Public cible :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.PublicCible);
+                            });
+
+                            column.Item().Text("5. Conditionnement et logistique").SemiBold().FontSize(14);
+                            column.Item().PaddingBottom(10).Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Cell().Text("Conditionnement :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.Conditionnement);
+
+                                table.Cell().Text("Dimensions du colis :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.DimensionsColis);
+
+                                table.Cell().Text("Poids du colis :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.PoidsColisKg.HasValue ? $"{piece.PoidsColisKg} kg" : null);
+
+                                table.Cell().Text("Quantité minimum de commande :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.MoqUnites.HasValue ? $"{piece.MoqUnites} unités" : null);
+
+                                table.Cell().Text("Délai de livraison estimé :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.DelaiLivraisonJours.HasValue ? $"{piece.DelaiLivraisonJours} jours" : null);
+                            });
+
+                            column.Item().Text("6. Éléments marketing").SemiBold().FontSize(14);
+                            column.Item().PaddingBottom(5).Text("Points forts / avantages :").Bold();
+                            CellOrPlaceholder(column.Item().PaddingBottom(10), piece.PointsForts);
+
+                            column.Item().PaddingBottom(5).Text("FAQ (questions fréquentes) :").Bold();
+                            CellOrPlaceholder(column.Item().PaddingBottom(10), piece.Faq);
+
+                            column.Item().Text("7. Prix").SemiBold().FontSize(14);
+                            column.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                var tva = piece.PrixVente * 0.2m;
+                                table.Cell().Text("Prix unitaire HT :").Bold();
+                                table.Cell().Text($"{piece.PrixVente:F2} €");
+
+                                table.Cell().Text("Prix unitaire TTC (TVA 20%) :").Bold();
+                                table.Cell().Text($"{(piece.PrixVente + tva):F2} €").FontColor(Colors.Green.Medium);
+
+                                table.Cell().Text("Tarifs dégressifs :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.TarifsDegressifs);
+                            });
+                        });
+
+                        page.Footer().AlignCenter()
+                            .Text($"Généré le {DateTime.Now:dd/MM/yyyy HH:mm} - 3D Inspire")
+                            .FontSize(10).FontColor(Colors.Grey.Medium);
+                    });
+                });
+
+                return document.GeneratePdf();
+            });
+        }
+
+        private static void CellOrPlaceholder(IContainer cell, string? value, string placeholder = "À compléter")
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                cell.Text(placeholder).Italic().FontColor(Colors.Grey.Medium);
+            else
+                cell.Text(value);
+        }
+
         public async Task<byte[]> ExportFacturePdfAsync(Facture facture)
         {
             return await Task.Run(() =>

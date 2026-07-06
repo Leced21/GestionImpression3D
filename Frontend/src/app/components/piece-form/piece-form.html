@@ -212,6 +212,108 @@
       </div>
     </div>
 
+    <!-- Section 5: Fiche produit -->
+    <div class="form-section">
+      <h2 class="section-title">🛍️ Fiche produit</h2>
+      <p class="helper-text">Ces informations servent uniquement à générer la
+        fiche produit (PDF). Dimensions, volume et poids sont calculés
+        automatiquement à partir du fichier STL.</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="couleurs">Couleur(s)</label>
+          <input type="text" id="couleurs" formControlName="couleurs"
+            placeholder="Ex: Blanc, Noir">
+        </div>
+
+        <div class="form-group">
+          <label for="capaciteContenance">Capacité / Contenance</label>
+          <input type="text" id="capaciteContenance"
+            formControlName="capaciteContenance" placeholder="Ex: 1.2 L">
+        </div>
+
+        <div class="form-group">
+          <label for="normesCertifications">Normes / Certifications</label>
+          <input type="text" id="normesCertifications"
+            formControlName="normesCertifications" placeholder="Ex: CE">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="instructionsUtilisation">Instructions
+            d'utilisation</label>
+          <textarea id="instructionsUtilisation"
+            formControlName="instructionsUtilisation" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="precautionsUsage">Précautions d'usage</label>
+          <textarea id="precautionsUsage" formControlName="precautionsUsage"
+            rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="publicCible">Public cible</label>
+          <input type="text" id="publicCible" formControlName="publicCible"
+            placeholder="Ex: Tous publics">
+        </div>
+
+        <div class="form-group">
+          <label for="conditionnement">Conditionnement</label>
+          <input type="text" id="conditionnement"
+            formControlName="conditionnement" placeholder="Ex: Boîte individuelle">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dimensionsColis">Dimensions du colis</label>
+          <input type="text" id="dimensionsColis"
+            formControlName="dimensionsColis" placeholder="Ex: 20 x 20 x 25 cm">
+        </div>
+
+        <div class="form-group">
+          <label for="poidsColisKg">Poids du colis (kg)</label>
+          <input type="number" id="poidsColisKg" formControlName="poidsColisKg"
+            step="0.01" min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="moqUnites">Quantité minimum de commande (MOQ)</label>
+          <input type="number" id="moqUnites" formControlName="moqUnites"
+            min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="delaiLivraisonJours">Délai de livraison (jours)</label>
+          <input type="number" id="delaiLivraisonJours"
+            formControlName="delaiLivraisonJours" min="0">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="pointsForts">Points forts / avantages</label>
+          <textarea id="pointsForts" formControlName="pointsForts"
+            rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="faq">FAQ (questions fréquentes)</label>
+          <textarea id="faq" formControlName="faq" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="tarifsDegressifs">Tarifs dégressifs</label>
+        <input type="text" id="tarifsDegressifs"
+          formControlName="tarifsDegressifs" placeholder="Ex: À partir de 10 unités : -10%">
+      </div>
+    </div>
+
     <!-- Actions du formulaire -->
     <div *ngIf="submissionError" class="form-error">
       <p>Erreur : {{ submissionError }}</p>

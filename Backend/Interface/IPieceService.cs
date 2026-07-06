@@ -13,5 +13,6 @@ namespace Backend.Interface
         Task<decimal> CalculerPrixRecommandéAsync(int id);
         Task<bool> DeleteAsync(int id);
         Task<STLMetadata?> AnalyzeSTLAsync(int pieceId, IFormFile file);
+        Task<STLMetadata?> AnalyzeAndSaveStlFileAsync(int pieceId, string filePath, string fileName);
     }
 }
