@@ -266,6 +266,7 @@ namespace Backend.Services
                                                         silhouette?.Front ?? new List<SilhouetteEdge>(),
                                                         metadata.BoundingBoxX, metadata.BoundingBoxZ,
                                                         $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                        $"{metadata.BoundingBoxY:F1} mm",
                                                         sharedScale, cellSize);
                                                 });
 
@@ -280,6 +281,7 @@ namespace Backend.Services
                                                         silhouette?.Side ?? new List<SilhouetteEdge>(),
                                                         metadata.BoundingBoxY, metadata.BoundingBoxZ,
                                                         $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                        $"{metadata.BoundingBoxX:F1} mm",
                                                         sharedScale, cellSize);
                                                 });
                                         });
@@ -298,6 +300,7 @@ namespace Backend.Services
                                                         silhouette?.Top ?? new List<SilhouetteEdge>(),
                                                         metadata.BoundingBoxX, metadata.BoundingBoxY,
                                                         $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm",
+                                                        $"{metadata.BoundingBoxZ:F1} mm",
                                                         sharedScale, cellSize);
                                                 });
 
@@ -311,6 +314,9 @@ namespace Backend.Services
                                                     {
                                                         col.Item().Background(Colors.Grey.Lighten4).Padding(10)
                                                             .Height(cellSize).Image(isoImage).FitArea();
+                                                        col.Item().AlignCenter().PaddingTop(3)
+                                                            .Text($"L {metadata.BoundingBoxX:F1} × l {metadata.BoundingBoxY:F1} × h {metadata.BoundingBoxZ:F1} mm")
+                                                            .FontSize(7.5f).FontColor(Colors.Grey.Medium);
                                                     }
                                                     else
                                                     {
@@ -548,6 +554,7 @@ namespace Backend.Services
                                                             silhouette?.Front ?? new List<SilhouetteEdge>(),
                                                             metadata.BoundingBoxX, metadata.BoundingBoxZ,
                                                             $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                            $"{metadata.BoundingBoxY:F1} mm",
                                                             sharedScale, cellSize);
                                                     });
 
@@ -561,6 +568,7 @@ namespace Backend.Services
                                                             silhouette?.Side ?? new List<SilhouetteEdge>(),
                                                             metadata.BoundingBoxY, metadata.BoundingBoxZ,
                                                             $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                            $"{metadata.BoundingBoxX:F1} mm",
                                                             sharedScale, cellSize);
                                                     });
 
@@ -574,6 +582,7 @@ namespace Backend.Services
                                                             silhouette?.Top ?? new List<SilhouetteEdge>(),
                                                             metadata.BoundingBoxX, metadata.BoundingBoxY,
                                                             $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm",
+                                                            $"{metadata.BoundingBoxZ:F1} mm",
                                                             sharedScale, cellSize);
                                                     });
                                             });
@@ -598,22 +607,27 @@ namespace Backend.Services
         // QuestPDF a retiré son API Canvas() (dépréciée depuis 2024.3.0, dépendance SkiaSharp
         // interne supprimée) : on rasterise donc nous-mêmes en bitmap puis on intègre le
         // résultat comme une image classique.
-        private void RenderTechnicalView(IContainer container, List<SilhouetteEdge> edges, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float scale, int cellSize)
+        private void RenderTechnicalView(IContainer container, List<SilhouetteEdge> edges, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, string depthLabel, float scale, int cellSize)
         {
             var realWidth = Math.Max((float)widthMm, 0.1f);
             var realHeight = Math.Max((float)heightMm, 0.1f);
 
-            var pngBytes = RenderTechnicalViewToPng(cellSize, cellSize, realWidth, realHeight, edges, widthLabel, heightLabel, scale);
+            var pngBytes = RenderTechnicalViewToPng(cellSize, cellSize, realWidth, realHeight, edges, widthLabel, heightLabel, depthLabel, scale);
             container.Height(cellSize).Image(pngBytes).FitArea();
         }
 
-        private static byte[] RenderTechnicalViewToPng(int canvasWidth, int canvasHeight, float realWidth, float realHeight, List<SilhouetteEdge> edges, string widthLabel, string heightLabel, float scale)
+        private static byte[] RenderTechnicalViewToPng(int canvasWidth, int canvasHeight, float realWidth, float realHeight, List<SilhouetteEdge> edges, string widthLabel, string heightLabel, string depthLabel, float scale)
         {
-            using var bitmap = new SKBitmap(canvasWidth, canvasHeight);
+            // Rendu à résolution supérieure (canvas.Scale) puis intégré à la taille finale :
+            // rend les traits/texte nets une fois affichés dans le PDF, au lieu du rendu un
+            // peu pixelisé d'un bitmap 1 pixel = 1 point (~72 DPI).
+            const int supersample = 3;
+            using var bitmap = new SKBitmap(canvasWidth * supersample, canvasHeight * supersample);
             using (var canvas = new SKCanvas(bitmap))
             {
                 canvas.Clear(SKColors.White);
-                DrawTechnicalView(canvas, canvasWidth, canvasHeight, realWidth, realHeight, edges, widthLabel, heightLabel, scale);
+                canvas.Scale(supersample);
+                DrawTechnicalView(canvas, canvasWidth, canvasHeight, realWidth, realHeight, edges, widthLabel, heightLabel, depthLabel, scale);
             }
 
             using var image = SKImage.FromBitmap(bitmap);
@@ -621,7 +635,7 @@ namespace Backend.Services
             return data.ToArray();
         }
 
-        private static void DrawTechnicalView(SKCanvas canvas, float canvasWidth, float canvasHeight, float realWidth, float realHeight, List<SilhouetteEdge> edges, string widthLabel, string heightLabel, float scale)
+        private static void DrawTechnicalView(SKCanvas canvas, float canvasWidth, float canvasHeight, float realWidth, float realHeight, List<SilhouetteEdge> edges, string widthLabel, string heightLabel, string depthLabel, float scale)
         {
             const float marginLeft = 20f;
             const float marginBottom = 20f;
@@ -739,6 +753,18 @@ namespace Backend.Services
             canvas.RotateDegrees(-90);
             canvas.DrawText(heightLabel, 0, 0, textPaint);
             canvas.Restore();
+
+            // 3e cote (profondeur), non représentable graphiquement dans cette vue 2D :
+            // notée en texte pour que les 3 dimensions de la pièce soient cotées quelque
+            // part sur chaque vue, plutôt que seulement les 2 dimensions du plan affiché.
+            using var depthTextPaint = new SKPaint
+            {
+                Color = new SKColor(0x30, 0x30, 0x30),
+                IsAntialias = true,
+                TextSize = 7.5f,
+                TextAlign = SKTextAlign.Left
+            };
+            canvas.DrawText($"Prof. : {depthLabel}", 4f, 10f, depthTextPaint);
         }
 
         // "1:N" (réduction) ou "N:1" (agrandissement) à partir de l'échelle points/mm
