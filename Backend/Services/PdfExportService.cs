@@ -495,7 +495,7 @@ namespace Backend.Services
                         {
                             if (LogoBytes != null)
                             {
-                                column.Item().PaddingBottom(5).Height(35).AlignCenter().Image(LogoBytes);
+                                column.Item().PaddingBottom(5).Height(35).AlignCenter().Image(LogoBytes).FitHeight();
                             }
                             column.Item().AlignCenter().Text("FICHE PRODUIT")
                                 .SemiBold().FontSize(22).FontColor(BrandNavy);
