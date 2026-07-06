@@ -19,19 +19,33 @@ namespace Backend.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly AppDbContext _context;
         private readonly IPieceService _pieceService;
+        private readonly ISTLAnalyzerService _stlAnalyzerService;
         private readonly IWebHostEnvironment _env;
+        private static readonly SKColor BrandNavy = new SKColor(0x1B, 0x3A, 0x5C);
 
         public TechnicalPlanService(
             IServiceProvider serviceProvider,
             AppDbContext context,
             IPieceService pieceService,
+            ISTLAnalyzerService stlAnalyzerService,
             IWebHostEnvironment env)
         {
             _serviceProvider = serviceProvider;
             _context = context;
             _pieceService = pieceService;
+            _stlAnalyzerService = stlAnalyzerService;
             _env = env;
             QuestPDF.Settings.License = LicenseType.Community;
+        }
+
+        private string? ResolveStlFilePath(string? stlFileName)
+        {
+            if (string.IsNullOrEmpty(stlFileName)
+                || !string.Equals(Path.GetExtension(stlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var filePath = Path.Combine(_env.ContentRootPath, "uploads", stlFileName);
+            return System.IO.File.Exists(filePath) ? filePath : null;
         }
 
         /// <summary>
@@ -51,21 +65,26 @@ namespace Backend.Services
             // Pièces uploadées avant la mise en place de l'analyse automatique à l'upload :
             // pas d'échec pour autant, on analyse le fichier déjà présent sur le disque
             // (uniquement pour un vrai .stl : les .step/.3mf ne sont pas ce format).
-            if (metadata == null
-                && !string.IsNullOrEmpty(piece.StlFileName)
-                && string.Equals(Path.GetExtension(piece.StlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+            var stlFilePath = ResolveStlFilePath(piece.StlFileName);
+
+            if (metadata == null && stlFilePath != null)
             {
-                var filePath = Path.Combine(_env.ContentRootPath, "uploads", piece.StlFileName);
-                if (System.IO.File.Exists(filePath))
-                {
-                    metadata = await _pieceService.AnalyzeAndSaveStlFileAsync(pieceId, filePath, piece.StlFileName);
-                }
+                metadata = await _pieceService.AnalyzeAndSaveStlFileAsync(pieceId, stlFilePath, piece.StlFileName);
             }
 
             if (metadata == null)
                 throw new ArgumentException($"Pas de données STL pour la pièce {pieceId}");
 
-            return await Task.Run(() => GeneratePlanPdf(piece, metadata));
+            SilhouetteData? silhouette = null;
+            byte[]? isoImage = null;
+            if (stlFilePath != null)
+            {
+                using var stlStream = System.IO.File.OpenRead(stlFilePath);
+                silhouette = await _stlAnalyzerService.ComputeSilhouetteAsync(stlStream);
+                isoImage = await _stlAnalyzerService.GeneratePreviewAsync(stlStream);
+            }
+
+            return await Task.Run(() => GeneratePlanPdf(piece, metadata, silhouette, isoImage));
         }
 
         /// <summary>
@@ -81,17 +100,34 @@ namespace Backend.Services
             if (project == null)
                 throw new ArgumentException($"Projet avec l'ID {projectId} non trouvé");
 
-            return await Task.Run(() => GenerateProjectPlansPdf(project));
+            // La génération du document QuestPDF est synchrone : on précalcule ici la
+            // silhouette de chaque pièce (lecture de fichier + calcul asynchrones) pour
+            // que GenerateProjectPlansPdf n'ait plus qu'à consulter ce dictionnaire.
+            var silhouettesByPieceId = new Dictionary<int, SilhouetteData>();
+            foreach (var projectPiece in project.ProjetPieces.Where(pp => pp.Piece != null))
+            {
+                var stlFilePath = ResolveStlFilePath(projectPiece.Piece.StlFileName);
+                if (stlFilePath == null) continue;
+
+                using var stlStream = System.IO.File.OpenRead(stlFilePath);
+                silhouettesByPieceId[projectPiece.Piece.Id] = await _stlAnalyzerService.ComputeSilhouetteAsync(stlStream);
+            }
+
+            return await Task.Run(() => GenerateProjectPlansPdf(project, silhouettesByPieceId));
         }
 
-        private byte[] GeneratePlanPdf(Piece piece, STLMetadata metadata)
+        private byte[] GeneratePlanPdf(Piece piece, STLMetadata metadata, SilhouetteData? silhouette, byte[]? isoImage)
         {
+            var maxDim = (float)Math.Max(metadata.BoundingBoxX, Math.Max(metadata.BoundingBoxY, metadata.BoundingBoxZ));
+            const int cellSize = 155;
+            var sharedScale = (cellSize - 50f) / Math.Max(maxDim, 0.1f);
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(1.5f, Unit.Centimetre);
+                    page.Margin(1.2f, Unit.Centimetre);
 
                     // En-tête
                     page.Header()
@@ -113,9 +149,10 @@ namespace Backend.Services
                                 .PaddingVertical(5);
                         });
 
-                    // Contenu
+                    // Contenu : encadré façon feuille de dessin technique
                     page.Content()
                         .PaddingVertical(10)
+                        .Border(1.2f).BorderColor(BrandNavy).Padding(12)
                         .Column(column =>
                         {
                             // Section Informations générales
@@ -202,53 +239,82 @@ namespace Backend.Services
                                     });
                                 });
 
-                            // Représentation ASCII des vues
+                            // Vues orthogonales (silhouette réelle projetée depuis le maillage STL,
+                            // à une échelle commune aux 3 vues) + vue isométrique, disposition en
+                            // grille façon feuille de dessin technique.
                             column.Item().PaddingTop(15)
                                 .Column(inner =>
                                 {
-                                    inner.Item().PaddingBottom(10).Text("VUES ORTHOGONALES")
+                                    inner.Item().PaddingBottom(10).Text($"VUES ORTHOGONALES — Échelle {FormatScale(sharedScale)}")
                                         .SemiBold().FontSize(12).FontColor(Colors.Blue.Medium);
 
-                                    // Vue de face
                                     inner.Item()
                                         .Row(row =>
                                         {
                                             row.RelativeColumn()
                                                 .Column(col =>
                                                 {
-                                                    col.Item().PaddingBottom(5).Text("Vue de face (XY)")
+                                                    col.Item().PaddingBottom(5).Text("Vue de face")
                                                         .SemiBold().FontSize(10);
 
                                                     RenderTechnicalView(
                                                         col.Item().Background(Colors.Grey.Lighten4).Padding(10),
+                                                        silhouette?.Front ?? new List<SilhouetteEdge>(),
                                                         metadata.BoundingBoxX, metadata.BoundingBoxZ,
-                                                        $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm");
+                                                        $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                        sharedScale, cellSize);
                                                 });
 
                                             row.RelativeColumn()
                                                 .Column(col =>
                                                 {
-                                                    col.Item().PaddingBottom(5).Text("Vue de côté (XZ)")
+                                                    col.Item().PaddingBottom(5).Text("Vue de côté")
                                                         .SemiBold().FontSize(10);
 
                                                     RenderTechnicalView(
                                                         col.Item().Background(Colors.Grey.Lighten4).Padding(10),
+                                                        silhouette?.Side ?? new List<SilhouetteEdge>(),
                                                         metadata.BoundingBoxY, metadata.BoundingBoxZ,
-                                                        $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm");
+                                                        $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                        sharedScale, cellSize);
                                                 });
                                         });
 
-                                    // Vue du dessus
                                     inner.Item().PaddingTop(10)
-                                        .Column(col =>
+                                        .Row(row =>
                                         {
-                                            col.Item().PaddingBottom(5).Text("Vue du dessus (YZ)")
-                                                .SemiBold().FontSize(10);
+                                            row.RelativeColumn()
+                                                .Column(col =>
+                                                {
+                                                    col.Item().PaddingBottom(5).Text("Vue de dessus")
+                                                        .SemiBold().FontSize(10);
 
-                                            RenderTechnicalView(
-                                                col.Item().Background(Colors.Grey.Lighten4).Padding(10),
-                                                metadata.BoundingBoxX, metadata.BoundingBoxY,
-                                                $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm");
+                                                    RenderTechnicalView(
+                                                        col.Item().Background(Colors.Grey.Lighten4).Padding(10),
+                                                        silhouette?.Top ?? new List<SilhouetteEdge>(),
+                                                        metadata.BoundingBoxX, metadata.BoundingBoxY,
+                                                        $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm",
+                                                        sharedScale, cellSize);
+                                                });
+
+                                            row.RelativeColumn()
+                                                .Column(col =>
+                                                {
+                                                    col.Item().PaddingBottom(5).Text("Vue isométrique")
+                                                        .SemiBold().FontSize(10);
+
+                                                    if (isoImage != null && isoImage.Length > 0)
+                                                    {
+                                                        col.Item().Background(Colors.Grey.Lighten4).Padding(10)
+                                                            .Height(cellSize).Image(isoImage).FitArea();
+                                                    }
+                                                    else
+                                                    {
+                                                        col.Item().Background(Colors.Grey.Lighten4).Padding(10)
+                                                            .Height(cellSize).AlignCenter().AlignMiddle()
+                                                            .Text("Non disponible").FontSize(9).FontColor(Colors.Grey.Medium);
+                                                    }
+                                                });
                                         });
                                 });
 
@@ -337,17 +403,41 @@ namespace Backend.Services
                                             .Text($"{metadata.EstimatedPrintTime:F0} min").FontSize(9);
                                     });
                                 });
-                        });
 
-                    // Pied de page
-                    page.Footer()
-                        .AlignCenter()
-                        .Column(col =>
-                        {
-                            col.Item().BorderTop(1).BorderColor(Colors.Grey.Lighten2)
-                                .PaddingTop(5)
-                                .Text($"Généré le {DateTime.Now:dd/MM/yyyy HH:mm} - 3D Inspire")
-                                .FontSize(9).FontColor(Colors.Grey.Medium);
+                            // Cartouche (bloc titre normalisé, en bas de la feuille de dessin)
+                            column.Item().PaddingTop(15)
+                                .Border(1).BorderColor(BrandNavy)
+                                .Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(2);
+                                        columns.RelativeColumn(3);
+                                        columns.RelativeColumn(2);
+                                        columns.RelativeColumn(3);
+                                    });
+
+                                    table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                        .Text("Désignation:").Bold().FontSize(8);
+                                    table.Cell().Padding(5).Text(piece.Nom).FontSize(8);
+                                    table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                        .Text("Échelle:").Bold().FontSize(8);
+                                    table.Cell().Padding(5).Text(FormatScale(sharedScale)).FontSize(8);
+
+                                    table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                        .Text("Référence:").Bold().FontSize(8);
+                                    table.Cell().Padding(5).Text(piece.Reference).FontSize(8);
+                                    table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                        .Text("Matériau:").Bold().FontSize(8);
+                                    table.Cell().Padding(5).Text(piece.Materiau ?? "N/A").FontSize(8);
+
+                                    table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                        .Text("Dessiné par:").Bold().FontSize(8);
+                                    table.Cell().Padding(5).Text("3D Inspire (généré automatiquement)").FontSize(8);
+                                    table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
+                                        .Text("Date:").Bold().FontSize(8);
+                                    table.Cell().Padding(5).Text($"{DateTime.Now:dd/MM/yyyy}").FontSize(8);
+                                });
                         });
                 });
             });
@@ -355,7 +445,7 @@ namespace Backend.Services
             return document.GeneratePdf();
         }
 
-        private byte[] GenerateProjectPlansPdf(Projet project)
+        private byte[] GenerateProjectPlansPdf(Projet project, Dictionary<int, SilhouetteData> silhouettesByPieceId)
         {
             var document = Document.Create(container =>
             {
@@ -367,6 +457,10 @@ namespace Backend.Services
                     if (metadata == null) continue;
 
                     var piece = projectPiece.Piece;
+                    silhouettesByPieceId.TryGetValue(piece.Id, out var silhouette);
+                    var maxDim = (float)Math.Max(metadata.BoundingBoxX, Math.Max(metadata.BoundingBoxY, metadata.BoundingBoxZ));
+                    const int cellSize = 95;
+                    var sharedScale = (cellSize - 34f) / Math.Max(maxDim, 0.1f);
 
                     container.Page(page =>
                     {
@@ -443,8 +537,10 @@ namespace Backend.Services
                                                             .SemiBold().FontSize(9);
                                                         RenderTechnicalView(
                                                             col.Item().Background(Colors.Grey.Lighten4).Padding(8),
+                                                            silhouette?.Front ?? new List<SilhouetteEdge>(),
                                                             metadata.BoundingBoxX, metadata.BoundingBoxZ,
-                                                            $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm", 60f);
+                                                            $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                            sharedScale, cellSize);
                                                     });
 
                                                 row.RelativeColumn()
@@ -454,8 +550,10 @@ namespace Backend.Services
                                                             .SemiBold().FontSize(9);
                                                         RenderTechnicalView(
                                                             col.Item().Background(Colors.Grey.Lighten4).Padding(8),
+                                                            silhouette?.Side ?? new List<SilhouetteEdge>(),
                                                             metadata.BoundingBoxY, metadata.BoundingBoxZ,
-                                                            $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm", 60f);
+                                                            $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm",
+                                                            sharedScale, cellSize);
                                                     });
 
                                                 row.RelativeColumn()
@@ -465,8 +563,10 @@ namespace Backend.Services
                                                             .SemiBold().FontSize(9);
                                                         RenderTechnicalView(
                                                             col.Item().Background(Colors.Grey.Lighten4).Padding(8),
+                                                            silhouette?.Top ?? new List<SilhouetteEdge>(),
                                                             metadata.BoundingBoxX, metadata.BoundingBoxY,
-                                                            $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm", 60f);
+                                                            $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm",
+                                                            sharedScale, cellSize);
                                                     });
                                             });
                                     });
@@ -483,31 +583,29 @@ namespace Backend.Services
             return document.GeneratePdf();
         }
 
-        // Dessine une vue technique cotée (silhouette à l'échelle + lignes de cote avec
-        // flèches et valeurs) au lieu de l'ancien rendu ASCII, qui ne reflétait ni les
-        // proportions ni la forme de la pièce et ne portait aucune cotation exploitable.
-        // QuestPDF a retiré son API Canvas() (dépréciée depuis 2024.3.0, dépendance
-        // SkiaSharp interne supprimée) : on rasterise donc nous-mêmes en bitmap via
-        // SkiaSharp puis on intègre le résultat comme une image classique.
-        private void RenderTechnicalView(IContainer container, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float maxSize = 100f)
+        // Dessine une vue technique cotée : silhouette réelle projetée depuis le maillage STL
+        // (contour + arêtes vives détectées façon logiciel de CAO, et non plus un simple
+        // rectangle), lignes d'axe, et lignes de cote avec flèches et valeurs. Toutes les vues
+        // d'une même feuille partagent la même échelle (points/mm), comme sur un vrai plan.
+        // QuestPDF a retiré son API Canvas() (dépréciée depuis 2024.3.0, dépendance SkiaSharp
+        // interne supprimée) : on rasterise donc nous-mêmes en bitmap puis on intègre le
+        // résultat comme une image classique.
+        private void RenderTechnicalView(IContainer container, List<SilhouetteEdge> edges, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float scale, int cellSize)
         {
             var realWidth = Math.Max((float)widthMm, 0.1f);
             var realHeight = Math.Max((float)heightMm, 0.1f);
 
-            const int canvasWidth = 320;
-            var canvasHeight = (int)(maxSize + 32f);
-
-            var pngBytes = RenderTechnicalViewToPng(canvasWidth, canvasHeight, realWidth, realHeight, widthLabel, heightLabel);
-            container.Height(canvasHeight).Image(pngBytes).FitArea();
+            var pngBytes = RenderTechnicalViewToPng(cellSize, cellSize, realWidth, realHeight, edges, widthLabel, heightLabel, scale);
+            container.Height(cellSize).Image(pngBytes).FitArea();
         }
 
-        private static byte[] RenderTechnicalViewToPng(int canvasWidth, int canvasHeight, float realWidth, float realHeight, string widthLabel, string heightLabel)
+        private static byte[] RenderTechnicalViewToPng(int canvasWidth, int canvasHeight, float realWidth, float realHeight, List<SilhouetteEdge> edges, string widthLabel, string heightLabel, float scale)
         {
             using var bitmap = new SKBitmap(canvasWidth, canvasHeight);
             using (var canvas = new SKCanvas(bitmap))
             {
                 canvas.Clear(SKColors.White);
-                DrawTechnicalView(canvas, canvasWidth, canvasHeight, realWidth, realHeight, widthLabel, heightLabel);
+                DrawTechnicalView(canvas, canvasWidth, canvasHeight, realWidth, realHeight, edges, widthLabel, heightLabel, scale);
             }
 
             using var image = SKImage.FromBitmap(bitmap);
@@ -515,37 +613,35 @@ namespace Backend.Services
             return data.ToArray();
         }
 
-        private static void DrawTechnicalView(SKCanvas canvas, float canvasWidth, float canvasHeight, float realWidth, float realHeight, string widthLabel, string heightLabel)
+        private static void DrawTechnicalView(SKCanvas canvas, float canvasWidth, float canvasHeight, float realWidth, float realHeight, List<SilhouetteEdge> edges, string widthLabel, string heightLabel, float scale)
         {
-            const float marginLeft = 42f;
-            const float marginBottom = 22f;
-            const float marginTop = 8f;
-            const float marginRight = 8f;
+            const float marginLeft = 20f;
+            const float marginBottom = 20f;
 
-            var availableWidth = canvasWidth - marginLeft - marginRight;
-            var availableHeight = canvasHeight - marginTop - marginBottom;
-            if (availableWidth <= 0 || availableHeight <= 0) return;
-
-            var scale = Math.Min(availableWidth / realWidth, availableHeight / realHeight);
             var w = realWidth * scale;
             var h = realHeight * scale;
 
-            var left = marginLeft + (availableWidth - w) / 2f;
-            var top = marginTop + (availableHeight - h) / 2f;
+            var left = marginLeft + Math.Max((canvasWidth - marginLeft - w) / 2f, 0f);
+            var top = Math.Max((canvasHeight - marginBottom - h) / 2f, 0f);
             var right = left + w;
             var bottom = top + h;
 
-            using var outlinePaint = new SKPaint
+            using var objectPaint = new SKPaint
             {
-                Color = new SKColor(0x1B, 0x3A, 0x5C),
-                StrokeWidth = 1.5f,
+                Color = BrandNavy,
+                StrokeWidth = 1.3f,
                 Style = SKPaintStyle.Stroke,
-                IsAntialias = true
+                IsAntialias = true,
+                StrokeCap = SKStrokeCap.Round
             };
-            using var fillPaint = new SKPaint
+            using var dashEffect = SKPathEffect.CreateDash(new float[] { 8f, 3f, 2f, 3f }, 0);
+            using var centerPaint = new SKPaint
             {
-                Color = new SKColor(0xEA, 0xF0, 0xF6),
-                Style = SKPaintStyle.Fill
+                Color = BrandNavy,
+                StrokeWidth = 0.5f,
+                Style = SKPaintStyle.Stroke,
+                IsAntialias = true,
+                PathEffect = dashEffect
             };
             using var dimPaint = new SKPaint
             {
@@ -562,9 +658,44 @@ namespace Backend.Services
                 TextAlign = SKTextAlign.Center
             };
 
-            // Silhouette de la pièce, à l'échelle
-            canvas.DrawRect(left, top, w, h, fillPaint);
-            canvas.DrawRect(left, top, w, h, outlinePaint);
+            if (edges.Count > 0)
+            {
+                // Bornes réelles de la silhouette projetée (peuvent différer légèrement de la
+                // boîte englobante globale selon l'axe de vue) : on centre le tracé dessus.
+                var minU = float.MaxValue; var maxU = float.MinValue;
+                var minV = float.MaxValue; var maxV = float.MinValue;
+                foreach (var e in edges)
+                {
+                    minU = Math.Min(minU, Math.Min(e.X1, e.X2));
+                    maxU = Math.Max(maxU, Math.Max(e.X1, e.X2));
+                    minV = Math.Min(minV, Math.Min(e.Y1, e.Y2));
+                    maxV = Math.Max(maxV, Math.Max(e.Y1, e.Y2));
+                }
+                var centerU = (minU + maxU) / 2f;
+                var centerV = (minV + maxV) / 2f;
+                var centerX = (left + right) / 2f;
+                var centerY = (top + bottom) / 2f;
+
+                SKPoint ToScreen(float u, float v) => new SKPoint(
+                    centerX + (u - centerU) * scale,
+                    centerY - (v - centerV) * scale
+                );
+
+                foreach (var e in edges)
+                {
+                    canvas.DrawLine(ToScreen(e.X1, e.Y1), ToScreen(e.X2, e.Y2), objectPaint);
+                }
+            }
+            else
+            {
+                // Repli si la géométrie n'a pas pu être calculée : rectangle simple, pour ne
+                // jamais laisser la vue complètement vide.
+                canvas.DrawRect(left, top, w, h, objectPaint);
+            }
+
+            // Lignes d'axe (centre géométrique de la vue)
+            canvas.DrawLine(left - 6f, (top + bottom) / 2f, right + 6f, (top + bottom) / 2f, centerPaint);
+            canvas.DrawLine((left + right) / 2f, top - 6f, (left + right) / 2f, bottom + 6f, centerPaint);
 
             // Cotation horizontale (largeur), sous la pièce : lignes d'attache + ligne de
             // cote avec flèches aux deux extrémités + valeur centrée.
@@ -589,6 +720,19 @@ namespace Backend.Services
             canvas.RotateDegrees(-90);
             canvas.DrawText(heightLabel, 0, 0, textPaint);
             canvas.Restore();
+        }
+
+        // "1:N" (réduction) ou "N:1" (agrandissement) à partir de l'échelle points/mm
+        // utilisée pour tracer les vues, convertie en ratio taille-imprimée / taille-réelle
+        // (1 point = 1/72 pouce = 0,3527 mm).
+        private static string FormatScale(float pointsPerMm)
+        {
+            const float mmPerPoint = 25.4f / 72f;
+            var printedMmPerRealMm = pointsPerMm * mmPerPoint;
+
+            return printedMmPerRealMm >= 1f
+                ? $"{printedMmPerRealMm:F1}:1"
+                : $"1:{1f / printedMmPerRealMm:F1}";
         }
 
         // Triangle plein dont la pointe est en (tipX, tipY) et dont la base s'évase dans la

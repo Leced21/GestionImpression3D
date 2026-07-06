@@ -104,6 +104,101 @@ namespace Backend.Services
             return RenderTrianglesToPng(triangles);
         }
 
+        public async Task<SilhouetteData> ComputeSilhouetteAsync(Stream stlStream)
+        {
+            stlStream.Position = 0;
+
+            var isAscii = IsAsciiSTL(stlStream);
+            stlStream.Position = 0;
+
+            var triangles = isAscii
+                ? await ParseAsciiSTLAsync(stlStream)
+                : await ParseBinarySTLAsync(stlStream);
+
+            if (triangles.Count == 0)
+                return new SilhouetteData();
+
+            return new SilhouetteData
+            {
+                Front = ComputeSilhouetteEdges(triangles, new Vector3(0, 1, 0), v => (v.X, v.Z)),
+                Top = ComputeSilhouetteEdges(triangles, new Vector3(0, 0, 1), v => (v.X, v.Y)),
+                Side = ComputeSilhouetteEdges(triangles, new Vector3(1, 0, 0), v => (v.Y, v.Z))
+            };
+        }
+
+        // Détection de silhouette façon logiciel de CAO : une arête 3D est gardée si elle est
+        // au bord du maillage (un seul triangle adjacent) ou si les deux triangles qui la
+        // partagent sont respectivement visible/caché par rapport à la direction d'observation
+        // (leurs normales ont un produit scalaire de signe opposé avec viewDir). On regroupe les
+        // arêtes par les mêmes clés (hashcode des sommets) que CheckWatertight, ce qui suppose un
+        // STL correctement soudé (sommets partagés bit-identiques), comme pour cette méthode.
+        private static List<SilhouetteEdge> ComputeSilhouetteEdges(List<Triangle> triangles, Vector3 viewDir, Func<Vector3, (float U, float V)> project)
+        {
+            var edgeGroups = new Dictionary<(int, int), List<int>>();
+            var vertexLookup = new Dictionary<int, Vector3>();
+            var normals = new Vector3[triangles.Count];
+
+            void AddEdge(int triangleIndex, Vector3 a, Vector3 b)
+            {
+                var ha = a.GetHashCode();
+                var hb = b.GetHashCode();
+                vertexLookup[ha] = a;
+                vertexLookup[hb] = b;
+
+                var key = ha < hb ? (ha, hb) : (hb, ha);
+                if (!edgeGroups.TryGetValue(key, out var list))
+                {
+                    list = new List<int>();
+                    edgeGroups[key] = list;
+                }
+                list.Add(triangleIndex);
+            }
+
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                var t = triangles[i];
+                var normal = Vector3.Cross(t.V2 - t.V1, t.V3 - t.V1);
+                normals[i] = normal.LengthSquared() > 1e-10f ? Vector3.Normalize(normal) : Vector3.Zero;
+
+                AddEdge(i, t.V1, t.V2);
+                AddEdge(i, t.V2, t.V3);
+                AddEdge(i, t.V3, t.V1);
+            }
+
+            var edges = new List<SilhouetteEdge>();
+
+            foreach (var (key, triIndices) in edgeGroups)
+            {
+                bool isSilhouette;
+                if (triIndices.Count == 1)
+                {
+                    isSilhouette = true;
+                }
+                else if (triIndices.Count == 2)
+                {
+                    var facing1 = Vector3.Dot(normals[triIndices[0]], viewDir) >= 0;
+                    var facing2 = Vector3.Dot(normals[triIndices[1]], viewDir) >= 0;
+                    isSilhouette = facing1 != facing2;
+                }
+                else
+                {
+                    // Arête partagée par 3+ triangles (maillage non-manifold/dégénéré) :
+                    // ignorée plutôt que de risquer un rendu incohérent.
+                    isSilhouette = false;
+                }
+
+                if (!isSilhouette) continue;
+                if (!vertexLookup.TryGetValue(key.Item1, out var a) || !vertexLookup.TryGetValue(key.Item2, out var b))
+                    continue;
+
+                var (u1, v1) = project(a);
+                var (u2, v2) = project(b);
+                edges.Add(new SilhouetteEdge { X1 = u1, Y1 = v1, X2 = u2, Y2 = v2 });
+            }
+
+            return edges;
+        }
+
         // Rendu 3D simplifié (vue isométrique, tri peintre + ombrage lambertien) directement
         // à partir des triangles STL : pas de bibliothèque de rendu 3D disponible/nécessaire,
         // SkiaSharp (déjà utilisé en interne par QuestPDF) suffit pour rasteriser les faces.
