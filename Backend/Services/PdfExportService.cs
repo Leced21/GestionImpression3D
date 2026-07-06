@@ -109,7 +109,7 @@ namespace Backend.Services
 
                         page.Footer()
                             .AlignCenter()
-                            .Text("Ce devis est valable 30 jours - PrintFlow3D")
+                            .Text("Ce devis est valable 30 jours - 3D Inspire")
                             .FontSize(10).FontColor(Colors.Grey.Medium);
                     });
                 });
@@ -131,7 +131,7 @@ namespace Backend.Services
 
                         page.Header()
                             .AlignCenter()
-                            .Text("PrintFlow3D - Fiche Technique")
+                            .Text("3D Inspire - Fiche Technique")
                             .SemiBold().FontSize(20).FontColor(Colors.Blue.Medium);
 
                         page.Content()
@@ -219,7 +219,7 @@ namespace Backend.Services
 
                         page.Footer()
                             .AlignCenter()
-                            .Text($"Généré le {DateTime.Now:dd/MM/yyyy HH:mm} - PrintFlow3D")
+                            .Text($"Généré le {DateTime.Now:dd/MM/yyyy HH:mm} - 3D Inspire")
                             .FontSize(10).FontColor(Colors.Grey.Medium);
                     });
                 });
@@ -243,7 +243,7 @@ namespace Backend.Services
                         // En-tête
                         page.Header()
                             .AlignCenter()
-                            .Text("PrintFlow3D - Fiche Projet")
+                            .Text("3D Inspire - Fiche Projet")
                             .SemiBold().FontSize(20).FontColor(Colors.Blue.Medium);
 
                         // Contenu
@@ -345,7 +345,7 @@ namespace Backend.Services
                             {
                                 x.Span("Document généré le ");
                                 x.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontColor(Colors.Grey.Medium);
-                                x.Span(" - PrintFlow3D");
+                                x.Span(" - 3D Inspire");
                             });
                     });
                 });
@@ -451,7 +451,7 @@ namespace Backend.Services
                         });
 
                         page.Footer().AlignCenter()
-                            .Text($"Devis généré le {DateTime.Now:dd/MM/yyyy HH:mm} - PrintFlow3D")
+                            .Text($"Devis généré le {DateTime.Now:dd/MM/yyyy HH:mm} - 3D Inspire")
                             .FontSize(10).FontColor(Colors.Grey.Medium);
                     });
                 });
@@ -551,7 +551,7 @@ namespace Backend.Services
                         });
 
                         page.Footer().AlignCenter()
-                            .Text($"Facture générée le {DateTime.Now:dd/MM/yyyy HH:mm} - PrintFlow3D")
+                            .Text($"Facture générée le {DateTime.Now:dd/MM/yyyy HH:mm} - 3D Inspire")
                             .FontSize(10).FontColor(Colors.Grey.Medium);
                     });
                 });

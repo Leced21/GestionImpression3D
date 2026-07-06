@@ -68,6 +68,12 @@
     padding: 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.sidebar-header .logo img {
+    display: block;
+    height: 2.25rem;
+    width: auto;
+}
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 1rem;

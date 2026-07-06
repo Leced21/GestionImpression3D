@@ -49,7 +49,7 @@ namespace TestProject
 
             emailSender.Verify(x => x.SendHtmlAsync(
                 "client@example.com",
-                "Votre accès au portail PrintFlow3D",
+                "Votre accès au portail 3D Inspire",
                 It.Is<string>(body =>
                     body.Contains("https://app.example.com/portail/acces?token=abc") &&
                     body.Contains("&lt;script&gt;") &&
@@ -68,7 +68,7 @@ namespace TestProject
             Assert.Equal(42, invitation.Id);
             emailSender.Verify(x => x.SendHtmlAsync(
                 "user@example.com",
-                "Invitation à rejoindre PrintFlow3D",
+                "Invitation à rejoindre 3D Inspire",
                 It.Is<string>(body => body.Contains("https://app.example.com/accept-invitation?token="))), Times.Once);
             invitationRepository.Verify(x => x.DeleteAsync(It.IsAny<int>()), Times.Never);
         }

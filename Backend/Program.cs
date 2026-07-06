@@ -286,7 +286,7 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         throw;
     }
 }
-app.MapGet("/", () => Results.Ok("PrintFlow3D API"));
+app.MapGet("/", () => Results.Ok("3D Inspire API"));
 
 static async Task EnsureDatabaseAsync(IConfiguration configuration, ILogger logger, int maxRetries = 20, TimeSpan? delay = null)
 {

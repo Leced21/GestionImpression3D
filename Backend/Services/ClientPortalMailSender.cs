@@ -20,7 +20,7 @@ namespace Backend.Services
                 <!doctype html>
                 <html lang="fr">
                 <body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.6">
-                  <h2>Accès à votre portail PrintFlow3D</h2>
+                  <h2>Accès à votre portail 3D Inspire</h2>
                   <p>Bonjour {{safeName}},</p>
                   <p>Utilisez le bouton ci-dessous pour accéder à votre espace client.</p>
                   <p style="margin:28px 0">
@@ -32,7 +32,7 @@ namespace Backend.Services
                 </html>
                 """;
 
-            return _emailSender.SendHtmlAsync(toEmail, "Votre accès au portail PrintFlow3D", body);
+            return _emailSender.SendHtmlAsync(toEmail, "Votre accès au portail 3D Inspire", body);
         }
     }
 }

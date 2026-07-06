@@ -13,7 +13,15 @@
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-weight: 700;
+}
+
+.logo img {
+    height: 1.75rem;
+    width: auto;
 }
 
 .header-right {

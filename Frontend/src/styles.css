@@ -74,3 +74,18 @@ body {
   margin: 0;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* The 3D Inspire logo's wordmark is dark navy, baked into the image, so on
+   dark surfaces it needs a light backdrop to stay legible. The sidebar uses
+   the dark chrome background in both themes, hence the unconditional rule. */
+.sidebar-header .logo,
+:root[data-theme="dark"] .header .logo,
+:root[data-theme="dark"] .login-card .logo,
+:root[data-theme="dark"] .register-card .logo,
+:root[data-theme="dark"] .portal-card .logo,
+:root[data-theme="dark"] .accept-card .logo {
+  display: inline-block;
+  background: #fff;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+}

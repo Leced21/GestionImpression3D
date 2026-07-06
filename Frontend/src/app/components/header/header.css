@@ -12,9 +12,9 @@
 }
 
 .logo {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--color-text);
+    display: block;
+    height: 2rem;
+    width: auto;
 }
 
 .header-right {

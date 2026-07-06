@@ -25,7 +25,7 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     'header.notifications': 'Notifications',
     'header.logout': 'Déconnexion',
 
-    'dashboard.welcomeTitle': 'Bienvenue sur PrintFlow3D',
+    'dashboard.welcomeTitle': 'Bienvenue sur 3D Inspire',
     'dashboard.welcomeIntro': 'Voici un petit guide rapide pour démarrer dans l\'application.',
     'dashboard.tutorialStep1': 'Utilisez le menu pour accéder aux imprimantes et aux pièces.',
     'dashboard.tutorialStep2': 'Créez une nouvelle pièce depuis "Pièces" → "Nouveau".',
@@ -53,7 +53,7 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     'dashboard.date': 'Date',
 
     'settings.title': 'Paramètres',
-    'settings.subtitle': 'Personnalisez votre expérience PrintFlow3D',
+    'settings.subtitle': 'Personnalisez votre expérience 3D Inspire',
     'settings.tab.general': 'Général',
     'settings.tab.profile': 'Profil',
     'settings.tab.notifications': 'Notifications',
@@ -126,7 +126,7 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     'header.notifications': 'Notifications',
     'header.logout': 'Log out',
 
-    'dashboard.welcomeTitle': 'Welcome to PrintFlow3D',
+    'dashboard.welcomeTitle': 'Welcome to 3D Inspire',
     'dashboard.welcomeIntro': "Here's a quick guide to get started with the application.",
     'dashboard.tutorialStep1': 'Use the menu to access printers and parts.',
     'dashboard.tutorialStep2': 'Create a new part from "Parts" → "New".',
@@ -154,7 +154,7 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     'dashboard.date': 'Date',
 
     'settings.title': 'Settings',
-    'settings.subtitle': 'Customize your PrintFlow3D experience',
+    'settings.subtitle': 'Customize your 3D Inspire experience',
     'settings.tab.general': 'General',
     'settings.tab.profile': 'Profile',
     'settings.tab.notifications': 'Notifications',

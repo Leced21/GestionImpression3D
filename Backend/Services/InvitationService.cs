@@ -80,8 +80,8 @@ namespace Backend.Services
                 <!doctype html>
                 <html lang="fr">
                 <body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.6">
-                  <h2>Invitation PrintFlow3D</h2>
-                  <p>Vous avez été invité à rejoindre PrintFlow3D avec le rôle <strong>{{safeRole}}</strong>.</p>
+                  <h2>Invitation 3D Inspire</h2>
+                  <p>Vous avez été invité à rejoindre 3D Inspire avec le rôle <strong>{{safeRole}}</strong>.</p>
                   <p style="margin:28px 0">
                     <a href="{{safeUrl}}" style="background:#3b82f6;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Accepter l'invitation</a>
                   </p>
@@ -93,7 +93,7 @@ namespace Backend.Services
 
             try
             {
-                await _emailSender.SendHtmlAsync(createdInvitation.Email, "Invitation à rejoindre PrintFlow3D", body);
+                await _emailSender.SendHtmlAsync(createdInvitation.Email, "Invitation à rejoindre 3D Inspire", body);
             }
             catch
             {
