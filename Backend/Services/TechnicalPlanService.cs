@@ -486,24 +486,44 @@ namespace Backend.Services
         // Dessine une vue technique cotée (silhouette à l'échelle + lignes de cote avec
         // flèches et valeurs) au lieu de l'ancien rendu ASCII, qui ne reflétait ni les
         // proportions ni la forme de la pièce et ne portait aucune cotation exploitable.
+        // QuestPDF a retiré son API Canvas() (dépréciée depuis 2024.3.0, dépendance
+        // SkiaSharp interne supprimée) : on rasterise donc nous-mêmes en bitmap via
+        // SkiaSharp puis on intègre le résultat comme une image classique.
         private void RenderTechnicalView(IContainer container, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float maxSize = 100f)
         {
             var realWidth = Math.Max((float)widthMm, 0.1f);
             var realHeight = Math.Max((float)heightMm, 0.1f);
 
-            container.Height(maxSize + 32f).Canvas((canvasObj, size) =>
-                DrawTechnicalView((SKCanvas)canvasObj, size, realWidth, realHeight, widthLabel, heightLabel));
+            const int canvasWidth = 320;
+            var canvasHeight = (int)(maxSize + 32f);
+
+            var pngBytes = RenderTechnicalViewToPng(canvasWidth, canvasHeight, realWidth, realHeight, widthLabel, heightLabel);
+            container.Height(canvasHeight).Image(pngBytes).FitHeight();
         }
 
-        private static void DrawTechnicalView(SKCanvas canvas, Size size, float realWidth, float realHeight, string widthLabel, string heightLabel)
+        private static byte[] RenderTechnicalViewToPng(int canvasWidth, int canvasHeight, float realWidth, float realHeight, string widthLabel, string heightLabel)
+        {
+            using var bitmap = new SKBitmap(canvasWidth, canvasHeight);
+            using (var canvas = new SKCanvas(bitmap))
+            {
+                canvas.Clear(SKColors.White);
+                DrawTechnicalView(canvas, canvasWidth, canvasHeight, realWidth, realHeight, widthLabel, heightLabel);
+            }
+
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            return data.ToArray();
+        }
+
+        private static void DrawTechnicalView(SKCanvas canvas, float canvasWidth, float canvasHeight, float realWidth, float realHeight, string widthLabel, string heightLabel)
         {
             const float marginLeft = 42f;
             const float marginBottom = 22f;
             const float marginTop = 8f;
             const float marginRight = 8f;
 
-            var availableWidth = size.Width - marginLeft - marginRight;
-            var availableHeight = size.Height - marginTop - marginBottom;
+            var availableWidth = canvasWidth - marginLeft - marginRight;
+            var availableHeight = canvasHeight - marginTop - marginBottom;
             if (availableWidth <= 0 || availableHeight <= 0) return;
 
             var scale = Math.Min(availableWidth / realWidth, availableHeight / realHeight);
