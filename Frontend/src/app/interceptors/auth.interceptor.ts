@@ -15,9 +15,13 @@ export class AuthInterceptor implements HttpInterceptor {
     // Le portail client a sa propre session/JWT (ClientPortalInterceptor) : ne jamais y
     // attacher le token interne, ni tenter un refresh/logout interne dessus.
     const isClientPortal = req.url.startsWith(`${API_BASE_URL}/client-portal/`);
+    // L'appel de refresh lui-même ne doit jamais redéclencher cette logique : sinon, tant
+    // que le token stocké (encore l'ancien, pas mis à jour avant la fin de cet appel) est
+    // expiré, l'intercepteur relance refreshToken() sur sa propre requête, en boucle infinie.
+    const isRefreshCall = req.url === `${API_BASE_URL}/auth/refresh`;
     const token = this.authService.getToken();
 
-    if (!isApi || isClientPortal) {
+    if (!isApi || isClientPortal || isRefreshCall) {
       return next.handle(req);
     }
 

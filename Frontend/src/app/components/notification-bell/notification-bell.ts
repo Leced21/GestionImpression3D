@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NotificationCenter } from '../notification-center/notification-center';
 import { NotificationManagerService } from '../../services/notification-manager.service';
@@ -11,9 +11,10 @@ import { NotificationManagerService } from '../../services/notification-manager.
   templateUrl: './notification-bell.html',
   styleUrls: ['./notification-bell.css'],
 })
-export class NotificationBell implements OnInit {
+export class NotificationBell implements OnInit, OnDestroy {
   unreadCount = 0;
   isOpen = false;
+  private refreshIntervalId?: ReturnType<typeof setInterval>;
 
   constructor(
     private notificationService: NotificationManagerService,
@@ -23,7 +24,13 @@ export class NotificationBell implements OnInit {
   ngOnInit(): void {
     this.loadUnreadCount();
     // Rafraîchir toutes les 30 secondes
-    setInterval(() => this.loadUnreadCount(), 30000);
+    this.refreshIntervalId = setInterval(() => this.loadUnreadCount(), 30000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshIntervalId) {
+      clearInterval(this.refreshIntervalId);
+    }
   }
 
   loadUnreadCount(): void {
