@@ -123,7 +123,7 @@ namespace Backend.Services
         private byte[] GeneratePlanPdf(Piece piece, STLMetadata metadata, SilhouetteData? silhouette, byte[]? isoImage)
         {
             var maxDim = (float)Math.Max(metadata.BoundingBoxX, Math.Max(metadata.BoundingBoxY, metadata.BoundingBoxZ));
-            const int cellSize = 155;
+            const int cellSize = 230;
             var sharedScale = (cellSize - 50f) / Math.Max(maxDim, 0.1f);
 
             var document = Document.Create(container =>
@@ -467,7 +467,7 @@ namespace Backend.Services
                     var piece = projectPiece.Piece;
                     silhouettesByPieceId.TryGetValue(piece.Id, out var silhouette);
                     var maxDim = (float)Math.Max(metadata.BoundingBoxX, Math.Max(metadata.BoundingBoxY, metadata.BoundingBoxZ));
-                    const int cellSize = 95;
+                    const int cellSize = 145;
                     var sharedScale = (cellSize - 34f) / Math.Max(maxDim, 0.1f);
 
                     container.Page(page =>
