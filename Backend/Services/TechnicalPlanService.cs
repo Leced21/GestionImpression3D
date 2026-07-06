@@ -498,7 +498,7 @@ namespace Backend.Services
             var canvasHeight = (int)(maxSize + 32f);
 
             var pngBytes = RenderTechnicalViewToPng(canvasWidth, canvasHeight, realWidth, realHeight, widthLabel, heightLabel);
-            container.Height(canvasHeight).Image(pngBytes).FitHeight();
+            container.Height(canvasHeight).Image(pngBytes).FitArea();
         }
 
         private static byte[] RenderTechnicalViewToPng(int canvasWidth, int canvasHeight, float realWidth, float realHeight, string widthLabel, string heightLabel)
