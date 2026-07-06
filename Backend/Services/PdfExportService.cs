@@ -8,9 +8,28 @@ namespace Backend.Services
 {
     public class PdfExportService : IPdfExportService
     {
+        // Couleur de marque 3D Inspire (celle du logo), utilisée pour la fiche produit
+        // uniquement : un document orienté client/catalogue, distinct des documents internes
+        // (devis/facture/fiche technique) qui gardent le bleu déjà établi pour l'UI de l'app.
+        private static readonly Color BrandNavy = Color.FromHex("#0E2841");
+        private static readonly byte[]? LogoBytes = LoadLogoBytes();
+
         public PdfExportService()
         {
             QuestPDF.Settings.License = LicenseType.Community;
+        }
+
+        private static byte[]? LoadLogoBytes()
+        {
+            try
+            {
+                var path = Path.Combine(AppContext.BaseDirectory, "Assets", "logo-icon.png");
+                return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            }
+            catch
+            {
+                return null;
+            }
         }
         public async Task<byte[]> ExportDevisToPdfAsync(Projet projet)
         {
@@ -474,15 +493,20 @@ namespace Backend.Services
 
                         page.Header().Column(column =>
                         {
+                            if (LogoBytes != null)
+                            {
+                                column.Item().PaddingBottom(5).Height(35).AlignCenter().Image(LogoBytes);
+                            }
                             column.Item().AlignCenter().Text("FICHE PRODUIT")
-                                .SemiBold().FontSize(22).FontColor(Colors.Blue.Medium);
+                                .SemiBold().FontSize(22).FontColor(BrandNavy);
                             column.Item().AlignCenter().Text(piece.Nom)
                                 .FontSize(14).FontColor(Colors.Grey.Medium);
+                            column.Item().PaddingTop(8).BorderBottom(1).BorderColor(BrandNavy);
                         });
 
                         page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
                         {
-                            column.Item().Text("1. Informations générales").SemiBold().FontSize(14);
+                            column.Item().Text("1. Informations générales").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(10).Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -504,10 +528,10 @@ namespace Backend.Services
                                 table.Cell().Text("3D Inspire");
                             });
 
-                            column.Item().Text("2. Description").SemiBold().FontSize(14);
+                            column.Item().Text("2. Description").SemiBold().FontSize(14).FontColor(BrandNavy);
                             CellOrPlaceholder(column.Item().PaddingBottom(10), piece.Description);
 
-                            column.Item().Text("3. Caractéristiques techniques").SemiBold().FontSize(14);
+                            column.Item().Text("3. Caractéristiques techniques").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(10).Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -547,7 +571,7 @@ namespace Backend.Services
                                 CellOrPlaceholder(table.Cell(), piece.NormesCertifications);
                             });
 
-                            column.Item().Text("4. Utilisation").SemiBold().FontSize(14);
+                            column.Item().Text("4. Utilisation").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(10).Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -566,7 +590,7 @@ namespace Backend.Services
                                 CellOrPlaceholder(table.Cell(), piece.PublicCible);
                             });
 
-                            column.Item().Text("5. Conditionnement et logistique").SemiBold().FontSize(14);
+                            column.Item().Text("5. Conditionnement et logistique").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(10).Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
@@ -591,14 +615,14 @@ namespace Backend.Services
                                 CellOrPlaceholder(table.Cell(), piece.DelaiLivraisonJours.HasValue ? $"{piece.DelaiLivraisonJours} jours" : null);
                             });
 
-                            column.Item().Text("6. Éléments marketing").SemiBold().FontSize(14);
+                            column.Item().Text("6. Éléments marketing").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(5).Text("Points forts / avantages :").Bold();
                             CellOrPlaceholder(column.Item().PaddingBottom(10), piece.PointsForts);
 
                             column.Item().PaddingBottom(5).Text("FAQ (questions fréquentes) :").Bold();
                             CellOrPlaceholder(column.Item().PaddingBottom(10), piece.Faq);
 
-                            column.Item().Text("7. Prix").SemiBold().FontSize(14);
+                            column.Item().Text("7. Prix").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>

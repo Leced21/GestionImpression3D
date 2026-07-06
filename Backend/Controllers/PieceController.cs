@@ -265,6 +265,21 @@ namespace Backend.Controllers
             if (piece == null) return NotFound();
 
             var stlMetadata = await _stlAnalyzerService.GetMetadataByPieceAsync(id);
+
+            // Pièces uploadées avant la mise en place de l'analyse automatique à l'upload :
+            // on analyse à la volée le fichier déjà présent sur le disque (comme pour le plan
+            // technique), pour éviter d'afficher "non analysé" alors que le fichier existe.
+            if (stlMetadata == null
+                && !string.IsNullOrEmpty(piece.StlFileName)
+                && string.Equals(Path.GetExtension(piece.StlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                var filePath = Path.Combine(_env.ContentRootPath, "uploads", piece.StlFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    stlMetadata = await _pieceService.AnalyzeAndSaveStlFileAsync(id, filePath, piece.StlFileName);
+                }
+            }
+
             var pdfBytes = await _pdfExportService.ExportFicheProduitPdfAsync(piece, stlMetadata);
             return File(pdfBytes, "application/pdf", $"FicheProduit_{piece.Reference}.pdf");
         }

@@ -218,12 +218,10 @@ namespace Backend.Services
                                                     col.Item().PaddingBottom(5).Text("Vue de face (XY)")
                                                         .SemiBold().FontSize(10);
 
-                                                    col.Item().Background(Colors.Grey.Lighten4)
-                                                        .Padding(10)
-                                                        .AlignCenter()
-                                                        .Text(GenerateFaceViewAscii(metadata))
-                                                        .FontFamily("Courier New")
-                                                        .FontSize(8);
+                                                    RenderDimensionBox(
+                                                        col.Item().Background(Colors.Grey.Lighten4).Padding(10),
+                                                        metadata.BoundingBoxX, metadata.BoundingBoxZ,
+                                                        $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm");
                                                 });
 
                                             row.RelativeColumn()
@@ -232,12 +230,10 @@ namespace Backend.Services
                                                     col.Item().PaddingBottom(5).Text("Vue de côté (XZ)")
                                                         .SemiBold().FontSize(10);
 
-                                                    col.Item().Background(Colors.Grey.Lighten4)
-                                                        .Padding(10)
-                                                        .AlignCenter()
-                                                        .Text(GenerateSideViewAscii(metadata))
-                                                        .FontFamily("Courier New")
-                                                        .FontSize(8);
+                                                    RenderDimensionBox(
+                                                        col.Item().Background(Colors.Grey.Lighten4).Padding(10),
+                                                        metadata.BoundingBoxY, metadata.BoundingBoxZ,
+                                                        $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm");
                                                 });
                                         });
 
@@ -248,12 +244,10 @@ namespace Backend.Services
                                             col.Item().PaddingBottom(5).Text("Vue du dessus (YZ)")
                                                 .SemiBold().FontSize(10);
 
-                                            col.Item().Background(Colors.Grey.Lighten4)
-                                                .Padding(10)
-                                                .AlignCenter()
-                                                .Text(GenerateTopViewAscii(metadata))
-                                                .FontFamily("Courier New")
-                                                .FontSize(8);
+                                            RenderDimensionBox(
+                                                col.Item().Background(Colors.Grey.Lighten4).Padding(10),
+                                                metadata.BoundingBoxX, metadata.BoundingBoxY,
+                                                $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm");
                                         });
                                 });
 
@@ -324,7 +318,7 @@ namespace Backend.Services
                                         table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                             .Text("Surface:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
-                                            .Text($"{metadata.SurfaceArea:F2} mm²").FontSize(9);
+                                            .Text($"{metadata.SurfaceArea:F2} cm²").FontSize(9);
 
                                         table.Cell().Background(Colors.White).Padding(5)
                                             .Text("Étanche:").Bold().FontSize(9);
@@ -446,12 +440,10 @@ namespace Backend.Services
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Face")
                                                             .SemiBold().FontSize(9);
-                                                        col.Item().Background(Colors.Grey.Lighten4)
-                                                            .Padding(8)
-                                                            .AlignCenter()
-                                                            .Text(GenerateFaceViewAscii(metadata))
-                                                            .FontFamily("Courier New")
-                                                            .FontSize(7);
+                                                        RenderDimensionBox(
+                                                            col.Item().Background(Colors.Grey.Lighten4).Padding(8),
+                                                            metadata.BoundingBoxX, metadata.BoundingBoxZ,
+                                                            $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxZ:F1} mm", 60f);
                                                     });
 
                                                 row.RelativeColumn()
@@ -459,12 +451,10 @@ namespace Backend.Services
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Côté")
                                                             .SemiBold().FontSize(9);
-                                                        col.Item().Background(Colors.Grey.Lighten4)
-                                                            .Padding(8)
-                                                            .AlignCenter()
-                                                            .Text(GenerateSideViewAscii(metadata))
-                                                            .FontFamily("Courier New")
-                                                            .FontSize(7);
+                                                        RenderDimensionBox(
+                                                            col.Item().Background(Colors.Grey.Lighten4).Padding(8),
+                                                            metadata.BoundingBoxY, metadata.BoundingBoxZ,
+                                                            $"{metadata.BoundingBoxY:F1} mm", $"{metadata.BoundingBoxZ:F1} mm", 60f);
                                                     });
 
                                                 row.RelativeColumn()
@@ -472,12 +462,10 @@ namespace Backend.Services
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Dessus")
                                                             .SemiBold().FontSize(9);
-                                                        col.Item().Background(Colors.Grey.Lighten4)
-                                                            .Padding(8)
-                                                            .AlignCenter()
-                                                            .Text(GenerateTopViewAscii(metadata))
-                                                            .FontFamily("Courier New")
-                                                            .FontSize(7);
+                                                        RenderDimensionBox(
+                                                            col.Item().Background(Colors.Grey.Lighten4).Padding(8),
+                                                            metadata.BoundingBoxX, metadata.BoundingBoxY,
+                                                            $"{metadata.BoundingBoxX:F1} mm", $"{metadata.BoundingBoxY:F1} mm", 60f);
                                                     });
                                             });
                                     });
@@ -494,86 +482,24 @@ namespace Backend.Services
             return document.GeneratePdf();
         }
 
-        private string GenerateFaceViewAscii(STLMetadata metadata)
+        // Dessine un rectangle à l'échelle réelle des deux dimensions données (au lieu de
+        // l'ancien rendu ASCII, qui ne reflétait ni les proportions ni la forme de la pièce).
+        private void RenderDimensionBox(IContainer container, decimal widthMm, decimal heightMm, string widthLabel, string heightLabel, float maxSize = 100f)
         {
-            var width = (int)(metadata.BoundingBoxX / 10);
-            var height = (int)(metadata.BoundingBoxZ / 10);
+            var width = Math.Max((float)widthMm, 0.1f);
+            var height = Math.Max((float)heightMm, 0.1f);
+            var scale = maxSize / Math.Max(width, height);
+            var boxWidth = Math.Max(width * scale, 15f);
+            var boxHeight = Math.Max(height * scale, 15f);
 
-            width = Math.Max(width, 10);
-            height = Math.Max(height, 8);
-
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("┌" + new string('─', width) + "┐");
-
-            for (int i = 0; i < height; i++)
+            container.Column(col =>
             {
-                if (i == height / 2)
-                    sb.AppendLine("│" + CenterText("█████", width) + "│");
-                else
-                    sb.AppendLine("│" + new string(' ', width) + "│");
-            }
-
-            sb.AppendLine("└" + new string('─', width) + "┘");
-            sb.Append($"  {metadata.BoundingBoxX:F1} mm");
-
-            return sb.ToString();
-        }
-
-        private string GenerateSideViewAscii(STLMetadata metadata)
-        {
-            var width = (int)(metadata.BoundingBoxY / 10);
-            var height = (int)(metadata.BoundingBoxZ / 10);
-
-            width = Math.Max(width, 10);
-            height = Math.Max(height, 8);
-
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("┌" + new string('─', width) + "┐");
-
-            for (int i = 0; i < height; i++)
-            {
-                if (i > height / 3 && i < 2 * height / 3)
-                    sb.AppendLine("│" + CenterText("███", width) + "│");
-                else
-                    sb.AppendLine("│" + new string(' ', width) + "│");
-            }
-
-            sb.AppendLine("└" + new string('─', width) + "┘");
-            sb.Append($"  {metadata.BoundingBoxY:F1} mm");
-
-            return sb.ToString();
-        }
-
-        private string GenerateTopViewAscii(STLMetadata metadata)
-        {
-            var width = (int)(metadata.BoundingBoxX / 10);
-            var height = (int)(metadata.BoundingBoxY / 10);
-
-            width = Math.Max(width, 10);
-            height = Math.Max(height, 8);
-
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("┌" + new string('─', width) + "┐");
-
-            for (int i = 0; i < height; i++)
-            {
-                if (i == 0 || i == height - 1)
-                    sb.AppendLine("│" + new string('█', width) + "│");
-                else if (i == height / 2)
-                    sb.AppendLine("│" + CenterText("▓▓▓", width) + "│");
-                else
-                    sb.AppendLine("│" + new string(' ', width) + "│");
-            }
-
-            sb.AppendLine("└" + new string('─', width) + "┘");
-
-            return sb.ToString();
-        }
-
-        private string CenterText(string text, int width)
-        {
-            var padding = (width - text.Length) / 2;
-            return new string(' ', padding) + text + new string(' ', width - text.Length - padding);
+                col.Item().AlignCenter().Width(boxWidth).Height(boxHeight)
+                    .Border(1).BorderColor(Colors.Blue.Medium).Background(Colors.Grey.Lighten3);
+                col.Item().AlignCenter().PaddingTop(3)
+                    .Text($"{widthLabel} x {heightLabel}")
+                    .FontSize(7).FontColor(Colors.Grey.Medium);
+            });
         }
 
         private void CreateTableCell(TableDescriptor table, string label, string value, bool isEven)

@@ -40,9 +40,14 @@ namespace Backend.Services
                 triangles = await ParseBinarySTLAsync(stlStream);
             }
 
-            // Calculer les métriques
-            var volume = CalculateVolume(triangles);
-            var surfaceArea = CalculateSurfaceArea(triangles);
+            // Calculer les métriques. Les sommets STL sont en mm, donc CalculateVolume/
+            // CalculateSurfaceArea renvoient des mm³/mm² bruts : on convertit ici en cm³/cm²
+            // (unités attendues par STLMetadata et par le calcul du poids/temps d'impression),
+            // sans quoi le poids estimé se retrouve 1000x trop grand.
+            var volumeMm3 = CalculateVolume(triangles);
+            var surfaceAreaMm2 = CalculateSurfaceArea(triangles);
+            var volume = volumeMm3 / 1000m;
+            var surfaceArea = surfaceAreaMm2 / 100m;
             var bounds = CalculateBoundingBox(triangles);
             var isWatertight = CheckWatertight(triangles);
 
