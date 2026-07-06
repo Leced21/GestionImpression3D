@@ -31,7 +31,6 @@ namespace Backend.Services
         public async Task<byte[]> GenerateTechnicalPlanPdfAsync(int pieceId)
         {
             var piece = await _context.Pieces
-                .Include(p => p.PieceVersions)
                 .FirstOrDefaultAsync(p => p.Id == pieceId);
 
             if (piece == null)
@@ -383,7 +382,7 @@ namespace Backend.Services
                                             .SemiBold().FontSize(14).FontColor(Colors.Blue.Medium);
 
                                         row.RelativeColumn().AlignRight()
-                                            .Text($"Pièce {projectPiece.OrdreAffichage}/{project.ProjetPieces.Count}")
+                                            .Text($"Pièce {project.ProjetPieces.IndexOf(projectPiece) + 1}/{project.ProjetPieces.Count}")
                                             .FontSize(10).FontColor(Colors.Grey.Medium);
                                     });
 
@@ -576,7 +575,7 @@ namespace Backend.Services
             return new string(' ', padding) + text + new string(' ', width - text.Length - padding);
         }
 
-        private void CreateTableCell(ITableDescriptor table, string label, string value, bool isEven)
+        private void CreateTableCell(TableDescriptor table, string label, string value, bool isEven)
         {
             var backgroundColor = isEven ? Colors.Grey.Lighten4 : Colors.White;
 
