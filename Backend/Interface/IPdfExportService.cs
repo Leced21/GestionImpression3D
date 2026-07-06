@@ -9,6 +9,6 @@ namespace Backend.Interface
         Task<byte[]> ExportDevisToPdfAsync(Projet projet);
         Task<byte[]> ExportDevisPdfAsync(Devis devis);
         Task<byte[]> ExportFacturePdfAsync(Facture facture);
-        Task<byte[]> ExportFicheProduitPdfAsync(Piece piece, STLMetadata? stlMetadata);
+        Task<byte[]> ExportFicheProduitPdfAsync(Piece piece, STLMetadata? stlMetadata, byte[]? previewImage = null);
     }
 }

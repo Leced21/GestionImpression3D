@@ -280,7 +280,28 @@ namespace Backend.Controllers
                 }
             }
 
-            var pdfBytes = await _pdfExportService.ExportFicheProduitPdfAsync(piece, stlMetadata);
+            byte[]? previewImage = null;
+            if (!string.IsNullOrEmpty(piece.StlFileName)
+                && string.Equals(Path.GetExtension(piece.StlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                var filePath = Path.Combine(_env.ContentRootPath, "uploads", piece.StlFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        using var stlStream = System.IO.File.OpenRead(filePath);
+                        previewImage = await _stlAnalyzerService.GeneratePreviewAsync(stlStream);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Le rendu 3D est un plus visuel : s'il échoue (fichier corrompu, etc.),
+                        // la fiche produit doit quand même être générée, sans image.
+                        _logger.LogWarning(ex, "Échec de la génération de l'aperçu 3D pour la pièce {PieceId}", id);
+                    }
+                }
+            }
+
+            var pdfBytes = await _pdfExportService.ExportFicheProduitPdfAsync(piece, stlMetadata, previewImage);
             return File(pdfBytes, "application/pdf", $"FicheProduit_{piece.Reference}.pdf");
         }
         [HttpGet("export/excel")]

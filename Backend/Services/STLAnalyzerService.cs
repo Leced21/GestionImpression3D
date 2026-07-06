@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using SkiaSharp;
 
 namespace Backend.Services
 {
@@ -88,12 +89,118 @@ namespace Backend.Services
 
         public async Task<byte[]> GeneratePreviewAsync(Stream stlStream)
         {
-            // Génération d'une image PNG miniature (simplifiée)
-            // Dans une version complète, utiliser une bibliothèque comme SixLabors.ImageSharp
             stlStream.Position = 0;
 
-            // Retourner un placeholder pour l'instant
-            return Array.Empty<byte>();
+            var isAscii = IsAsciiSTL(stlStream);
+            stlStream.Position = 0;
+
+            var triangles = isAscii
+                ? await ParseAsciiSTLAsync(stlStream)
+                : await ParseBinarySTLAsync(stlStream);
+
+            if (triangles.Count == 0)
+                return Array.Empty<byte>();
+
+            return RenderTrianglesToPng(triangles);
+        }
+
+        // Rendu 3D simplifié (vue isométrique, tri peintre + ombrage lambertien) directement
+        // à partir des triangles STL : pas de bibliothèque de rendu 3D disponible/nécessaire,
+        // SkiaSharp (déjà utilisé en interne par QuestPDF) suffit pour rasteriser les faces.
+        private static byte[] RenderTrianglesToPng(List<Triangle> triangles)
+        {
+            const int size = 800;
+            const int margin = 60;
+
+            var rotY = -MathF.PI / 4f;
+            var rotX = MathF.Atan(1f / MathF.Sqrt(2f));
+
+            Vector3 Rotate(Vector3 v)
+            {
+                var x1 = v.X * MathF.Cos(rotY) + v.Z * MathF.Sin(rotY);
+                var z1 = -v.X * MathF.Sin(rotY) + v.Z * MathF.Cos(rotY);
+                var y1 = v.Y;
+
+                var y2 = y1 * MathF.Cos(rotX) - z1 * MathF.Sin(rotX);
+                var z2 = y1 * MathF.Sin(rotX) + z1 * MathF.Cos(rotX);
+
+                return new Vector3(x1, y2, z2);
+            }
+
+            var rotated = triangles
+                .Select(t => (V1: Rotate(t.V1), V2: Rotate(t.V2), V3: Rotate(t.V3)))
+                .ToList();
+
+            var minX = float.MaxValue, maxX = float.MinValue;
+            var minY = float.MaxValue, maxY = float.MinValue;
+
+            foreach (var t in rotated)
+            {
+                foreach (var v in new[] { t.V1, t.V2, t.V3 })
+                {
+                    minX = Math.Min(minX, v.X);
+                    maxX = Math.Max(maxX, v.X);
+                    minY = Math.Min(minY, v.Y);
+                    maxY = Math.Max(maxY, v.Y);
+                }
+            }
+
+            var spanX = Math.Max(maxX - minX, 0.001f);
+            var spanY = Math.Max(maxY - minY, 0.001f);
+            var scale = (size - 2 * margin) / Math.Max(spanX, spanY);
+            var centerX = (minX + maxX) / 2f;
+            var centerY = (minY + maxY) / 2f;
+
+            SKPoint Project(Vector3 v) => new SKPoint(
+                size / 2f + (v.X - centerX) * scale,
+                size / 2f - (v.Y - centerY) * scale
+            );
+
+            var ordered = rotated
+                .OrderBy(t => (t.V1.Z + t.V2.Z + t.V3.Z) / 3f)
+                .ToList();
+
+            var lightDir = Vector3.Normalize(new Vector3(0.4f, 0.6f, 1f));
+
+            using var bitmap = new SKBitmap(size, size);
+            using (var canvas = new SKCanvas(bitmap))
+            {
+                canvas.Clear(new SKColor(0xF5, 0xF5, 0xF5));
+
+                foreach (var t in ordered)
+                {
+                    var normal = Vector3.Cross(t.V2 - t.V1, t.V3 - t.V1);
+                    if (normal.LengthSquared() < 1e-8f) continue;
+                    normal = Vector3.Normalize(normal);
+
+                    var intensity = Math.Clamp(Vector3.Dot(normal, lightDir), 0.25f, 1f);
+                    var baseShade = (byte)Math.Min(255f, intensity * 255f);
+
+                    var color = new SKColor(
+                        (byte)Math.Min(255f, 0x0E * intensity + baseShade * 0.15f),
+                        (byte)Math.Min(255f, 0x28 * intensity + baseShade * 0.15f),
+                        (byte)Math.Min(255f, 0x41 + baseShade * 0.5f)
+                    );
+
+                    using var path = new SKPath();
+                    path.MoveTo(Project(t.V1));
+                    path.LineTo(Project(t.V2));
+                    path.LineTo(Project(t.V3));
+                    path.Close();
+
+                    using var paint = new SKPaint
+                    {
+                        Color = color,
+                        IsAntialias = true,
+                        Style = SKPaintStyle.Fill
+                    };
+                    canvas.DrawPath(path, paint);
+                }
+            }
+
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            return data.ToArray();
         }
 
         public async Task<STLMetadata?> GetMetadataByPieceAsync(int pieceId)

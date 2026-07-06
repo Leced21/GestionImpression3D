@@ -479,7 +479,7 @@ namespace Backend.Services
             });
         }
 
-        public async Task<byte[]> ExportFicheProduitPdfAsync(Piece piece, STLMetadata? stlMetadata)
+        public async Task<byte[]> ExportFicheProduitPdfAsync(Piece piece, STLMetadata? stlMetadata, byte[]? previewImage = null)
         {
             return await Task.Run(() =>
             {
@@ -506,6 +506,21 @@ namespace Backend.Services
 
                         page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
                         {
+                            column.Item().Text("Aperçu du produit").SemiBold().FontSize(14).FontColor(BrandNavy);
+                            if (previewImage != null && previewImage.Length > 0)
+                            {
+                                column.Item().PaddingBottom(10).AlignCenter().Height(220)
+                                    .Border(1).BorderColor(BrandNavy)
+                                    .Image(previewImage).FitHeight();
+                            }
+                            else
+                            {
+                                column.Item().PaddingBottom(10).Height(80).Background(Colors.Grey.Lighten4)
+                                    .AlignCenter().AlignMiddle()
+                                    .Text("Aperçu non disponible (fichier STL non analysé)")
+                                    .FontSize(9).FontColor(Colors.Grey.Medium);
+                            }
+
                             column.Item().Text("1. Informations générales").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(10).Table(table =>
                             {
