@@ -48,8 +48,12 @@ namespace TestProject
             var metadata = await _service.AnalyzeAsync(stream, "test.stl", pieceId: 1, materiau);
 
             Assert.True(metadata.Volume > 0, "Le volume calculé doit être strictement positif pour ce triangle de test");
+
+            // EstimatedWeight est arrondi une seule fois à partir du volume BRUT (non arrondi),
+            // donc le comparer à un recalcul depuis metadata.Volume (déjà arrondi à 2 décimales)
+            // peut dériver de 0.01 selon la densité : on tolère donc 1 décimale de précision.
             var expectedWeight = Math.Round(metadata.Volume * expectedDensity, 2);
-            Assert.Equal(expectedWeight, metadata.EstimatedWeight);
+            Assert.Equal(expectedWeight, metadata.EstimatedWeight, 1);
         }
 
         [Fact]
