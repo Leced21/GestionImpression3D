@@ -21,7 +21,11 @@ namespace Backend.Services
         private readonly IPieceService _pieceService;
         private readonly ISTLAnalyzerService _stlAnalyzerService;
         private readonly IWebHostEnvironment _env;
-        private static readonly SKColor BrandNavy = new SKColor(0x1B, 0x3A, 0x5C);
+        // Deux types de couleur distincts pour la même teinte : QuestPDF.Infrastructure.Color
+        // pour les éléments fluents (bordures/texte du document), SkiaSharp.SKColor pour le
+        // dessin bas niveau (silhouette/cotations rastérisées en bitmap).
+        private static readonly Color BrandNavy = Color.FromHex("#1B3A5C");
+        private static readonly SKColor BrandNavySK = new SKColor(0x1B, 0x3A, 0x5C);
 
         public TechnicalPlanService(
             IServiceProvider serviceProvider,
@@ -628,7 +632,7 @@ namespace Backend.Services
 
             using var objectPaint = new SKPaint
             {
-                Color = BrandNavy,
+                Color = BrandNavySK,
                 StrokeWidth = 1.3f,
                 Style = SKPaintStyle.Stroke,
                 IsAntialias = true,
@@ -637,7 +641,7 @@ namespace Backend.Services
             using var dashEffect = SKPathEffect.CreateDash(new float[] { 8f, 3f, 2f, 3f }, 0);
             using var centerPaint = new SKPaint
             {
-                Color = BrandNavy,
+                Color = BrandNavySK,
                 StrokeWidth = 0.5f,
                 Style = SKPaintStyle.Stroke,
                 IsAntialias = true,
