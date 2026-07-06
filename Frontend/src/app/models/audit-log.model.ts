@@ -10,7 +10,19 @@ export enum EntityType {
   Piece = 1,
   Projet = 2,
   PrintJob = 3,
-  User = 4
+  User = 4,
+  Printer = 5,
+  MaterialStock = 6,
+  OrdreFabrication = 7,
+  PrintProfile = 8,
+  PrinterMaintenance = 9,
+  MaterialConsumption = 10,
+  PrintIncident = 11,
+  Client = 12,
+  Devis = 13,
+  Invitation = 14,
+  Facture = 15,
+  Commande = 16
 }
 
 export interface AuditLog {
@@ -18,9 +30,7 @@ export interface AuditLog {
   userId?: number;
   userEmail?: string;
   action: ActionType;
-  actionLabel: string;
   entityType: EntityType;
-  entityTypeLabel: string;
   entityId: number;
   entityName?: string;
   fieldName?: string;

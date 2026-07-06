@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { API_BASE_URL } from '../config/api.config';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 import { IncidentStatistics, IncidentStatus, PrintIncident } from '../models/print-incident.model';
 
@@ -41,7 +41,8 @@ export class PrintIncidentService {
   }
 
   updateStatus(id: number, status: IncidentStatus): Observable<PrintIncident> {
-    return this.http.patch<PrintIncident>(`${this.apiUrl}/${id}/status`, status);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.patch<PrintIncident>(`${this.apiUrl}/${id}/status`, JSON.stringify(status), { headers });
   }
 
   resolve(id: number, resolution: string): Observable<PrintIncident> {

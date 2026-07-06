@@ -5,17 +5,19 @@ import { Projet } from '../../models/projet.model';
 import { ProjetService } from '../../services/projet.service';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslatePipe],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css'],
 })
 export class Sidebar implements OnInit, OnDestroy {
   recentProjets: Projet[] = [];
   isAdmin = false;
+  canManageCommandes = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -24,7 +26,9 @@ export class Sidebar implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.authService.currentUser$.subscribe(user => {
-      this.isAdmin = user?.role?.toLowerCase() === 'admin';
+      const role = user?.role?.toLowerCase();
+      this.isAdmin = role === 'admin';
+      this.canManageCommandes = role === 'admin' || role === 'commercial';
     });
   }
 

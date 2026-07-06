@@ -33,6 +33,9 @@ namespace Backend.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Devis> Devis { get; set; }
         public DbSet<DevisLigne> DevisLignes { get; set; }
+        public DbSet<Facture> Factures { get; set; }
+        public DbSet<FactureLigne> FactureLignes { get; set; }
+        public DbSet<ClientMagicLink> ClientMagicLinks { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -52,6 +55,14 @@ namespace Backend.Data
                       .HasConversion<string>()
                       .HasMaxLength(30);
 
+                // Champs de la fiche produit
+                entity.Property(e => e.Couleurs).HasMaxLength(200);
+                entity.Property(e => e.CapaciteContenance).HasMaxLength(200);
+                entity.Property(e => e.NormesCertifications).HasMaxLength(200);
+                entity.Property(e => e.PublicCible).HasMaxLength(200);
+                entity.Property(e => e.Conditionnement).HasMaxLength(200);
+                entity.Property(e => e.DimensionsColis).HasMaxLength(100);
+
                 // Ignorer les propriétés calculées
                 entity.Ignore(e => e.CoutTotal);
                 entity.Ignore(e => e.Marge);
@@ -64,7 +75,6 @@ namespace Backend.Data
                 entity.Property(e => e.NumeroCommande).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.ClientNom).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.ClientEmail).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Statut).HasMaxLength(50);
 
                 // Rattache la commande à la fiche client centralisée (mêmes clé/comportement que la
                 // relation shadow générée précédemment par convention : aucun changement de schéma).
@@ -356,6 +366,52 @@ namespace Backend.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Description).HasMaxLength(500);
             });
+
+            modelBuilder.Entity<Facture>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.NumeroFacture).IsRequired().HasMaxLength(20);
+                entity.HasIndex(e => e.NumeroFacture).IsUnique();
+
+                entity.HasOne(e => e.Devis)
+                      .WithMany(d => d.Factures)
+                      .HasForeignKey(e => e.DevisId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Client)
+                      .WithMany(c => c.Factures)
+                      .HasForeignKey(e => e.ClientId)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<FactureLigne>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.HasOne(e => e.Facture)
+                      .WithMany(f => f.Lignes)
+                      .HasForeignKey(e => e.FactureId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Piece)
+                      .WithMany()
+                      .HasForeignKey(e => e.PieceId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<ClientMagicLink>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+
+                entity.HasOne(e => e.Client)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClientId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<UserSettings>(entity =>
             {
                 entity.HasKey(e => e.Id);

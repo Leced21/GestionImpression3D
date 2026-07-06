@@ -15,6 +15,8 @@
         PrintIncident = 11,
         Client = 12,
         Devis = 13,
-        Invitation = 14
+        Invitation = 14,
+        Facture = 15,
+        Commande = 16
     }
 }

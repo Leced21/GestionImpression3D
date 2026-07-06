@@ -166,7 +166,7 @@ namespace TestProject
             Assert.Equal("New Name", result.Nom);
             Assert.Equal(existingPiece.DateCreation, result.DateCreation);
             _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "Nom", "Old Name", "New Name"), Times.Once);
-            _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "PrixVente", "10,00", "20,00"), Times.Once);
+            _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "PrixVente", "10.00", "20.00"), Times.Once);
             _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Piece, 1, "Description", "Old Description", "New Description"), Times.Once);
         }
 

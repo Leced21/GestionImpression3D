@@ -4,9 +4,11 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Client } from '../../../models/client.model';
 import { Piece } from '../../../models/piece.model';
+import { Projet } from '../../../models/projet.model';
 import { DevisService } from '../../../services/devis.service';
 import { ClientService } from '../../../services/client.service';
 import { PieceService } from '../../../services/piece.service';
+import { ProjetService } from '../../../services/projet.service';
 
 @Component({
   selector: 'app-devis-form',
@@ -21,12 +23,14 @@ export class DevisForm {
   devisId?: number;
   clients: Client[] = [];
   pieces: Piece[] = [];
+  projets: Projet[] = [];
 
   constructor(
     private fb: FormBuilder,
     private devisService: DevisService,
     private clientService: ClientService,
     private pieceService: PieceService,
+    private projetService: ProjetService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -34,13 +38,14 @@ export class DevisForm {
   ngOnInit(): void {
     this.devisForm = this.fb.group({
       clientId: ['', Validators.required],
+      projetId: [''],
       dateValidite: ['', Validators.required],
       tva: [20],
       notes: [''],
       conditions: [''],
       lignes: this.fb.array([])
     });
-    this.loadClients(); this.loadPieces();
+    this.loadClients(); this.loadPieces(); this.loadProjets();
     this.devisId = this.route.snapshot.params['id'];
     if (this.devisId) { this.isEditMode = true; this.loadDevis(); }
     else this.addLigne();
@@ -100,11 +105,25 @@ export class DevisForm {
       },
     });
   }
+  loadProjets() {
+    this.projetService.getAll().subscribe({
+      next: (data) => {
+        this.projets = data;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des projets', error);
+      },
+    });
+  }
   loadDevis() { this.devisService.getById(this.devisId!).subscribe(data => { this.devisForm.patchValue(data); while (this.lignes.length) this.lignes.removeAt(0); data.lignes.forEach(l => this.lignes.push(this.fb.group(l))); }); }
   onSubmit() {
     if (this.devisForm.invalid)
       return;
-    const devisData = this.devisForm.value;
+    const devisData = {
+      ...this.devisForm.value,
+      projetId: this.devisForm.value.projetId ? Number(this.devisForm.value.projetId) : null
+    };
     if (this.isEditMode && this.devisId) {
       this.devisService.update(this.devisId, devisData).subscribe({
         next: () => this.router.navigate(['/devis']),

@@ -7,9 +7,6 @@ services:
 
     restart: always
 
-    ports:
-      - "${SQLSERVER_PORT:-1434}:1433"
-
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${SA_PASSWORD}
@@ -48,9 +45,6 @@ services:
 
     restart: always
 
-    ports:
-      - "${BACKEND_PORT:-8081}:8080"
-
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -67,7 +61,21 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
 
+      Frontend__BaseUrl: ${FRONTEND_BASE_URL}
+      ClientPortal__FrontendBaseUrl: ${FRONTEND_BASE_URL}
+
+      Mail__Smtp__Host: ${SMTP_HOST}
+      Mail__Smtp__Port: ${SMTP_PORT:-587}
+      Mail__Smtp__Username: ${SMTP_USERNAME}
+      Mail__Smtp__Password: ${SMTP_PASSWORD}
+      Mail__Smtp__FromEmail: ${SMTP_FROM_EMAIL}
+      Mail__Smtp__FromName: ${SMTP_FROM_NAME:-3D Inspire}
+      Mail__Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+
       Database__ApplyMigrationsOnStartup: ${APPLY_MIGRATIONS}
+
+      AdminSeed__Email: ${ADMIN_SEED_EMAIL}
+      AdminSeed__Password: ${ADMIN_SEED_PASSWORD}
 
     volumes:
       - uploads:/app/uploads
@@ -101,9 +109,6 @@ services:
     container_name: printflow-frontend
 
     restart: always
-
-    ports:
-      - "${FRONTEND_PORT:-8082}:80"
 
     depends_on:
       backend:

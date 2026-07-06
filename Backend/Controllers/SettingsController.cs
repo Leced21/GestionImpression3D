@@ -1,7 +1,10 @@
-﻿using Backend.DTOs;
+﻿using Backend.Data;
+using Backend.DTOs;
 using Backend.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using System.Security.Claims;
 
 namespace Backend.Controllers
@@ -13,11 +16,15 @@ namespace Backend.Controllers
     {
         private readonly IUserSettingsService _settingsService;
         private readonly IUserService _userService;
+        private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public SettingsController(IUserSettingsService settingsService, IUserService userService)
+        public SettingsController(IUserSettingsService settingsService, IUserService userService, AppDbContext context, IWebHostEnvironment env)
         {
             _settingsService = settingsService;
             _userService = userService;
+            _context = context;
+            _env = env;
         }
 
         private int GetCurrentUserId()
@@ -108,6 +115,38 @@ namespace Backend.Controllers
             var userId = GetCurrentUserId();
             var updated = await _settingsService.UpdateSettingsAsync(userId, settings);
             return Ok(updated);
+        }
+
+        // ==========================================
+        // SYSTÈME (Admin)
+        // ==========================================
+
+        [HttpGet("system-info")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetSystemInfo()
+        {
+            var dbStatus = await _context.Database.CanConnectAsync() ? "🟢 Connectée" : "🔴 Déconnectée";
+
+            string diskSpace;
+            try
+            {
+                var drive = new DriveInfo(Path.GetPathRoot(AppContext.BaseDirectory) ?? "/");
+                var usedGo = (drive.TotalSize - drive.AvailableFreeSpace) / 1024.0 / 1024.0 / 1024.0;
+                var totalGo = drive.TotalSize / 1024.0 / 1024.0 / 1024.0;
+                diskSpace = $"{usedGo:F1} Go / {totalGo:F1} Go";
+            }
+            catch (Exception)
+            {
+                diskSpace = "N/A";
+            }
+
+            return Ok(new
+            {
+                AppVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "N/A",
+                Environment = _env.EnvironmentName,
+                DbStatus = dbStatus,
+                DiskSpace = diskSpace
+            });
         }
     }
 }

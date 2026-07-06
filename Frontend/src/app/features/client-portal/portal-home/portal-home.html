@@ -1,0 +1,122 @@
+<div class="portal-shell">
+    <header class="portal-header">
+        <div class="logo">
+            <img src="logo-icon.png" alt="">
+            <span>3D Inspire — Espace client</span>
+        </div>
+        <div class="header-right">
+            <span class="client-name" *ngIf="clientNom">{{ clientNom }}</span>
+            <button class="btn-logout" (click)="logout()">Se déconnecter</button>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button [class.active]="activeTab === 'devis'"
+            (click)="setTab('devis')">📋 Devis ({{ devisList.length }})</button>
+        <button [class.active]="activeTab === 'factures'"
+            (click)="setTab('factures')">🧾 Factures ({{ factures.length
+            }})</button>
+        <button [class.active]="activeTab === 'commandes'"
+            (click)="setTab('commandes')">📦 Commandes ({{ commandes.length
+            }})</button>
+    </nav>
+
+    <main class="portal-content">
+        <!-- Devis -->
+        <div *ngIf="activeTab === 'devis'">
+            <div *ngIf="devisList.length === 0" class="empty-state">Aucun devis
+                pour l'instant.</div>
+            <div class="item-card" *ngFor="let devis of devisList"
+                (click)="toggleExpand(devis.id)">
+                <div class="item-header">
+                    <div>
+                        <strong>{{ devis.numeroDevis }}</strong>
+                        <span class="date">{{ devis.dateEmission | date:'dd/MM/yyyy'
+                            }}</span>
+                    </div>
+                    <span class="status-badge">{{ devisStatusLabel(devis.statut)
+                        }}</span>
+                    <div class="amount">{{ devis.totalTTC | number:'1.2-2' }} €</div>
+                </div>
+                <div class="item-details" *ngIf="expandedId === devis.id">
+                    <div class="ligne" *ngFor="let ligne of devis.lignes">
+                        <span>{{ ligne.quantite }} × {{ ligne.description }}</span>
+                        <span>{{ ligne.total | number:'1.2-2' }} €</span>
+                    </div>
+                    <div class="totaux">
+                        <span>Total HT : {{ devis.totalHT | number:'1.2-2' }} €</span>
+                        <span>TVA ({{ devis.tva }}%)</span>
+                        <span><strong>Total TTC : {{ devis.totalTTC |
+                                number:'1.2-2' }} €</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Factures -->
+        <div *ngIf="activeTab === 'factures'">
+            <div *ngIf="factures.length === 0" class="empty-state">Aucune
+                facture pour l'instant.</div>
+            <div class="item-card" *ngFor="let facture of factures"
+                (click)="toggleExpand(facture.id)">
+                <div class="item-header">
+                    <div>
+                        <strong>{{ facture.numeroFacture }}</strong>
+                        <span class="date">Échéance {{ facture.dateEcheance |
+                            date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <span class="status-badge">{{
+                        factureStatusLabel(facture.statut) }}</span>
+                    <div class="amount">{{ facture.totalTTC | number:'1.2-2' }}
+                        €</div>
+                    <button class="btn-download"
+                        (click)="downloadFacturePdf(facture, $event)">⬇️
+                        PDF</button>
+                </div>
+                <div class="item-details" *ngIf="expandedId === facture.id">
+                    <div class="ligne" *ngFor="let ligne of facture.lignes">
+                        <span>{{ ligne.quantite }} × {{ ligne.description }}</span>
+                        <span>{{ ligne.total | number:'1.2-2' }} €</span>
+                    </div>
+                    <div class="totaux">
+                        <span>Total HT : {{ facture.totalHT | number:'1.2-2' }}
+                            €</span>
+                        <span>TVA ({{ facture.tva }}%)</span>
+                        <span><strong>Total TTC : {{ facture.totalTTC |
+                                number:'1.2-2' }} €</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commandes -->
+        <div *ngIf="activeTab === 'commandes'">
+            <div *ngIf="commandes.length === 0" class="empty-state">Aucune
+                commande pour l'instant.</div>
+            <div class="item-card" *ngFor="let commande of commandes"
+                (click)="toggleExpand(commande.id)">
+                <div class="item-header">
+                    <div>
+                        <strong>{{ commande.numeroCommande }}</strong>
+                        <span class="date">{{ commande.dateCommande |
+                            date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <span class="status-badge">{{
+                        commandeStatusLabel(commande.statut) }}</span>
+                    <div class="amount">{{ commande.total | number:'1.2-2' }}
+                        €</div>
+                </div>
+                <div class="item-details" *ngIf="expandedId === commande.id">
+                    <div class="ligne" *ngFor="let ligne of commande.lignes">
+                        <span>{{ ligne.quantite }} × {{ ligne.nom }}</span>
+                        <span>{{ ligne.total | number:'1.2-2' }} €</span>
+                    </div>
+                    <div class="totaux">
+                        <span><strong>Total : {{ commande.total | number:'1.2-2'
+                                }} €</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

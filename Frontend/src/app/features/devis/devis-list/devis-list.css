@@ -24,7 +24,7 @@ h1 {
 }
 
 .stat-card {
-    background: white;
+    background: var(--color-surface);
     padding: 1rem;
     border-radius: 0.75rem;
     text-align: center;
@@ -42,7 +42,7 @@ h1 {
 }
 
 .devis-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -58,7 +58,7 @@ h1 {
 .devis-number {
     font-family: monospace;
     font-weight: 700;
-    color: #3b82f6;
+    color: var(--color-primary);
 }
 
 .devis-status {
@@ -68,23 +68,23 @@ h1 {
 }
 
 .devis-status.Brouillon {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
 }
 
 .devis-status.Envoyé {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
 }
 
 .devis-status.Accepté {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
 }
 
 .devis-status.Refusé {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
 }
 
 .devis-client {
@@ -97,13 +97,13 @@ h1 {
     gap: 1rem;
     margin: 0.5rem 0;
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .devis-total {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #10b981;
+    color: var(--color-success);
     margin: 0.5rem 0;
 }
 
@@ -118,21 +118,21 @@ h1 {
     border-radius: 0.375rem;
     border: none;
     cursor: pointer;
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
 }
 
 .btn-sm.success {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
 }
 
 .btn-sm.danger {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
 }
 
 .btn-primary {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -143,6 +143,6 @@ h1 {
 .empty-state {
     text-align: center;
     padding: 3rem;
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
 }

@@ -16,6 +16,16 @@
                 <div class="form-group"><label>Validité *</label><input
                         type="date" formControlName="dateValidite"></div>
             </div>
+            <div class="form-group">
+                <label>Projet</label>
+                <select formControlName="projetId">
+                    <option value>-- Aucun --</option>
+                    <option *ngFor="let projet of projets"
+                        [value]="projet.id">{{ projet.nom }}</option>
+                </select>
+                <small class="hint">Nécessaire pour pouvoir accepter ce devis
+                    (génère l'ordre de fabrication et la facture).</small>
+            </div>
             <div class="form-group"><label>TVA (%)</label><input type="number"
                     formControlName="tva" step="0.1"></div>
         </div>

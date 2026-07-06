@@ -35,8 +35,16 @@ namespace Backend.Controllers
             _invitationService = invitationService;
         }
 
+        private const int MaxAuditLogLimit = 500;
+
         [HttpGet("audit-logs")]
-        public async Task<IActionResult> GetAuditLogs([FromQuery] int? entityId, [FromQuery] string? entityType)
+        public async Task<IActionResult> GetAuditLogs(
+            [FromQuery] int? entityId,
+            [FromQuery] string? entityType,
+            [FromQuery] int? userId,
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate,
+            [FromQuery] int? limit)
         {
             // Si des filtres de recherche sont fournis dans l'URL, on les applique
             if (entityId.HasValue || !string.IsNullOrEmpty(entityType))
@@ -55,8 +63,21 @@ namespace Backend.Controllers
                 return Ok(filteredLogs);
             }
 
+            if (userId.HasValue)
+            {
+                var userLogs = await _auditLogRepository.GetByUserAsync(userId.Value);
+                return Ok(userLogs);
+            }
+
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                var rangeLogs = await _auditLogRepository.GetByDateRangeAsync(startDate.Value, endDate.Value);
+                return Ok(rangeLogs);
+            }
+
             // Comportement par défaut si aucun paramètre n'est fourni
-            var logs = await _auditLogRepository.GetRecentAsync(100);
+            var effectiveLimit = Math.Clamp(limit ?? 100, 1, MaxAuditLogLimit);
+            var logs = await _auditLogRepository.GetRecentAsync(effectiveLimit);
             return Ok(logs);
         }
 

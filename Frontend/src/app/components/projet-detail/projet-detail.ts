@@ -8,6 +8,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ExportService } from '../../services/export.service';
+import { TechnicalPlanService } from '../../services/technical-plan.service';
 
 @Component({
   selector: 'app-projet-detail',
@@ -29,7 +30,8 @@ export class ProjetDetail implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private technicalPlanService: TechnicalPlanService
   ) { }
 
   ngOnInit(): void {
@@ -142,6 +144,10 @@ export class ProjetDetail implements OnInit, OnDestroy {
       },
       error: (err) => console.error('Erreur export devis:', err)
     });
+  }
+
+  downloadTechnicalPlans(): void {
+    this.technicalPlanService.downloadProjectTechnicalPlans(this.projet.id);
   }
 }
 

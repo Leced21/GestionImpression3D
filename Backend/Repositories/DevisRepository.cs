@@ -108,6 +108,20 @@ namespace Backend.Repositories
 
         public async Task<Devis> UpdateAsync(Devis devis)
         {
+            // Remplace explicitement les lignes en base plutôt que de compter sur la
+            // détection automatique des orphelins d'EF Core, pour ne pas dépendre d'un
+            // comportement subtil et difficile à vérifier sans base réelle sous la main.
+            var existingLignes = await _context.DevisLignes
+                .Where(l => l.DevisId == devis.Id)
+                .ToListAsync();
+            _context.DevisLignes.RemoveRange(existingLignes);
+
+            foreach (var ligne in devis.Lignes)
+            {
+                ligne.Id = 0;
+                ligne.DevisId = devis.Id;
+            }
+
             _context.Entry(devis).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return devis;

@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/internal/Observable';
 import { API_BASE_URL } from '../config/api.config';
-import { of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -12,22 +11,18 @@ export class SettingsService  {
   constructor(private http: HttpClient) {}
 
   getSettings(): Observable<any> {
-    // En attendant l'API, retourner des valeurs par défaut
-    return of({
-      language: 'fr',
-      timezone: 'Europe/Paris',
-      dateFormat: 'DD/MM/YYYY',
-      theme: 'light',
-      primaryColor: '#3b82f6',
-      emailNotifications: true,
-      stockAlerts: true,
-      productionAlerts: true,
-      weeklyReports: false,
-      twoFactorEnabled: false
-    });
+    return this.http.get(`${this.apiUrl}`);
   }
 
   saveSettings(settings: any): Observable<any> {
     return this.http.post(`${this.apiUrl}`, settings);
+  }
+
+  toggleTwoFactor(): Observable<{ enabled: boolean }> {
+    return this.http.post<{ enabled: boolean }>(`${this.apiUrl}/toggle-2fa`, {});
+  }
+
+  getSystemInfo(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/system-info`);
   }
 }

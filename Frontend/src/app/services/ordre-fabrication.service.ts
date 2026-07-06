@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { API_BASE_URL } from '../config/api.config';
 import { Observable } from 'rxjs/internal/Observable';
 import { OrdreFabrication, OrdreStatistics } from '../models/ordre-fabrication.model';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -32,7 +32,8 @@ export class OrdreFabricationService {
   }
 
   updateStatut(id: number, statut: string): Observable<OrdreFabrication> {
-    return this.http.patch<OrdreFabrication>(`${this.apiUrl}/${id}/statut`, statut);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.patch<OrdreFabrication>(`${this.apiUrl}/${id}/statut`, JSON.stringify(statut), { headers });
   }
 
   startProduction(id: number): Observable<OrdreFabrication> {

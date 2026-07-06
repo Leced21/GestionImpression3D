@@ -1,0 +1,212 @@
+.commandes-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+}
+
+.btn-refresh {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+}
+
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--color-text-muted);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--color-text-muted);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.commandes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.commande-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.commande-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+}
+
+.commande-row:hover {
+    background: var(--color-surface-hover);
+}
+
+.commande-main {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.numero {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.client {
+    color: var(--color-text-secondary);
+}
+
+.date {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.total {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.expand-icon {
+    color: var(--color-text-muted);
+}
+
+.badge {
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-warning {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+}
+
+.badge-info {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.badge-success {
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
+}
+
+.badge-secondary {
+    background: var(--color-surface-hover);
+    color: var(--color-text-muted);
+}
+
+.badge-danger {
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+}
+
+.commande-detail {
+    padding: 1.25rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+}
+
+.detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.lignes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.lignes-table th,
+.lignes-table td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.875rem;
+}
+
+.lignes-table th {
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.detail-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.statut-select {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.statut-select label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.statut-select select {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.btn-danger {
+    padding: 0.5rem 1rem;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.annulee-message {
+    color: var(--color-danger-text);
+    font-weight: 500;
+    margin: 0;
+}

@@ -1,63 +1,66 @@
 <aside class="sidebar">
     <div class="sidebar-header">
         <div class="logo">
-            <span style="font-size: 1.5rem;">🖨️</span>
-            <span>PrintFlow3D</span>
+            <img src="logo.png" alt="3D Inspire">
         </div>
     </div>
     <nav class="nav">
         <div class="nav-item active" routerLink="/dashboard"
-            routerLinkActive="active">📊 Tableau de bord</div>
+            routerLinkActive="active">📊 {{ 'sidebar.dashboard' | translate }}</div>
         <div class="nav-item" routerLink="/kanban" routerLinkActive="active">🔄
-            Cycle de vie</div>
+            {{ 'sidebar.lifecycle' | translate }}</div>
         <div class="nav-item" routerLink="/pieces" routerLinkActive="active">📦
-            Pièces</div>
+            {{ 'sidebar.pieces' | translate }}</div>
         <div class="nav-item" routerLink="/projets" routerLinkActive="active">📁
-            Projets</div>
+            {{ 'sidebar.projects' | translate }}</div>
         <div class="nav-item" routerLink="/commercial"
-            routerLinkActive="active">💰 Commercial</div>
+            routerLinkActive="active">💰 {{ 'sidebar.commercial' | translate }}</div>
+        <div class="nav-item" routerLink="/commercial/commandes"
+            routerLinkActive="active" *ngIf="canManageCommandes">
+            📦 {{ 'sidebar.commandes' | translate }}
+        </div>
         <div class="nav-item" routerLink="/admin/audit-logs"
             routerLinkActive="active" *ngIf="isAdmin">
-            📋 Journal d'audit
+            📋 {{ 'sidebar.auditLog' | translate }}
         </div>
         <div class="nav-item" routerLink="/printers" routerLinkActive="active">
-            🖨️ Imprimantes
+            🖨️ {{ 'sidebar.printers' | translate }}
         </div>
         <div class="nav-item" routerLink="/print-jobs"
             routerLinkActive="active">
-            🖨️ Jobs d'impression
+            🖨️ {{ 'sidebar.printJobs' | translate }}
         </div>
         <div class="nav-item" routerLink="/stock" routerLinkActive="active">
-            📦 Stocks
+            📦 {{ 'sidebar.stock' | translate }}
         </div>
         <div class="nav-item" routerLink="/admin/users"
             routerLinkActive="active" *ngIf="isAdmin">
-            👥 Utilisateurs
+            👥 {{ 'sidebar.users' | translate }}
         </div>
         <div class="nav-item" routerLink="/ordres" routerLinkActive="active">
-            📋 Ordres de fabrication
+            📋 {{ 'sidebar.manufacturingOrders' | translate }}
         </div>
         <div class="nav-item" routerLink="/profils-impression"
             routerLinkActive="active">
-            ⚙️ Profils d'impression
+            ⚙️ {{ 'sidebar.printProfiles' | translate }}
         </div>
         <div class="nav-item" routerLink="/consommations"
             routerLinkActive="active">
-            📊 Consommation matière
+            📊 {{ 'sidebar.materialConsumption' | translate }}
         </div>
         <div class="nav-item" routerLink="/maintenances"
             routerLinkActive="active">
-            🛠️ Maintenance
+            🛠️ {{ 'sidebar.maintenance' | translate }}
         </div>
         <div class="nav-item" routerLink="/incidents" routerLinkActive="active">
-            ⚠️ Incidents
+            ⚠️ {{ 'sidebar.incidents' | translate }}
         </div>
         <div class="nav-item" routerLink="/clients" routerLinkActive="active">
-            👥 Clients
+            👥 {{ 'sidebar.clients' | translate }}
         </div>
         <div class="nav-item" routerLink="/devis" routerLinkActive="active">
-            📄 Devis
+            📄 {{ 'sidebar.quotes' | translate }}
         </div>
-        <div class="nav-item" routerLink="/settings" routerLinkActive="active">⚙️ Paramètres</div>
+        <div class="nav-item" routerLink="/settings" routerLinkActive="active">⚙️ {{ 'sidebar.settings' | translate }}</div>
     </nav>
 </aside>

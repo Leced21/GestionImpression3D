@@ -2,11 +2,11 @@
     <div class="filter-group">
         <label>Action</label>
         <select [(ngModel)]="filters.action" (change)="onFilterChange()">
-            <option [value]="undefined">Toutes</option>
-            <option [value]="ActionType.Create">➕ Création</option>
-            <option [value]="ActionType.Update">✏️ Modification</option>
-            <option [value]="ActionType.Delete">🗑️ Suppression</option>
-            <option [value]="ActionType.StatusChange">🔄 Changement
+            <option [ngValue]="undefined">Toutes</option>
+            <option [ngValue]="ActionType.Create">➕ Création</option>
+            <option [ngValue]="ActionType.Update">✏️ Modification</option>
+            <option [ngValue]="ActionType.Delete">🗑️ Suppression</option>
+            <option [ngValue]="ActionType.StatusChange">🔄 Changement
                 statut</option>
         </select>
     </div>
@@ -14,11 +14,23 @@
     <div class="filter-group">
         <label>Entité</label>
         <select [(ngModel)]="filters.entityType" (change)="onFilterChange()">
-            <option [value]="undefined">Toutes</option>
-            <option [value]="EntityType.Piece">📦 Pièces</option>
-            <option [value]="EntityType.Projet">📁 Projets</option>
-            <option [value]="EntityType.PrintJob">🖨️ Impressions</option>
-            <option [value]="EntityType.User">👤 Utilisateurs</option>
+            <option [ngValue]="undefined">Toutes</option>
+            <option [ngValue]="EntityType.Piece">📦 Pièces</option>
+            <option [ngValue]="EntityType.Projet">📁 Projets</option>
+            <option [ngValue]="EntityType.PrintJob">🖨️ Impressions</option>
+            <option [ngValue]="EntityType.User">👤 Utilisateurs</option>
+            <option [ngValue]="EntityType.Printer">🖨️ Imprimantes</option>
+            <option [ngValue]="EntityType.MaterialStock">🧱 Stocks matière</option>
+            <option [ngValue]="EntityType.OrdreFabrication">📋 Ordres de fabrication</option>
+            <option [ngValue]="EntityType.PrintProfile">⚙️ Profils d'impression</option>
+            <option [ngValue]="EntityType.PrinterMaintenance">🛠️ Maintenance</option>
+            <option [ngValue]="EntityType.MaterialConsumption">📊 Consommation matière</option>
+            <option [ngValue]="EntityType.PrintIncident">⚠️ Incidents</option>
+            <option [ngValue]="EntityType.Client">👥 Clients</option>
+            <option [ngValue]="EntityType.Devis">📄 Devis</option>
+            <option [ngValue]="EntityType.Invitation">✉️ Invitations</option>
+            <option [ngValue]="EntityType.Facture">💶 Factures</option>
+            <option [ngValue]="EntityType.Commande">📦 Commandes</option>
         </select>
     </div>
 

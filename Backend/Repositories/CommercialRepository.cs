@@ -61,7 +61,7 @@ namespace Backend.Repositories
                                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<IEnumerable<Commande>> GetByStatutAsync(string statut)
+        public async Task<IEnumerable<Commande>> GetByStatutAsync(CommandeStatus statut)
         {
             return await _context.Commandes
                                  .Include(c => c.Lignes)
@@ -93,11 +93,11 @@ namespace Backend.Repositories
         public async Task<decimal> GetChiffreAffairesAsync()
         {
             return await _context.Commandes
-                .Where(c => c.Statut == "Livrée")
+                .Where(c => c.Statut == CommandeStatus.Livrée)
                 .SumAsync(c => c.Total);
         }
 
-        public async Task<Dictionary<string, int>> GetStatistiquesCommandesAsync()
+        public async Task<Dictionary<CommandeStatus, int>> GetStatistiquesCommandesAsync()
         {
             var stats = await _context.Commandes
                 .GroupBy(c => c.Statut)
@@ -107,13 +107,13 @@ namespace Backend.Repositories
             return stats;
         }
 
-        public async Task<Commande?> UpdateStatutAsync(int id, string nouveauStatut)
+        public async Task<Commande?> UpdateStatutAsync(int id, CommandeStatus nouveauStatut)
         {
             var commande = await _context.Commandes.FindAsync(id);
             if (commande == null) return null;
 
             commande.Statut = nouveauStatut;
-            if (nouveauStatut == "Livrée")
+            if (nouveauStatut == CommandeStatus.Livrée)
                 commande.DateLivraison = DateTime.Now;
 
             await _context.SaveChangesAsync();
@@ -130,6 +130,35 @@ namespace Backend.Repositories
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<bool> RestoreStockAsync(int pieceId, int quantite)
+        {
+            var piece = await _context.Pieces.FindAsync(pieceId);
+            if (piece == null) return false;
+
+            piece.Stock += quantite;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<string> GenerateNumeroCommandeAsync()
+        {
+            var year = DateTime.Now.Year;
+            var lastCommande = await _context.Commandes
+                .Where(c => c.NumeroCommande.StartsWith($"CMD-{year}"))
+                .OrderByDescending(c => c.NumeroCommande)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (lastCommande != null)
+            {
+                var lastNumber = int.Parse(lastCommande.NumeroCommande.Split('-').Last());
+                nextNumber = lastNumber + 1;
+            }
+
+            return $"CMD-{year}-{nextNumber:D4}";
         }
     }
 }

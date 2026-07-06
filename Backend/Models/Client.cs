@@ -20,5 +20,6 @@
         // Navigation
         public List<Devis> Devis { get; set; } = new();
         public List<Commande> Commandes { get; set; } = new();
+        public List<Facture> Factures { get; set; } = new();
     }
 }

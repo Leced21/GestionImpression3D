@@ -205,6 +205,41 @@ namespace Backend.Migrations
                     b.ToTable("Clients");
                 });
 
+            modelBuilder.Entity("Backend.Models.ClientMagicLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("ClientMagicLinks");
+                });
+
             modelBuilder.Entity("Backend.Models.Commande", b =>
                 {
                     b.Property<int>("Id")
@@ -248,10 +283,8 @@ namespace Backend.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("Statut")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("Statut")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
@@ -422,6 +455,95 @@ namespace Backend.Migrations
                     b.HasIndex("PieceId");
 
                     b.ToTable("DevisLignes");
+                });
+
+            modelBuilder.Entity("Backend.Models.Facture", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateEcheance")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateEmission")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DevisId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumeroFacture")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TVA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalHT")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalTTC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("DevisId");
+
+                    b.HasIndex("NumeroFacture")
+                        .IsUnique();
+
+                    b.ToTable("Factures");
+                });
+
+            modelBuilder.Entity("Backend.Models.FactureLigne", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("FactureId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PieceId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrixUnitaire")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantite")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FactureId");
+
+                    b.HasIndex("PieceId");
+
+                    b.ToTable("FactureLignes");
                 });
 
             modelBuilder.Entity("Backend.Models.Invitation", b =>
@@ -716,9 +838,21 @@ namespace Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CapaciteContenance")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("Categorie")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Conditionnement")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Couleurs")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("CoutMachine")
                         .HasColumnType("decimal(18,2)");
@@ -735,27 +869,60 @@ namespace Backend.Migrations
                     b.Property<DateTime?>("DateModification")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DelaiLivraisonJours")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DimensionsColis")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<bool>("EstDisponible")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Faq")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InstructionsUtilisation")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Materiau")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("MoqUnites")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nom")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("NormesCertifications")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("PoidsColisKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PointsForts")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PrecautionsUsage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("PrixVente")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PublicCible")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Reference")
                         .IsRequired()
@@ -773,6 +940,9 @@ namespace Backend.Migrations
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
+
+                    b.Property<string>("TarifsDegressifs")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1513,6 +1683,17 @@ namespace Backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Backend.Models.ClientMagicLink", b =>
+                {
+                    b.HasOne("Backend.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+                });
+
             modelBuilder.Entity("Backend.Models.Commande", b =>
                 {
                     b.HasOne("Backend.Models.Client", "Client")
@@ -1571,6 +1752,43 @@ namespace Backend.Migrations
                         .HasForeignKey("PieceId");
 
                     b.Navigation("Devis");
+
+                    b.Navigation("Piece");
+                });
+
+            modelBuilder.Entity("Backend.Models.Facture", b =>
+                {
+                    b.HasOne("Backend.Models.Client", "Client")
+                        .WithMany("Factures")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Devis", "Devis")
+                        .WithMany("Factures")
+                        .HasForeignKey("DevisId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Devis");
+                });
+
+            modelBuilder.Entity("Backend.Models.FactureLigne", b =>
+                {
+                    b.HasOne("Backend.Models.Facture", "Facture")
+                        .WithMany("Lignes")
+                        .HasForeignKey("FactureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Piece", "Piece")
+                        .WithMany()
+                        .HasForeignKey("PieceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Facture");
 
                     b.Navigation("Piece");
                 });
@@ -1778,6 +1996,8 @@ namespace Backend.Migrations
                     b.Navigation("Commandes");
 
                     b.Navigation("Devis");
+
+                    b.Navigation("Factures");
                 });
 
             modelBuilder.Entity("Backend.Models.Commande", b =>
@@ -1787,9 +2007,16 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Devis", b =>
                 {
+                    b.Navigation("Factures");
+
                     b.Navigation("Lignes");
 
                     b.Navigation("OrdresFabrication");
+                });
+
+            modelBuilder.Entity("Backend.Models.Facture", b =>
+                {
+                    b.Navigation("Lignes");
                 });
 
             modelBuilder.Entity("Backend.Models.OrdreFabrication", b =>

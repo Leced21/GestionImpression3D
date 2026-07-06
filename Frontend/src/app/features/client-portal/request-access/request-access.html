@@ -1,0 +1,33 @@
+<div class="portal-container">
+    <div class="portal-card">
+        <img class="logo" src="logo.png" alt="3D Inspire">
+        <h2>Espace client</h2>
+
+        <div *ngIf="!submitted">
+            <p class="subtitle">Reçois un lien d'accès sécurisé par email pour
+                consulter tes devis, factures et commandes.</p>
+
+            <form (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" [(ngModel)]="email" name="email"
+                        required placeholder="ton@email.com">
+                </div>
+
+                <button type="submit" class="btn-primary"
+                    [disabled]="isSubmitting">
+                    {{ isSubmitting ? 'Envoi...' : 'Recevoir mon lien d\'accès' }}
+                </button>
+            </form>
+        </div>
+
+        <div *ngIf="submitted" class="confirmation">
+            <div class="confirmation-icon">📧</div>
+            <p>{{ message }}</p>
+        </div>
+
+        <p class="back-link">
+            <a routerLink="/login">← Retour à l'espace interne</a>
+        </p>
+    </div>
+</div>

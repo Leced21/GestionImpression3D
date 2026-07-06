@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { ClientPortalGuard } from './guards/client-portal.guard';
 import { Settings } from './features/settings/settings';
 
 export const routes: Routes = [
@@ -7,6 +8,19 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./components/login/login').then((m) => m.Login),
+  },
+  {
+    path: 'portail/demande-acces',
+    loadComponent: () => import('./features/client-portal/request-access/request-access').then((m) => m.RequestAccess),
+  },
+  {
+    path: 'portail/acces',
+    loadComponent: () => import('./features/client-portal/consume/consume').then((m) => m.Consume),
+  },
+  {
+    path: 'portail',
+    loadComponent: () => import('./features/client-portal/portal-home/portal-home').then((m) => m.PortalHome),
+    canActivate: [ClientPortalGuard],
   },
   {
     path: 'register',
@@ -41,6 +55,12 @@ export const routes: Routes = [
     path: 'commercial',
     loadComponent: () => import('./components/commercial-catalog/commercial-catalog').then((m) => m.CommercialCatalog),
     canActivate: [AuthGuard],
+  },
+  {
+    path: 'commercial/commandes',
+    loadComponent: () => import('./components/commande-list/commande-list').then((m) => m.CommandeList),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'Commercial'] },
   },
   {
     path: 'dashboard',
@@ -270,6 +290,11 @@ export const routes: Routes = [
   {
     path: 'devis/:id',
     loadComponent: () => import('./features/devis/devis-detail/devis-detail').then((m) => m.DevisDetail),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'devis/:id/edit',
+    loadComponent: () => import('./features/devis/devis-form/devis-form').then((m) => m.DevisForm),
     canActivate: [AuthGuard],
   },
   { path: 'settings', component: Settings, canActivate: [AuthGuard] },

@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { SettingsService } from '../../services/settings.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { TranslationService } from '../../services/translation.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
 })
@@ -46,14 +48,15 @@ export class Settings implements OnInit {
   };
 
   // Système
-  appVersion = '2.0.0';
-  environment = 'Développement';
-  dbStatus = '🟢 Connectée';
-  diskSpace = '2.4 Go / 50 Go';
+  appVersion = '';
+  environment = '';
+  dbStatus = '';
+  diskSpace = '';
 
   constructor(
     private settingsService: SettingsService,
     private userService: UserService,
+    private translationService: TranslationService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -62,11 +65,27 @@ export class Settings implements OnInit {
     this.loadSettings();
   }
 
+  private loadSystemInfo(): void {
+    this.settingsService.getSystemInfo().subscribe({
+      next: (data) => {
+        this.appVersion = data.appVersion;
+        this.environment = data.environment;
+        this.dbStatus = data.dbStatus;
+        this.diskSpace = data.diskSpace;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
+    });
+  }
+
   loadUser(): void {
     this.userService.getProfile().subscribe({
       next: (data) => {
         this.user = data;
         this.isAdmin = data.role === "Admin";
+        if (this.isAdmin) {
+          this.loadSystemInfo();
+        }
         this.cdr.detectChanges()
       },
       error: (err) => console.error(err)
@@ -78,9 +97,15 @@ export class Settings implements OnInit {
         this.settings = { ...this.settings, ...data };
         this.applyTheme();
         this.applyColor();
+        this.translationService.use(this.settings.language);
       },
       error: (err) => console.error(err)
     });
+  }
+
+  setLanguage(lang: string): void {
+    this.settings.language = lang;
+    this.translationService.use(lang);
   }
   getInitials(): string {
     return `${this.user.prenom?.charAt(0) || ''}${this.user.nom?.charAt(0) || ''}`;
@@ -112,8 +137,13 @@ export class Settings implements OnInit {
   }
 
   toggle2FA(): void {
-    this.settings.twoFactorEnabled = !this.settings.twoFactorEnabled;
-    alert(`2FA ${this.settings.twoFactorEnabled ? 'activé' : 'désactivé'}`);
+    this.settingsService.toggleTwoFactor().subscribe({
+      next: (result) => {
+        this.settings.twoFactorEnabled = result.enabled;
+        alert(`2FA ${this.settings.twoFactorEnabled ? 'activé' : 'désactivé'}`);
+      },
+      error: (err) => console.error(err)
+    });
   }
 
   setTheme(theme: string): void {
@@ -154,6 +184,7 @@ export class Settings implements OnInit {
       };
       this.applyTheme();
       this.applyColor();
+      this.translationService.use(this.settings.language);
       alert('✅ Paramètres réinitialisés');
     }
   }
@@ -168,6 +199,10 @@ export class Settings implements OnInit {
   // Actions système (Admin)
   clearCache(): void {
     if (confirm('Vider le cache ?')) {
+      localStorage.removeItem('cart');
+      localStorage.removeItem('printflow3d_first_visit_tutorial_seen');
+      sessionStorage.clear();
+      this.loadSettings();
       alert('🧹 Cache vidé avec succès');
     }
   }

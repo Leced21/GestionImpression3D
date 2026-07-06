@@ -23,5 +23,6 @@ namespace Backend.Models
         public Projet? Projet { get; set; }
         public List<DevisLigne> Lignes { get; set; } = new();
         public List<OrdreFabrication> OrdresFabrication { get; set; } = new();
+        public List<Facture> Factures { get; set; } = new();
     }
 }

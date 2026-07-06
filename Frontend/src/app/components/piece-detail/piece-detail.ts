@@ -9,6 +9,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ThreeDViewer } from '../three-d-viewer/three-d-viewer';
 import { ExportService } from '../../services/export.service';
+import { TechnicalPlanService } from '../../services/technical-plan.service';
 import { PieceVersions } from '../piece-versions/piece-versions';
 
 @Component({
@@ -48,7 +49,8 @@ export class PieceDetail implements OnInit, OnDestroy {
     private router: Router,
     private pieceService: PieceService,
     private cdr: ChangeDetectorRef,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private technicalPlanService: TechnicalPlanService
   ) { }
 
   ngOnInit(): void {
@@ -492,6 +494,27 @@ export class PieceDetail implements OnInit, OnDestroy {
       },
       error: (err) => console.error('Erreur export PDF:', err)
     });
+  }
+
+  exportFicheProduitPdf(): void {
+    if (!this.piece) {
+      console.warn("Impossible d'exporter : aucune pièce n'est chargée.");
+      return;
+    }
+    this.exportService.exportFicheProduitPdf(this.piece.id).subscribe({
+      next: (blob) => {
+        this.exportService.downloadPdf(blob, `FicheProduit_${this.piece?.reference}.pdf`);
+      },
+      error: (err) => console.error('Erreur export fiche produit:', err)
+    });
+  }
+
+  downloadTechnicalPlan(): void {
+    if (!this.piece) {
+      console.warn("Impossible d'exporter : aucune pièce n'est chargée.");
+      return;
+    }
+    this.technicalPlanService.downloadPieceTechnicalPlan(this.piece.id);
   }
 }
 

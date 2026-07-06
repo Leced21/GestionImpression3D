@@ -11,7 +11,7 @@
 }
 
 .notification-bell:hover {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
 }
 
 .bell-icon {
@@ -23,7 +23,7 @@
     position: absolute;
     top: 4px;
     right: 4px;
-    background: #ef4444;
+    background: var(--color-danger);
     color: white;
     border-radius: 50%;
     font-size: 0.6rem;

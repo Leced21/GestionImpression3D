@@ -1,14 +1,17 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Piece, PieceStatus } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
-import { CartItem } from '../../models/cart.model';
+import { CartItem, CommandeRequest } from '../../models/cart.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { CommercialService } from '../../services/commercial.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-commercial-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './commercial-catalog.html',
   styleUrls: ['./commercial-catalog.css'],
 })
@@ -22,8 +25,20 @@ export class CommercialCatalog implements OnInit {
   filtreCategorie = '';
   filtreMateriau = '';
 
+  showCheckoutForm = false;
+  isSubmittingCommande = false;
+  checkoutInfo = {
+    clientNom: '',
+    clientEmail: '',
+    clientTelephone: '',
+    adresseLivraison: '',
+    notes: ''
+  };
+
   constructor(
     private pieceService: PieceService,
+    private commercialService: CommercialService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -110,13 +125,55 @@ export class CommercialCatalog implements OnInit {
 
   passerCommande(): void {
     if (this.cartItems.length === 0) return;
+    this.showCheckoutForm = true;
+  }
 
-    const total = this.getTotalPanier();
-    alert(`✅ Commande validée !\nTotal : ${total.toFixed(2)} €\n\nUn email de confirmation va vous être envoyé.`);
+  annulerCheckout(): void {
+    this.showCheckoutForm = false;
+  }
 
-    this.cartItems = [];
-    this.saveCart();
-    this.toggleCart();
+  confirmerCommande(): void {
+    if (this.cartItems.length === 0 || this.isSubmittingCommande) return;
+
+    const { clientNom, clientEmail, clientTelephone, adresseLivraison } = this.checkoutInfo;
+    if (!clientNom.trim() || !clientEmail.trim() || !clientTelephone.trim() || !adresseLivraison.trim()) {
+      this.toast.warn('Merci de renseigner toutes les informations de livraison');
+      return;
+    }
+
+    const request: CommandeRequest = {
+      clientNom: clientNom.trim(),
+      clientEmail: clientEmail.trim(),
+      clientTelephone: clientTelephone.trim(),
+      adresseLivraison: adresseLivraison.trim(),
+      notes: this.checkoutInfo.notes.trim() || undefined,
+      total: this.getTotalPanier(),
+      items: this.cartItems.map(item => ({
+        pieceId: item.pieceId,
+        nom: item.nom,
+        reference: item.reference,
+        quantite: item.quantite,
+        prixUnitaire: item.prix
+      }))
+    };
+
+    this.isSubmittingCommande = true;
+    this.commercialService.creerCommande(request).subscribe({
+      next: (result) => {
+        this.toast.success(`✅ Commande ${result.numeroCommande} créée avec succès`);
+        this.cartItems = [];
+        this.saveCart();
+        this.checkoutInfo = { clientNom: '', clientEmail: '', clientTelephone: '', adresseLivraison: '', notes: '' };
+        this.showCheckoutForm = false;
+        this.isSubmittingCommande = false;
+        this.toggleCart();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.toast.error(err.message || 'Impossible de créer la commande');
+        this.isSubmittingCommande = false;
+      }
+    });
   }
 
   voirDetail(id: number): void {

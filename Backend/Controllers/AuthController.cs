@@ -2,6 +2,7 @@
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Backend.Controllers
@@ -18,6 +19,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("auth")]
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
         {
             var response = await _authService.LoginAsync(request);
@@ -28,6 +30,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting("auth")]
         public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
         {
             if (await _authService.UserExistsAsync(request.Email))
@@ -53,7 +56,17 @@ namespace Backend.Controllers
             return Ok(new { user.Id, user.Email, user.Nom, user.Prenom, user.Role });
         }
 
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            await _authService.LogoutAsync(userId);
+            return NoContent();
+        }
+
         [HttpPost("refresh")]
+        [EnableRateLimiting("auth")]
         public async Task<ActionResult<AuthResponse>> Refresh(RefreshRequest request)
         {
             if (request == null || string.IsNullOrEmpty(request.RefreshToken))

@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -75,7 +76,7 @@ namespace Backend.Controllers
 
         [HttpPatch("commandes/{id}/statut")]
         [Authorize(Roles = "Admin,Commercial")]
-        public async Task<IActionResult> UpdateStatut(int id, [FromBody] string statut)
+        public async Task<IActionResult> UpdateStatut(int id, [FromBody] CommandeStatus statut)
         {
             try
             {

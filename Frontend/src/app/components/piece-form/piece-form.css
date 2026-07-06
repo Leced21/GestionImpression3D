@@ -14,7 +14,7 @@
 .btn-back {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--color-primary);
   cursor: pointer;
   font-size: 0.875rem;
   margin-bottom: 1rem;
@@ -30,12 +30,12 @@
 h1 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 /* Form */
 .piece-form {
-  background: white;
+  background: var(--color-surface);
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -43,13 +43,13 @@ h1 {
 
 .form-section {
   padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
   margin-bottom: 1.25rem;
 }
 
@@ -69,12 +69,12 @@ h1 {
 label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 input, select, textarea {
   padding: 0.625rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   transition: all 0.2s;
@@ -82,21 +82,21 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
 
 input.invalid, select.invalid, textarea.invalid {
-  border-color: #ef4444;
+  border-color: var(--color-danger);
 }
 
 .error-message {
-  color: #ef4444;
+  color: var(--color-danger);
   font-size: 0.75rem;
 }
 
 .helper-text {
-  color: #94a3b8;
+  color: var(--color-text-faint);
   font-size: 0.7rem;
 }
 
@@ -104,7 +104,7 @@ input.invalid, select.invalid, textarea.invalid {
 .cost-summary {
   margin-top: 1rem;
   padding: 1rem;
-  background: #f8fafc;
+  background: var(--color-surface-alt);
   border-radius: 0.5rem;
 }
 
@@ -115,13 +115,13 @@ input.invalid, select.invalid, textarea.invalid {
 }
 
 .cost-item:first-child {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .btn-link {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--color-primary);
   cursor: pointer;
   font-size: 0.875rem;
   margin-top: 0.5rem;
@@ -136,7 +136,7 @@ input.invalid, select.invalid, textarea.invalid {
 .margin-preview {
   margin-top: 1rem;
   padding: 0.75rem;
-  background: #f8fafc;
+  background: var(--color-surface-alt);
   border-radius: 0.5rem;
 }
 
@@ -147,16 +147,16 @@ input.invalid, select.invalid, textarea.invalid {
 }
 
 .margin-info.positive {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .margin-info.negative {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 /* File zone */
 .file-zone {
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--color-border-strong);
   border-radius: 0.75rem;
   padding: 2rem;
   text-align: center;
@@ -165,8 +165,8 @@ input.invalid, select.invalid, textarea.invalid {
 }
 
 .file-zone:hover {
-  border-color: #3b82f6;
-  background: #f8fafc;
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
 }
 
 .file-placeholder {
@@ -182,7 +182,7 @@ input.invalid, select.invalid, textarea.invalid {
 
 .file-hint {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--color-text-faint);
 }
 
 .file-info {
@@ -190,12 +190,12 @@ input.invalid, select.invalid, textarea.invalid {
   align-items: center;
   gap: 1rem;
   padding: 0.5rem;
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   border-radius: 0.5rem;
 }
 
 .file-info.existing {
-  background: #dcfce7;
+  background: var(--color-success-bg);
 }
 
 .file-details {
@@ -210,22 +210,22 @@ input.invalid, select.invalid, textarea.invalid {
 
 .file-details span {
   font-size: 0.7rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .btn-remove {
-  background: #fee2e2;
+  background: var(--color-danger-bg);
   border: none;
   width: 28px;
   height: 28px;
   border-radius: 50%;
   cursor: pointer;
-  color: #dc2626;
+  color: var(--color-danger);
   font-weight: bold;
 }
 
 .btn-remove:hover {
-  background: #fecaca;
+  background: var(--color-danger-bg);
 }
 
 /* Form actions */
@@ -234,13 +234,13 @@ input.invalid, select.invalid, textarea.invalid {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  background: #f8fafc;
+  background: var(--color-surface-alt);
 }
 
 .btn-secondary {
   padding: 0.625rem 1.25rem;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   cursor: pointer;
   font-weight: 500;
@@ -248,12 +248,12 @@ input.invalid, select.invalid, textarea.invalid {
 }
 
 .btn-secondary:hover {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
 }
 
 .btn-primary {
   padding: 0.625rem 1.5rem;
-  background: #3b82f6;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -263,7 +263,7 @@ input.invalid, select.invalid, textarea.invalid {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 

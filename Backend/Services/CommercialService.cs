@@ -1,4 +1,5 @@
-﻿using Backend.Interface;
+﻿using Backend.Enums;
+using Backend.Interface;
 using Backend.Models;
 using Backend.Repositories;
 
@@ -9,21 +10,24 @@ namespace Backend.Services
         private readonly IPieceRepository _pieceRepository;
         private readonly ICommercialRepository _repository;
         private readonly IClientService _clientService;
-        public CommercialService(IPieceRepository pieceRepository, ICommercialRepository repository, IClientService clientService)
+        private readonly IAuditLogger _auditLogger;
+        public CommercialService(IPieceRepository pieceRepository, ICommercialRepository repository, IClientService clientService, IAuditLogger auditLogger)
         {
             _pieceRepository = pieceRepository;
             _repository = repository;
             _clientService = clientService;
+            _auditLogger = auditLogger;
         }
         public async Task<bool> AnnulerCommandeAsync(int id)
         {
             var commande = await _repository.GetByIdAsync(id);
             if (commande == null) return false;
 
-            if (commande.Statut != "En attente" && commande.Statut != "Confirmée")
+            if (commande.Statut != CommandeStatus.EnAttente && commande.Statut != CommandeStatus.Confirmée)
                 throw new InvalidOperationException("Seules les commandes en attente ou confirmées peuvent être annulées");
 
-            return await _repository.DeleteAsync(id);
+            await UpdateStatutCommandeAsync(id, CommandeStatus.Annulée);
+            return true;
         }
 
         public async Task<Commande> CreerCommandeAsync(CommandeRequest request)
@@ -52,7 +56,7 @@ namespace Backend.Services
             }
 
             // Générer numéro de commande
-            var numeroCommande = GenererNumeroCommande();
+            var numeroCommande = await _repository.GenerateNumeroCommandeAsync();
 
             // Calculer le total
             decimal total = 0;
@@ -85,13 +89,17 @@ namespace Backend.Services
                 ClientTelephone = client?.Telephone ?? request.ClientTelephone,
                 AdresseLivraison = request.AdresseLivraison,
                 Total = total,
-                Statut = "En attente",
+                Statut = CommandeStatus.EnAttente,
                 DateCommande = DateTime.Now,
                 Notes = request.Notes,
                 Lignes = lignes
             };
 
-            return await _repository.CreateAsync(commande);
+            var created = await _repository.CreateAsync(commande);
+
+            await _auditLogger.LogCreationAsync(EntityType.Commande, created.Id, created.NumeroCommande);
+
+            return created;
         }
 
         public async Task<IEnumerable<Commande>> GetAllCommandesAsync()
@@ -128,34 +136,48 @@ namespace Backend.Services
             return new
             {
                 TotalCommandes = commandes.Count(),
-                CommandesEnAttente = statsParStatut.GetValueOrDefault("En attente", 0),
-                CommandesEnProduction = statsParStatut.GetValueOrDefault("En production", 0),
-                CommandesLivrees = statsParStatut.GetValueOrDefault("Livrée", 0),
+                CommandesEnAttente = statsParStatut.GetValueOrDefault(CommandeStatus.EnAttente, 0),
+                CommandesEnProduction = statsParStatut.GetValueOrDefault(CommandeStatus.EnProduction, 0),
+                CommandesLivrees = statsParStatut.GetValueOrDefault(CommandeStatus.Livrée, 0),
                 ChiffreAffaires = ca,
                 ChiffreAffairesMois = await GetChiffreAffairesMoisAsync()
             };
         }
 
-        public async Task<Commande?> UpdateStatutCommandeAsync(int id, string nouveauStatut)
+        public async Task<Commande?> UpdateStatutCommandeAsync(int id, CommandeStatus nouveauStatut)
         {
-            var statutsValides = new[] { "En attente", "Confirmée", "En production", "Expédiée", "Livrée" };
-            if (!statutsValides.Contains(nouveauStatut))
+            if (!Enum.IsDefined(nouveauStatut))
                 throw new ArgumentException("Statut invalide");
 
-            return await _repository.UpdateStatutAsync(id, nouveauStatut);
+            var commande = await _repository.GetByIdAsync(id);
+            if (commande == null) return null;
+
+            var ancienStatut = commande.Statut;
+            if (ancienStatut == nouveauStatut) return commande;
+
+            // Restituer le stock consommé quand une commande passe (pour la première fois) à Annulée,
+            // quel que soit le chemin emprunté (annulation dédiée ou changement de statut direct).
+            if (nouveauStatut == CommandeStatus.Annulée)
+            {
+                foreach (var ligne in commande.Lignes)
+                {
+                    await _repository.RestoreStockAsync(ligne.PieceId, ligne.Quantite);
+                }
+            }
+
+            var updated = await _repository.UpdateStatutAsync(id, nouveauStatut);
+
+            await _auditLogger.LogStatusChangeAsync(EntityType.Commande, id, ancienStatut.ToString(), nouveauStatut.ToString());
+
+            return updated;
         }
 
         // Méthodes privées
-        private string GenererNumeroCommande()
-        {
-            return $"CMD-{DateTime.UtcNow:yyyyMMddHHmmssfff}-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000, 10000)}";
-        }
-
         private async Task<decimal> GetChiffreAffairesMoisAsync()
         {
             var commandes = await _repository.GetAllAsync();
             return commandes
-                .Where(c => c.Statut == "Livrée" &&
+                .Where(c => c.Statut == CommandeStatus.Livrée &&
                             c.DateCommande.Month == DateTime.Now.Month &&
                             c.DateCommande.Year == DateTime.Now.Year)
                 .Sum(c => c.Total);

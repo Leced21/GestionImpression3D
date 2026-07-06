@@ -14,6 +14,8 @@ namespace TestProject
         private readonly Mock<IClientRepository> _clientRepositoryMock;
         private readonly Mock<IPieceRepository> _pieceRepositoryMock;
         private readonly Mock<IOrdreFabricationService> _ordreFabricationServiceMock;
+        private readonly Mock<IFactureService> _factureServiceMock;
+        private readonly Mock<IPdfExportService> _pdfExportServiceMock;
         private readonly Mock<IAuditLogger> _auditLoggerMock;
 
         public DevisServiceTests()
@@ -22,6 +24,8 @@ namespace TestProject
             _clientRepositoryMock = new Mock<IClientRepository>();
             _pieceRepositoryMock = new Mock<IPieceRepository>();
             _ordreFabricationServiceMock = new Mock<IOrdreFabricationService>();
+            _factureServiceMock = new Mock<IFactureService>();
+            _pdfExportServiceMock = new Mock<IPdfExportService>();
             _auditLoggerMock = new Mock<IAuditLogger>();
 
             _devisService = new DevisService(
@@ -29,6 +33,8 @@ namespace TestProject
                 _clientRepositoryMock.Object,
                 _pieceRepositoryMock.Object,
                 _ordreFabricationServiceMock.Object,
+                _factureServiceMock.Object,
+                _pdfExportServiceMock.Object,
                 _auditLoggerMock.Object
             );
         }
@@ -43,6 +49,106 @@ namespace TestProject
                 Statut = statut,
                 Lignes = lignes.ToList()
             };
+        }
+
+        [Fact]
+        public async Task UpdateAsync_NonExistingDevis_ReturnsNull()
+        {
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Devis?)null);
+
+            var result = await _devisService.UpdateAsync(99, new UpdateDevisRequest { ClientId = 1, DateValidite = DateTime.UtcNow });
+
+            Assert.Null(result);
+            _devisRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_OnAcceptedDevis_ThrowsInvalidOperationException()
+        {
+            var devis = CreateDevis(1, DevisStatus.Accepté, projetId: 7);
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _devisService.UpdateAsync(1, new UpdateDevisRequest { ClientId = 1, DateValidite = DateTime.UtcNow })
+            );
+            _devisRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WithNonExistingClient_ThrowsInvalidOperationException()
+        {
+            var devis = CreateDevis(1, DevisStatus.Brouillon, projetId: null);
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _clientRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Client?)null);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _devisService.UpdateAsync(1, new UpdateDevisRequest { ClientId = 99, DateValidite = DateTime.UtcNow })
+            );
+            _devisRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WithValidData_RecomputesTotalsAndReplacesLignes()
+        {
+            var devis = CreateDevis(1, DevisStatus.Brouillon, projetId: null,
+                new DevisLigne { Id = 1, Description = "Ancienne ligne", Quantite = 1, PrixUnitaire = 999m });
+            var client = new Client { Id = 1, Nom = "Test SARL", Email = "contact@testsarl.com" };
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _clientRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(client);
+            _devisRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Devis>())).ReturnsAsync((Devis d) => d);
+
+            var request = new UpdateDevisRequest
+            {
+                ClientId = 1,
+                ProjetId = 7,
+                DateValidite = DateTime.UtcNow.AddDays(30),
+                TVA = 20,
+                Lignes = new List<DevisLigneRequest>
+                {
+                    new DevisLigneRequest { Description = "Nouvelle ligne", Quantite = 2, PrixUnitaire = 50m }
+                }
+            };
+
+            var result = await _devisService.UpdateAsync(1, request);
+
+            Assert.NotNull(result);
+            Assert.Equal(7, result.ProjetId);
+            Assert.Single(result.Lignes);
+            Assert.Equal("Nouvelle ligne", result.Lignes[0].Description);
+            Assert.Equal(100m, result.TotalHT);
+            Assert.Equal(120m, result.TotalTTC);
+            _auditLoggerMock.Verify(x => x.LogUpdateAsync(EntityType.Devis, 1, "Devis", "Modifié", It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WithPieceLigne_UsesPiecePriceAndName()
+        {
+            var devis = CreateDevis(1, DevisStatus.Brouillon, projetId: null);
+            var client = new Client { Id = 1, Nom = "Test SARL", Email = "contact@testsarl.com" };
+            var piece = new Piece { Id = 10, Nom = "Pièce Catalogue", PrixVente = 42m };
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _clientRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(client);
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(10)).ReturnsAsync(piece);
+            _devisRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Devis>())).ReturnsAsync((Devis d) => d);
+
+            var request = new UpdateDevisRequest
+            {
+                ClientId = 1,
+                DateValidite = DateTime.UtcNow.AddDays(30),
+                TVA = 0,
+                Lignes = new List<DevisLigneRequest>
+                {
+                    new DevisLigneRequest { PieceId = 10, Quantite = 1, PrixUnitaire = 0 }
+                }
+            };
+
+            var result = await _devisService.UpdateAsync(1, request);
+
+            Assert.NotNull(result);
+            Assert.Equal("Pièce Catalogue", result.Lignes[0].Description);
+            Assert.Equal(42m, result.Lignes[0].PrixUnitaire);
         }
 
         [Fact]
@@ -86,6 +192,47 @@ namespace TestProject
             );
             _devisRepositoryMock.Verify(x => x.UpdateStatutAsync(It.IsAny<int>(), It.IsAny<DevisStatus>()), Times.Never);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWithProjet_GeneratesFacture()
+        {
+            // Arrange
+            var lignes = new[] { new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 } };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+            _factureServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.Is<Devis>(d => d.Id == 1)), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateStatut_ToAccepteWhenFactureAlreadyExistsForDevis_SkipsGeneration()
+        {
+            // Arrange : facture déjà générée précédemment (rejeu du statut Accepté)
+            var lignes = new[] { new DevisLigne { Id = 1, PieceId = 10, Quantite = 2 } };
+            var devis = CreateDevis(1, DevisStatus.Envoyé, projetId: 7, lignes);
+            var accepted = CreateDevis(1, DevisStatus.Accepté, projetId: 7, lignes);
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _devisRepositoryMock.Setup(x => x.UpdateStatutAsync(1, DevisStatus.Accepté)).ReturnsAsync(accepted);
+            _ordreFabricationServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(false);
+            _factureServiceMock.Setup(x => x.ExistsForDevisAsync(1)).ReturnsAsync(true);
+
+            // Act
+            await _devisService.UpdateStatutAsync(1, DevisStatus.Accepté);
+
+            // Assert
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
         }
 
         [Fact]
@@ -169,6 +316,7 @@ namespace TestProject
             // Assert
             Assert.NotNull(result);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
         }
 
         [Fact]
@@ -180,6 +328,32 @@ namespace TestProject
 
             Assert.Null(result);
             _ordreFabricationServiceMock.Verify(x => x.CreateAsync(It.IsAny<CreateOrdreRequest>()), Times.Never);
+            _factureServiceMock.Verify(x => x.CreateFromDevisAsync(It.IsAny<Devis>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GeneratePdf_ExistingDevis_DelegatesToExportService()
+        {
+            var devis = CreateDevis(1, DevisStatus.Brouillon, projetId: null);
+            var pdfBytes = new byte[] { 1, 2, 3 };
+
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(devis);
+            _pdfExportServiceMock.Setup(x => x.ExportDevisPdfAsync(devis)).ReturnsAsync(pdfBytes);
+
+            var result = await _devisService.GeneratePdfAsync(1);
+
+            Assert.Equal(pdfBytes, result);
+        }
+
+        [Fact]
+        public async Task GeneratePdf_NonExistingDevis_ReturnsEmptyBytes()
+        {
+            _devisRepositoryMock.Setup(x => x.GetByIdAsync(99)).ReturnsAsync((Devis?)null);
+
+            var result = await _devisService.GeneratePdfAsync(99);
+
+            Assert.Empty(result);
+            _pdfExportServiceMock.Verify(x => x.ExportDevisPdfAsync(It.IsAny<Devis>()), Times.Never);
         }
     }
 }

@@ -39,7 +39,19 @@ export class AuditLogFormatterService {
       [EntityType.Piece]: 'Pièce',
       [EntityType.Projet]: 'Projet',
       [EntityType.PrintJob]: 'Impression',
-      [EntityType.User]: 'Utilisateur'
+      [EntityType.User]: 'Utilisateur',
+      [EntityType.Printer]: 'Imprimante',
+      [EntityType.MaterialStock]: 'Stock matière',
+      [EntityType.OrdreFabrication]: 'Ordre de fabrication',
+      [EntityType.PrintProfile]: "Profil d'impression",
+      [EntityType.PrinterMaintenance]: 'Maintenance',
+      [EntityType.MaterialConsumption]: 'Consommation matière',
+      [EntityType.PrintIncident]: 'Incident',
+      [EntityType.Client]: 'Client',
+      [EntityType.Devis]: 'Devis',
+      [EntityType.Invitation]: 'Invitation',
+      [EntityType.Facture]: 'Facture',
+      [EntityType.Commande]: 'Commande'
     };
     return labels[entityType] || 'Inconnu';
   }
@@ -49,17 +61,29 @@ export class AuditLogFormatterService {
       [EntityType.Piece]: '📦',
       [EntityType.Projet]: '📁',
       [EntityType.PrintJob]: '🖨️',
-      [EntityType.User]: '👤'
+      [EntityType.User]: '👤',
+      [EntityType.Printer]: '🖨️',
+      [EntityType.MaterialStock]: '🧱',
+      [EntityType.OrdreFabrication]: '📋',
+      [EntityType.PrintProfile]: '⚙️',
+      [EntityType.PrinterMaintenance]: '🛠️',
+      [EntityType.MaterialConsumption]: '📊',
+      [EntityType.PrintIncident]: '⚠️',
+      [EntityType.Client]: '👥',
+      [EntityType.Devis]: '📄',
+      [EntityType.Invitation]: '✉️',
+      [EntityType.Facture]: '💶',
+      [EntityType.Commande]: '📦'
     };
     return icons[entityType] || '📄';
   }
 
   formatChangeMessage(log: AuditLog): string {
     if (log.action === ActionType.Create) {
-      return `Création de la ${log.entityTypeLabel} "${log.entityName}"`;
+      return `Création de la ${this.getEntityTypeLabel(log.entityType)} "${log.entityName}"`;
     }
     if (log.action === ActionType.Delete) {
-      return `Suppression de la ${log.entityTypeLabel} "${log.entityName}"`;
+      return `Suppression de la ${this.getEntityTypeLabel(log.entityType)} "${log.entityName}"`;
     }
     if (log.action === ActionType.StatusChange) {
       return `Statut: ${log.oldValue} → ${log.newValue}`;

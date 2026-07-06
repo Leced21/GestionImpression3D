@@ -19,17 +19,17 @@
 .kanban-header h1 {
     font-size: 1.875rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text);
 }
 
 .subtitle {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.875rem;
     margin-top: 0.25rem;
 }
 
 .btn-primary {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
     padding: 0.625rem 1.25rem;
@@ -40,7 +40,7 @@
 }
 
 .btn-primary:hover {
-    background: #2563eb;
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
 }
 
@@ -50,7 +50,7 @@
     gap: 1.5rem;
     margin-bottom: 2rem;
     padding: 1rem;
-    background: white;
+    background: var(--color-surface);
     border-radius: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -62,14 +62,14 @@
 }
 
 .stat-label {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.875rem;
 }
 
 .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text);
 }
 
 /* Kanban Board */
@@ -85,7 +85,7 @@
 .kanban-column {
     min-width: 320px;
     width: 320px;
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
     border-radius: 1rem;
     display: flex;
     flex-direction: column;
@@ -94,7 +94,7 @@
 
 .column-header {
     padding: 1rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--color-border);
 }
 
 .column-title {
@@ -103,7 +103,7 @@
     gap: 0.5rem;
     font-weight: 600;
     font-size: 0.875rem;
-    color: #1e293b;
+    color: var(--color-text);
 }
 
 .column-icon {
@@ -111,7 +111,7 @@
 }
 
 .badge-count {
-    background: #cbd5e1;
+    background: var(--color-border-strong);
     padding: 0.125rem 0.5rem;
     border-radius: 1rem;
     font-size: 0.75rem;
@@ -127,7 +127,7 @@
 
 /* Kanban Card */
 .kanban-card {
-    background: white;
+    background: var(--color-surface);
     border-radius: 0.75rem;
     padding: 0.875rem;
     margin-bottom: 0.75rem;
@@ -154,8 +154,8 @@
 
 .cdk-drag-placeholder {
     opacity: 0.3;
-    background: #cbd5e1;
-    border: 2px dashed #64748b;
+    background: var(--color-border-strong);
+    border: 2px dashed var(--color-text-muted);
 }
 
 .card-header {
@@ -168,7 +168,7 @@
 .card-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--color-text);
     margin: 0;
     flex: 1;
 }
@@ -178,24 +178,24 @@
     border: none;
     font-size: 1.25rem;
     cursor: pointer;
-    color: #94a3b8;
+    color: var(--color-text-faint);
     padding: 0 0.25rem;
 }
 
 .card-menu:hover {
-    color: #475569;
+    color: var(--color-text-secondary);
 }
 
 .card-ref {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-family: monospace;
     margin-bottom: 0.5rem;
 }
 
 .card-description {
     font-size: 0.75rem;
-    color: #475569;
+    color: var(--color-text-secondary);
     margin-bottom: 0.75rem;
     line-height: 1.4;
 }
@@ -209,16 +209,16 @@
 }
 
 .card-cost {
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .card-price {
     font-weight: 600;
-    color: #10b981;
+    color: var(--color-success);
 }
 
 .card-price.empty {
-    color: #94a3b8;
+    color: var(--color-text-faint);
     font-weight: normal;
 }
 
@@ -226,13 +226,13 @@
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--color-border);
     padding-top: 0.5rem;
     margin-top: 0.5rem;
 }
 
 .action-icon {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
     border: none;
     padding: 0.25rem 0.5rem;
     border-radius: 0.375rem;
@@ -242,7 +242,7 @@
 }
 
 .action-icon:hover {
-    background: #e2e8f0;
+    background: var(--color-border);
     transform: scale(1.05);
 }
 
@@ -250,7 +250,7 @@
     position: absolute;
     bottom: 0.5rem;
     right: 0.5rem;
-    color: #cbd5e1;
+    color: var(--color-border-strong);
     cursor: grab;
     font-size: 0.75rem;
     letter-spacing: -2px;
@@ -263,7 +263,7 @@
 .empty-column {
     text-align: center;
     padding: 2rem;
-    color: #94a3b8;
+    color: var(--color-text-faint);
     font-size: 0.875rem;
 }
 
@@ -279,8 +279,8 @@
 .spinner {
     width: 48px;
     height: 48px;
-    border: 3px solid #e2e8f0;
-    border-top-color: #3b82f6;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -295,7 +295,7 @@
 /* Context Menu */
 .context-menu {
     position: fixed;
-    background: white;
+    background: var(--color-surface);
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0.25rem;
@@ -323,26 +323,26 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
-    color: #1e293b;
+    color: var(--color-text);
     border-radius: 0.375rem;
     transition: all 0.2s;
 }
 
 .menu-item:hover {
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
 }
 
 .menu-item.delete {
-    color: #dc2626;
+    color: var(--color-danger);
 }
 
 .menu-item.delete:hover {
-    background: #fee2e2;
+    background: var(--color-danger-bg);
 }
 
 .menu-divider {
     height: 1px;
-    background: #e2e8f0;
+    background: var(--color-border);
     margin: 0.25rem 0;
 }
 
@@ -352,17 +352,17 @@
 }
 
 .column-content::-webkit-scrollbar-track {
-    background: #e2e8f0;
+    background: var(--color-border);
     border-radius: 3px;
 }
 
 .column-content::-webkit-scrollbar-thumb {
-    background: #94a3b8;
+    background: var(--color-text-faint);
     border-radius: 3px;
 }
 
 .column-content::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+    background: var(--color-text-muted);
 }
 
 /* Responsive */

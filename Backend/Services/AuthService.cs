@@ -144,6 +144,18 @@ namespace Backend.Services
             return user != null;
         }
 
+        public async Task<bool> LogoutAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return false;
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            await _userRepository.UpdateAsync(user);
+
+            return true;
+        }
+
         // Déplacé depuis le Repository vers le Service (Sa place légitime)
         private string GenerateJwtToken(User user, DateTime expiresAt)
         {

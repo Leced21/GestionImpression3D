@@ -1,1 +1,91 @@
 /* You can add global styles to this file, and also import other style files */
+
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, black);
+  --color-primary-dark: color-mix(in srgb, var(--color-primary) 65%, black);
+  --color-primary-light: color-mix(in srgb, var(--color-primary) 12%, white);
+
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  --color-text: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-faint: #94a3b8;
+
+  --color-success: #10b981;
+  --color-success-bg: #dcfce7;
+  --color-success-text: #166534;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --color-danger-text: #dc2626;
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+  --color-warning-text: #92400e;
+
+  /* Dark brand chrome (auth backdrops, sidebar, portal header): intentionally
+     stays constant across themes, it isn't part of the light/dark surface system. */
+  --color-chrome-start: #1e293b;
+  --color-chrome-end: #0f172a;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --color-primary-light: color-mix(in srgb, var(--color-primary) 20%, black);
+
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-alt: #16213a;
+  --color-surface-hover: #334155;
+  --color-border: #334155;
+  --color-border-strong: #475569;
+
+  --color-text: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-text-faint: #64748b;
+
+  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-success-text: #86efac;
+
+  --color-danger-bg: rgba(220, 38, 38, 0.18);
+  --color-danger-text: #fca5a5;
+
+  --color-warning-bg: rgba(245, 158, 11, 0.18);
+  --color-warning-text: #fde68a;
+
+  color-scheme: dark;
+}
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body {
+  margin: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* The 3D Inspire logo's wordmark is dark navy, baked into the image, so on
+   dark surfaces it needs a light backdrop to stay legible. The sidebar uses
+   the dark chrome background in both themes, hence the unconditional rule. */
+.sidebar-header .logo,
+:root[data-theme="dark"] .header .logo,
+:root[data-theme="dark"] .login-card .logo,
+:root[data-theme="dark"] .register-card .logo,
+:root[data-theme="dark"] .portal-card .logo,
+:root[data-theme="dark"] .accept-card .logo {
+  display: inline-block;
+  background: #fff;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+}

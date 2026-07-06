@@ -18,12 +18,16 @@ namespace Backend.Controllers
         private readonly IPdfExportService _pdfExportService;
         private readonly IExcelExportService _excelExportService;
         private readonly ISTLAnalyzerService _stlAnalyzerService;
-        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService)
+        private readonly IWebHostEnvironment _env;
+        private readonly ILogger<PieceController> _logger;
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService, IWebHostEnvironment env, ILogger<PieceController> logger)
         {
             _pieceService = pieceService;
             _pdfExportService = pdfExportService;
             _excelExportService = excelExportService;
             _stlAnalyzerService = stlAnalyzerService;
+            _env = env;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -176,7 +180,7 @@ namespace Backend.Controllers
             {
                 return BadRequest(new { error = "Format non supporté. Utilisez STL, STEP ou 3MF" });
             }
-            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            var uploadDir = Path.Combine(_env.ContentRootPath, "uploads");
             if (!Directory.Exists(uploadDir))
                 Directory.CreateDirectory(uploadDir);
 
@@ -197,6 +201,20 @@ namespace Backend.Controllers
             piece.StlFileName = fileName;
             await _pieceService.UpdateAsync(id, piece);
 
+            // Analyse automatique : dimensions/volume/poids doivent être disponibles dès l'upload,
+            // sans dépendre d'un second appel explicite à /analyze-stl.
+            if (string.Equals(extension, ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    await _pieceService.AnalyzeAndSaveStlFileAsync(id, filePath, fileName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Échec de l'analyse automatique du STL pour la pièce {PieceId}", id);
+                }
+            }
+
             return Ok(new
             {
                 fileName = fileName,
@@ -215,7 +233,7 @@ namespace Backend.Controllers
             if (!string.Equals(safeFileName, piece.StlFileName, StringComparison.Ordinal))
                 return BadRequest(new { error = "Nom de fichier invalide" });
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", safeFileName);
+            var filePath = Path.Combine(_env.ContentRootPath, "uploads", safeFileName);
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new { error = "Fichier introuvable sur le serveur" });
 
@@ -238,6 +256,53 @@ namespace Backend.Controllers
 
             var pdfBytes = await _pdfExportService.ExportPieceToPdfAsync(piece);
             return File(pdfBytes, "application/pdf", $"Piece_{piece.Reference}.pdf");
+        }
+
+        [HttpGet("{id}/fiche-produit-pdf")]
+        public async Task<IActionResult> ExportFicheProduitPdf(int id)
+        {
+            var piece = await _pieceService.GetByIdAsync(id);
+            if (piece == null) return NotFound();
+
+            var stlMetadata = await _stlAnalyzerService.GetMetadataByPieceAsync(id);
+
+            // Pièces uploadées avant la mise en place de l'analyse automatique à l'upload :
+            // on analyse à la volée le fichier déjà présent sur le disque (comme pour le plan
+            // technique), pour éviter d'afficher "non analysé" alors que le fichier existe.
+            if (stlMetadata == null
+                && !string.IsNullOrEmpty(piece.StlFileName)
+                && string.Equals(Path.GetExtension(piece.StlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                var filePath = Path.Combine(_env.ContentRootPath, "uploads", piece.StlFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    stlMetadata = await _pieceService.AnalyzeAndSaveStlFileAsync(id, filePath, piece.StlFileName);
+                }
+            }
+
+            byte[]? previewImage = null;
+            if (!string.IsNullOrEmpty(piece.StlFileName)
+                && string.Equals(Path.GetExtension(piece.StlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                var filePath = Path.Combine(_env.ContentRootPath, "uploads", piece.StlFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        using var stlStream = System.IO.File.OpenRead(filePath);
+                        previewImage = await _stlAnalyzerService.GeneratePreviewAsync(stlStream);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Le rendu 3D est un plus visuel : s'il échoue (fichier corrompu, etc.),
+                        // la fiche produit doit quand même être générée, sans image.
+                        _logger.LogWarning(ex, "Échec de la génération de l'aperçu 3D pour la pièce {PieceId}", id);
+                    }
+                }
+            }
+
+            var pdfBytes = await _pdfExportService.ExportFicheProduitPdfAsync(piece, stlMetadata, previewImage);
+            return File(pdfBytes, "application/pdf", $"FicheProduit_{piece.Reference}.pdf");
         }
         [HttpGet("export/excel")]
         [Authorize(Roles = "Admin,ProductionManager")]
@@ -272,6 +337,32 @@ namespace Backend.Controllers
             var metadata = await _stlAnalyzerService.GetMetadataByPieceAsync(id);
             if (metadata == null) return NotFound();
             return Ok(metadata);
+        }
+
+        [HttpGet("{id}/technical-plan/pdf")]
+        [Authorize(Roles = "Admin,Designer,ProductionManager")]
+        public async Task<IActionResult> GenerateTechnicalPlanPdf(int id)
+        {
+            try
+            {
+                var piece = await _pieceService.GetByIdAsync(id);
+                if (piece == null)
+                    return NotFound(new { error = "Pièce non trouvée" });
+
+                var technicalPlanService = HttpContext.RequestServices.GetRequiredService<ITechnicalPlanService>();
+                var pdfBytes = await technicalPlanService.GenerateTechnicalPlanPdfAsync(id);
+
+                return File(pdfBytes, "application/pdf", $"Plan-Technique_{piece.Reference}_{DateTime.Now:yyyyMMdd}.pdf");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur lors de la génération du plan technique pour la pièce {id}");
+                return StatusCode(500, new { error = "Erreur lors de la génération du plan", details = _env.IsDevelopment() ? ex.Message : null });
+            }
         }
 
         private static string GetContentType(string extension) => extension.ToLowerInvariant() switch

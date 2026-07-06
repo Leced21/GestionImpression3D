@@ -1,0 +1,148 @@
+.portal-shell {
+    min-height: 100vh;
+    background: var(--color-surface-alt);
+}
+
+.portal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: var(--color-chrome-start);
+    color: white;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.logo img {
+    height: 1.75rem;
+    width: auto;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-logout {
+    padding: 0.4rem 0.9rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem 0;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.tabs button {
+    padding: 0.6rem 1rem;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
+.tabs button.active {
+    color: var(--color-text);
+    border-bottom-color: var(--color-primary);
+}
+
+.portal-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--color-text-faint);
+    padding: 3rem 0;
+}
+
+.item-card {
+    background: var(--color-surface);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+}
+
+.item-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.item-header>div:first-child {
+    flex: 1;
+    min-width: 150px;
+}
+
+.date {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-text-faint);
+}
+
+.status-badge {
+    font-size: 0.85rem;
+    background: var(--color-surface-hover);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+}
+
+.amount {
+    font-weight: 700;
+    min-width: 90px;
+    text-align: right;
+}
+
+.btn-download {
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.item-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.ligne {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.totaux {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-end;
+    font-size: 0.9rem;
+}

@@ -4,7 +4,7 @@
     flex-wrap: wrap;
     align-items: flex-end;
     padding: 1rem;
-    background: white;
+    background: var(--color-surface);
     border-radius: 0.75rem;
     margin-bottom: 1.5rem;
 }
@@ -17,20 +17,20 @@
 
 .filter-group label {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .filter-group select,
 .filter-group input {
     padding: 0.5rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     min-width: 150px;
 }
 
 .btn-clear {
     padding: 0.5rem 1rem;
-    background: #f1f5f9;
+    background: var(--color-surface-hover);
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;

@@ -1,4 +1,5 @@
-﻿using Backend.Models;
+﻿using Backend.Enums;
+using Backend.Models;
 
 namespace Backend.Interface
 {
@@ -12,7 +13,7 @@ namespace Backend.Interface
         Task<Commande?> GetCommandeAsync(int id);
         Task<IEnumerable<Commande>> GetAllCommandesAsync();
         Task<IEnumerable<Commande>> GetByClientAsync(int clientId);
-        Task<Commande?> UpdateStatutCommandeAsync(int id, string nouveauStatut);
+        Task<Commande?> UpdateStatutCommandeAsync(int id, CommandeStatus nouveauStatut);
         Task<bool> AnnulerCommandeAsync(int id);
 
         // Statistiques

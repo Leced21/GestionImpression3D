@@ -3,6 +3,7 @@ using Backend.Enums;
 using Backend.Interface;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace Backend.Services
 {
@@ -108,8 +109,8 @@ namespace Backend.Services
             {
                 await _auditLogger.LogUpdateAsync(
                     EntityType.Piece, id, "PrixVente",
-                    existingPiece.PrixVente.ToString("F2"),
-                    piece.PrixVente.ToString("F2")
+                    existingPiece.PrixVente.ToString("F2", CultureInfo.InvariantCulture),
+                    piece.PrixVente.ToString("F2", CultureInfo.InvariantCulture)
                 );
             }
 
@@ -147,7 +148,21 @@ namespace Backend.Services
             if (piece == null) return null;
 
             using var stream = file.OpenReadStream();
-            var metadata = await _stlAnalyzerService.AnalyzeAsync(stream, file.FileName, pieceId);
+            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, file.FileName, piece.Materiau);
+        }
+
+        public async Task<STLMetadata?> AnalyzeAndSaveStlFileAsync(int pieceId, string filePath, string fileName)
+        {
+            var piece = await _pieceRepository.GetByIdAsync(pieceId);
+            if (piece == null) return null;
+
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, fileName, piece.Materiau);
+        }
+
+        private async Task<STLMetadata> AnalyzeAndSaveStlStreamAsync(int pieceId, Stream stream, string fileName, string? materiau)
+        {
+            var metadata = await _stlAnalyzerService.AnalyzeAsync(stream, fileName, pieceId, materiau);
 
             // Sauvegarder les métadonnées
             using var scope = _serviceProvider.CreateScope();

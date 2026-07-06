@@ -4,16 +4,19 @@ using Backend.Hubs;
 using Backend.Interface;
 using Backend.Mappers;
 using Backend.Middleware;
+using Backend.Options;
 using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +37,8 @@ if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
     throw new InvalidOperationException("La clé JWT ('Jwt:Key') est manquante dans la configuration ou est trop courte (minimum 32 caractères).");
 }
 
+var clientPortalAudience = builder.Configuration.GetValue("ClientPortal:JwtAudience", "PrintFlow3DClientPortal");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -48,9 +53,62 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.Zero // Optionnel : Élimine la tolérance par défaut de 5 minutes pour l'expiration du token
         };
+    })
+    // Schéma distinct pour le portail client externe : audience différente de celle des
+    // Users internes, afin qu'un token client ne puisse jamais être accepté par un endpoint
+    // interne (et inversement), même si les deux partagent la même clé de signature.
+    .AddJwtBearer("ClientPortal", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = clientPortalAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
     });
 
 builder.Services.AddAuthorization();
+
+// --- 1bis. Rate limiting (garde-fou global + protection brute-force sur l'authentification) ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    var globalPermitLimit = builder.Configuration.GetValue("RateLimiting:Global:PermitLimit", 200);
+    var globalWindowSeconds = builder.Configuration.GetValue("RateLimiting:Global:WindowSeconds", 60);
+    var authPermitLimit = builder.Configuration.GetValue("RateLimiting:Auth:PermitLimit", 5);
+    var authWindowSeconds = builder.Configuration.GetValue("RateLimiting:Auth:WindowSeconds", 60);
+
+    // Garde-fou global par IP, appliqué à toute l'API.
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = globalPermitLimit,
+            Window = TimeSpan.FromSeconds(globalWindowSeconds),
+            QueueLimit = 0
+        });
+    });
+
+    // Politique plus stricte pour les endpoints d'authentification (login/register/refresh),
+    // afin de limiter le brute-force sur les identifiants et les refresh tokens.
+    options.AddPolicy("auth", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = authPermitLimit,
+            Window = TimeSpan.FromSeconds(authWindowSeconds),
+            QueueLimit = 0
+        });
+    });
+});
 
 // --- 2. Configuration de la base de données ---
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -71,6 +129,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 
 // --- 4. Injection de dépendances (Scope & Business Logic) ---
 // Métier : Pièces et Commerciaux
@@ -106,6 +165,7 @@ builder.Services.AddScoped<ISTLAnalyzerService, STLAnalyzerService>();
 builder.Services.AddScoped<IProjetRepository, ProjetRepository>();
 builder.Services.AddScoped<IProjetService, ProjetService>();
 builder.Services.AddScoped<IPdfExportService, PdfExportService>();
+builder.Services.AddScoped<ITechnicalPlanService, TechnicalPlanService>();
 
 // Métier : Utilisateurs (Auth, Audit, Users)
 // Note : IAuthRepository a été retiré conformément au nettoyage de l'architecture.
@@ -125,6 +185,20 @@ builder.Services.AddScoped<IDevisRepository, DevisRepository>();
 builder.Services.AddScoped<IPrintIncidentService, PrintIncidentService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IDevisService, DevisService>();
+builder.Services.AddScoped<IFactureRepository, FactureRepository>();
+builder.Services.AddScoped<IFactureService, FactureService>();
+builder.Services.AddScoped<IClientMagicLinkRepository, ClientMagicLinkRepository>();
+builder.Services.AddScoped<IClientPortalAuthService, ClientPortalAuthService>();
+// Sans SMTP configuré (dev/local), on logge les emails au lieu de tenter un vrai envoi.
+if (string.IsNullOrWhiteSpace(builder.Configuration[$"{SmtpOptions.SectionName}:Host"]))
+{
+    builder.Services.AddTransient<IEmailSender, LoggingEmailSender>();
+}
+else
+{
+    builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+}
+builder.Services.AddScoped<IClientPortalMailSender, ClientPortalMailSender>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
@@ -171,6 +245,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 app.UseResponseCompression();
 // Étape B : Gestion du CORS (Placé haut pour intercepter et autoriser immédiatement les requêtes OPTIONS)
 app.UseCors("AllowAngular");
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {
@@ -205,6 +280,8 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         logger.LogInformation("Application des migrations...");
         await context.Database.MigrateAsync();
         logger.LogInformation("Base de données prête.");
+
+        await SeedData.InitializeAsync(app.Services);
     }
     catch (Exception ex)
     {
@@ -212,7 +289,7 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
         throw;
     }
 }
-app.MapGet("/", () => Results.Ok("PrintFlow3D API"));
+app.MapGet("/", () => Results.Ok("3D Inspire API"));
 
 static async Task EnsureDatabaseAsync(IConfiguration configuration, ILogger logger, int maxRetries = 20, TimeSpan? delay = null)
 {

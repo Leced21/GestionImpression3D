@@ -1,5 +1,6 @@
 ﻿using Backend.Interface;
 using Backend.Models;
+using System.Net;
 
 namespace Backend.Services
 {
@@ -7,11 +8,19 @@ namespace Backend.Services
     {
         private readonly IInvitationRepository _invitationRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
 
-        public InvitationService(IInvitationRepository invitationRepository, IUserRepository userRepository)
+        public InvitationService(
+            IInvitationRepository invitationRepository,
+            IUserRepository userRepository,
+            IEmailSender emailSender,
+            IConfiguration configuration)
         {
             _invitationRepository = invitationRepository;
             _userRepository = userRepository;
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
 
         public async Task<User> AcceptInvitationAsync(string token, string password, string nom, string prenom)
@@ -61,7 +70,38 @@ namespace Backend.Services
                 IsUsed = false
             };
 
-            return await _invitationRepository.CreateAsync(invitation);
+            var createdInvitation = await _invitationRepository.CreateAsync(invitation);
+
+            var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ?? "http://localhost:4200").TrimEnd('/');
+            var invitationUrl = $"{frontendBaseUrl}/accept-invitation?token={Uri.EscapeDataString(createdInvitation.Token)}";
+            var safeUrl = WebUtility.HtmlEncode(invitationUrl);
+            var safeRole = WebUtility.HtmlEncode(createdInvitation.Role);
+            var body = $$"""
+                <!doctype html>
+                <html lang="fr">
+                <body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.6">
+                  <h2>Invitation 3D Inspire</h2>
+                  <p>Vous avez été invité à rejoindre 3D Inspire avec le rôle <strong>{{safeRole}}</strong>.</p>
+                  <p style="margin:28px 0">
+                    <a href="{{safeUrl}}" style="background:#3b82f6;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Accepter l'invitation</a>
+                  </p>
+                  <p>Cette invitation expire dans 7 jours.</p>
+                  <p>Si vous n'attendiez pas cette invitation, ignorez cet email.</p>
+                </body>
+                </html>
+                """;
+
+            try
+            {
+                await _emailSender.SendHtmlAsync(createdInvitation.Email, "Invitation à rejoindre 3D Inspire", body);
+            }
+            catch
+            {
+                await _invitationRepository.DeleteAsync(createdInvitation.Id);
+                throw;
+            }
+
+            return createdInvitation;
         }
 
         public async Task<List<Invitation>> GetPendingInvitationsAsync()

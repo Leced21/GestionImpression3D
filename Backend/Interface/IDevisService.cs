@@ -10,6 +10,7 @@ namespace Backend.Interface
         Task<Devis?> GetByIdAsync(int id);
         Task<IEnumerable<Devis>> GetByClientAsync(int clientId);
         Task<Devis> CreateAsync(CreateDevisRequest request);
+        Task<Devis?> UpdateAsync(int id, UpdateDevisRequest request);
         Task<Devis?> UpdateStatutAsync(int id, DevisStatus statut);
         Task<byte[]> GeneratePdfAsync(int id);
         Task<bool> DeleteAsync(int id);
