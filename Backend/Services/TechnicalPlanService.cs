@@ -17,11 +17,19 @@ namespace Backend.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly AppDbContext _context;
+        private readonly IPieceService _pieceService;
+        private readonly IWebHostEnvironment _env;
 
-        public TechnicalPlanService(IServiceProvider serviceProvider, AppDbContext context)
+        public TechnicalPlanService(
+            IServiceProvider serviceProvider,
+            AppDbContext context,
+            IPieceService pieceService,
+            IWebHostEnvironment env)
         {
             _serviceProvider = serviceProvider;
             _context = context;
+            _pieceService = pieceService;
+            _env = env;
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
@@ -38,6 +46,20 @@ namespace Backend.Services
 
             var metadata = await _context.STLMetadata
                 .FirstOrDefaultAsync(m => m.PieceId == pieceId);
+
+            // Pièces uploadées avant la mise en place de l'analyse automatique à l'upload :
+            // pas d'échec pour autant, on analyse le fichier déjà présent sur le disque
+            // (uniquement pour un vrai .stl : les .step/.3mf ne sont pas ce format).
+            if (metadata == null
+                && !string.IsNullOrEmpty(piece.StlFileName)
+                && string.Equals(Path.GetExtension(piece.StlFileName), ".stl", StringComparison.OrdinalIgnoreCase))
+            {
+                var filePath = Path.Combine(_env.ContentRootPath, "uploads", piece.StlFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    metadata = await _pieceService.AnalyzeAndSaveStlFileAsync(pieceId, filePath, piece.StlFileName);
+                }
+            }
 
             if (metadata == null)
                 throw new ArgumentException($"Pas de données STL pour la pièce {pieceId}");
