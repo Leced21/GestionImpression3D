@@ -211,11 +211,27 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins(
+        // 4200 : dev-server Angular local (ng serve). 4300 : conteneur frontend en
+        // Docker dev (docker-compose.dev.yml). On ajoute aussi Frontend:BaseUrl s'il est
+        // configuré (staging/prod), pour ne pas avoir à recoder une origine à chaque
+        // nouvel environnement.
+        var allowedOrigins = new List<string>
+        {
             "http://localhost",
             "https://localhost",
             "http://localhost:4200",
-            "https://localhost:4200")
+            "https://localhost:4200",
+            "http://localhost:4300",
+            "https://localhost:4300"
+        };
+
+        var configuredFrontendUrl = builder.Configuration["Frontend:BaseUrl"];
+        if (!string.IsNullOrWhiteSpace(configuredFrontendUrl))
+        {
+            allowedOrigins.Add(configuredFrontendUrl.TrimEnd('/'));
+        }
+
+        policy.WithOrigins(allowedOrigins.ToArray())
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials()
