@@ -1,10 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 
 :root {
-  --color-primary: #3b82f6;
-  --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, black);
+  /* Palette de marque 3D Inspire, extraite du logo : bleu marine dominant + accent orange. */
+  --color-primary: #0e2841;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, white);
   --color-primary-dark: color-mix(in srgb, var(--color-primary) 65%, black);
   --color-primary-light: color-mix(in srgb, var(--color-primary) 12%, white);
+
+  --color-accent: #f87000;
+  --color-accent-hover: color-mix(in srgb, var(--color-accent) 85%, black);
+  --color-accent-light: color-mix(in srgb, var(--color-accent) 15%, white);
 
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
@@ -32,14 +37,20 @@
 
   /* Dark brand chrome (auth backdrops, sidebar, portal header): intentionally
      stays constant across themes, it isn't part of the light/dark surface system. */
-  --color-chrome-start: #1e293b;
-  --color-chrome-end: #0f172a;
+  --color-chrome-start: #1b3a5c;
+  --color-chrome-end: #0a1a2e;
 
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --color-primary-light: color-mix(in srgb, var(--color-primary) 20%, black);
+  /* Le bleu marine de la marque est trop sombre pour servir de couleur de texte/icône sur
+     les fonds déjà sombres du thème dark : on l'éclaircit ici pour rester lisible, tandis que
+     --color-primary-light garde sa formule "pastille claire" (texte marine sur fond pâle),
+     qui reste lisible même sur un thème sombre. */
+  --color-primary: #4a7fad;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, white);
+  --color-primary-dark: color-mix(in srgb, var(--color-primary) 65%, black);
 
   --color-bg: #0f172a;
   --color-surface: #1e293b;
