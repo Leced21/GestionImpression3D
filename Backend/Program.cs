@@ -307,6 +307,11 @@ app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllers();
 
+// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème de CORS élucidé. Endpoint minimal
+// sans dépendance (pas d'auth, pas de CORS, pas de pipeline complexe) pour vérifier de façon
+// définitive si le binaire qui tourne contient bien ce code.
+app.MapGet("/api/debug-version", () => Results.Ok(new { marker = "CORS-DEBUG-v3", checkedAtUtc = DateTime.UtcNow }));
+
 // Les migrations sont une opération de déploiement. Elles ne sont appliquées au
 // démarrage que lorsqu'elles sont explicitement activées (développement local,
 // conteneur d'initialisation, etc.).
