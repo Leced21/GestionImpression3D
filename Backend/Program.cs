@@ -250,12 +250,6 @@ builder.Services.AddResponseCompression();
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème de CORS élucidé. Marqueur de
-// démarrage inconditionnel : s'il n'apparaît pas dans "docker logs", le conteneur ne fait
-// pas tourner ce binaire (peu importe ce que Docker prétend avoir construit).
-Console.WriteLine("[CORS-DEBUG] ==== Binaire avec diagnostic CORS chargé au démarrage ====");
-Console.Out.Flush();
-
 // --- 6. Pipeline des Middlewares (L'ordre est TRÈS important) ---
 
 // Étape A : Gestion des reverse proxies (doit être tout en haut)
@@ -265,25 +259,6 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseResponseCompression();
-
-// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème de CORS élucidé.
-app.Use(async (context, next) =>
-{
-    var origin = context.Request.Headers["Origin"].ToString();
-    var isOptions = string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
-    if (isOptions)
-    {
-        Console.WriteLine($"[CORS-DEBUG] --> {context.Request.Method} {context.Request.Path} | Origin reçu = '{origin}'");
-        Console.Out.Flush();
-    }
-    await next();
-    if (isOptions)
-    {
-        var allowOrigin = context.Response.Headers["Access-Control-Allow-Origin"].ToString();
-        Console.WriteLine($"[CORS-DEBUG] <-- Status={context.Response.StatusCode} | Access-Control-Allow-Origin = '{allowOrigin}'");
-        Console.Out.Flush();
-    }
-});
 
 // Étape B : Gestion du CORS (Placé haut pour intercepter et autoriser immédiatement les requêtes OPTIONS)
 app.UseCors("AllowAngular");
@@ -306,11 +281,6 @@ app.UseAuthorization();
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllers();
-
-// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème de CORS élucidé. Endpoint minimal
-// sans dépendance (pas d'auth, pas de CORS, pas de pipeline complexe) pour vérifier de façon
-// définitive si le binaire qui tourne contient bien ce code.
-app.MapGet("/api/debug-version", () => Results.Ok(new { marker = "CORS-DEBUG-v3", checkedAtUtc = DateTime.UtcNow }));
 
 // Les migrations sont une opération de déploiement. Elles ne sont appliquées au
 // démarrage que lorsqu'elles sont explicitement activées (développement local,
