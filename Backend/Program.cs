@@ -250,6 +250,12 @@ builder.Services.AddResponseCompression();
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème de CORS élucidé. Marqueur de
+// démarrage inconditionnel : s'il n'apparaît pas dans "docker logs", le conteneur ne fait
+// pas tourner ce binaire (peu importe ce que Docker prétend avoir construit).
+Console.WriteLine("[CORS-DEBUG] ==== Binaire avec diagnostic CORS chargé au démarrage ====");
+Console.Out.Flush();
+
 // --- 6. Pipeline des Middlewares (L'ordre est TRÈS important) ---
 
 // Étape A : Gestion des reverse proxies (doit être tout en haut)
@@ -268,12 +274,14 @@ app.Use(async (context, next) =>
     if (isOptions)
     {
         Console.WriteLine($"[CORS-DEBUG] --> {context.Request.Method} {context.Request.Path} | Origin reçu = '{origin}'");
+        Console.Out.Flush();
     }
     await next();
     if (isOptions)
     {
         var allowOrigin = context.Response.Headers["Access-Control-Allow-Origin"].ToString();
         Console.WriteLine($"[CORS-DEBUG] <-- Status={context.Response.StatusCode} | Access-Control-Allow-Origin = '{allowOrigin}'");
+        Console.Out.Flush();
     }
 });
 
