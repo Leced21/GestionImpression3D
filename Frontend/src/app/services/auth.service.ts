@@ -142,7 +142,10 @@ export class AuthService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     console.error('AuthService error:', error);
-    const message = error.error?.error || error.message || 'Une erreur réseau est survenue';
+    const validationErrors = error.error?.errors;
+    const message = validationErrors
+      ? Object.values(validationErrors).flat().join(' ')
+      : error.error?.error || error.message || 'Une erreur réseau est survenue';
     return throwError(() => new Error(message));
   }
 }
