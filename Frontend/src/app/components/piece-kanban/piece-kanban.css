@@ -32,11 +32,11 @@
     background: var(--color-primary);
     color: white;
     border: none;
-    padding: 0.625rem 1.25rem;
+    padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, transform 0.2s;
 }
 
 .btn-primary:hover {
