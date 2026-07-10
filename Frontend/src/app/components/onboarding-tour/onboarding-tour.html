@@ -1,0 +1,88 @@
+<div class="onboarding-overlay" *ngIf="visible">
+  <div class="onboarding-card">
+
+    <button class="skip-btn" type="button" (click)="skip()">Passer</button>
+
+    <div class="step-content" *ngIf="contentVisible" [class.enter-next]="direction === 'next'" [class.enter-prev]="direction === 'prev'">
+    <div class="icon-stage">
+      <!-- Bienvenue : impression couche par couche -->
+      <svg *ngIf="steps[currentIndex].icon === 'welcome'" viewBox="0 0 120 120" class="tour-icon icon-welcome">
+        <rect class="layer layer-1" x="30" y="90" width="60" height="10" rx="2"/>
+        <rect class="layer layer-2" x="34" y="76" width="52" height="10" rx="2"/>
+        <rect class="layer layer-3" x="38" y="62" width="44" height="10" rx="2"/>
+        <rect class="layer layer-4" x="42" y="48" width="36" height="10" rx="2"/>
+        <g class="nozzle">
+          <path d="M52 20 L68 20 L62 38 L58 38 Z"/>
+          <rect x="56" y="12" width="8" height="10" rx="1"/>
+        </g>
+      </svg>
+
+      <!-- Dashboard : barres qui montent -->
+      <svg *ngIf="steps[currentIndex].icon === 'dashboard'" viewBox="0 0 120 120" class="tour-icon icon-dashboard">
+        <rect class="bar bar-1" x="24" y="70" width="16" height="30" rx="2"/>
+        <rect class="bar bar-2" x="52" y="50" width="16" height="50" rx="2"/>
+        <rect class="bar bar-3" x="80" y="35" width="16" height="65" rx="2"/>
+        <line x1="16" y1="104" x2="104" y2="104" class="baseline"/>
+      </svg>
+
+      <!-- Pièces : cube qui se construit -->
+      <svg *ngIf="steps[currentIndex].icon === 'pieces'" viewBox="0 0 120 120" class="tour-icon icon-pieces">
+        <g class="cube">
+          <polygon class="face face-top" points="60,20 90,36 60,52 30,36"/>
+          <polygon class="face face-left" points="30,36 60,52 60,88 30,72"/>
+          <polygon class="face face-right" points="90,36 60,52 60,88 90,72"/>
+        </g>
+      </svg>
+
+      <!-- Devis : document avec check -->
+      <svg *ngIf="steps[currentIndex].icon === 'devis'" viewBox="0 0 120 120" class="tour-icon icon-devis">
+        <rect x="32" y="18" width="56" height="76" rx="4" class="doc"/>
+        <line x1="42" y1="34" x2="78" y2="34" class="doc-line"/>
+        <line x1="42" y1="46" x2="78" y2="46" class="doc-line"/>
+        <line x1="42" y1="58" x2="64" y2="58" class="doc-line"/>
+        <circle cx="82" cy="82" r="18" class="check-circle"/>
+        <path d="M74 82 L80 88 L92 74" class="check-mark"/>
+      </svg>
+
+      <!-- Production : buse qui va-et-vient -->
+      <svg *ngIf="steps[currentIndex].icon === 'production'" viewBox="0 0 120 120" class="tour-icon icon-production">
+        <rect x="20" y="96" width="80" height="8" rx="2" class="bed"/>
+        <rect class="print-object" x="52" y="78" width="16" height="18" rx="1"/>
+        <g class="moving-nozzle">
+          <rect x="-6" y="0" width="12" height="16" rx="1"/>
+          <path d="M-4 16 L4 16 L0 26 Z"/>
+        </g>
+      </svg>
+
+      <!-- Fin : check final -->
+      <svg *ngIf="steps[currentIndex].icon === 'done'" viewBox="0 0 120 120" class="tour-icon icon-done">
+        <circle cx="60" cy="60" r="42" class="done-circle"/>
+        <path d="M40 62 L54 76 L82 46" class="done-check"/>
+      </svg>
+    </div>
+
+    <h2 class="step-title">{{ steps[currentIndex].title }}</h2>
+    <p class="step-description">{{ steps[currentIndex].description }}</p>
+    </div>
+
+    <div class="progress-dots">
+      <button
+        type="button"
+        class="dot"
+        *ngFor="let step of steps; let i = index"
+        [class.active]="i === currentIndex"
+        (click)="goTo(i)"
+        [attr.aria-label]="'Étape ' + (i + 1)">
+      </button>
+    </div>
+
+    <div class="nav-actions">
+      <button type="button" class="btn-ghost" (click)="previous()" [disabled]="currentIndex === 0">
+        ← Précédent
+      </button>
+      <button type="button" class="btn-primary" (click)="next()">
+        {{ isLastStep ? 'Commencer' : 'Suivant →' }}
+      </button>
+    </div>
+  </div>
+</div>

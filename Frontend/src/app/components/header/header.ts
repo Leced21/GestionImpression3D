@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { NotificationCenter } from '../notification-center/notification-center';
 import { NotificationBell } from '../notification-bell/notification-bell';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { OnboardingService } from '../../services/onboarding.service';
 
 @Component({
   selector: 'app-header',
@@ -21,8 +22,13 @@ export class Header implements OnInit ,OnDestroy{
   private userSub!: Subscription;
 
   constructor(
-    private authService: AuthService
+    private authService: AuthService,
+    private onboardingService: OnboardingService
   ) {}
+
+  startOnboarding(): void {
+    this.onboardingService.start();
+  }
   ngOnDestroy(): void {
     if (this.userSub) {
       this.userSub.unsubscribe();

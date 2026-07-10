@@ -1,0 +1,346 @@
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 30, 0.6);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    animation: overlay-in 0.25s ease-out;
+    padding: 1rem;
+}
+
+.onboarding-card {
+    position: relative;
+    background: var(--color-surface);
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 460px;
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skip-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.skip-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+
+.step-content {
+    animation: content-fade 0.3s ease-out;
+}
+
+.step-content.enter-prev {
+    animation-name: content-fade-prev;
+}
+
+.icon-stage {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.tour-icon {
+    width: 110px;
+    height: 110px;
+    overflow: visible;
+}
+
+.step-title {
+    margin: 0 0 0.75rem;
+    color: var(--color-text);
+    font-size: 1.35rem;
+}
+
+.step-description {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.75rem 0 1.5rem;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-border);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.dot.active {
+    width: 22px;
+    border-radius: 4px;
+    background: var(--color-accent);
+}
+
+.nav-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-ghost {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.6rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: opacity 0.2s;
+}
+
+.btn-ghost:disabled {
+    opacity: 0;
+    cursor: default;
+    pointer-events: none;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.65rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    margin-left: auto;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+/* ---- Entrée générale ---- */
+
+@keyframes overlay-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes card-in {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes content-fade {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes content-fade-prev {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ---- Icône : bienvenue (impression couche par couche) ---- */
+
+.icon-welcome .layer {
+    fill: var(--color-primary);
+    opacity: 0;
+    transform-origin: center;
+    animation: layer-rise 0.4s ease-out forwards;
+}
+.icon-welcome .layer-1 { animation-delay: 0.05s; }
+.icon-welcome .layer-2 { animation-delay: 0.2s; }
+.icon-welcome .layer-3 { animation-delay: 0.35s; }
+.icon-welcome .layer-4 { animation-delay: 0.5s; }
+
+.icon-welcome .nozzle {
+    fill: var(--color-accent);
+    animation: nozzle-bob 1.2s ease-in-out 0.7s infinite;
+}
+
+@keyframes layer-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nozzle-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+}
+
+/* ---- Icône : dashboard (barres) ---- */
+
+.icon-dashboard .bar {
+    fill: var(--color-primary);
+    transform-box: fill-box;
+    transform-origin: bottom;
+    transform: scaleY(0);
+    animation: bar-grow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.icon-dashboard .bar-1 { animation-delay: 0.05s; fill: var(--color-primary-light); }
+.icon-dashboard .bar-2 { animation-delay: 0.2s; }
+.icon-dashboard .bar-3 { animation-delay: 0.35s; fill: var(--color-accent); }
+.icon-dashboard .baseline {
+    stroke: var(--color-border);
+    stroke-width: 2;
+}
+
+@keyframes bar-grow {
+    to { transform: scaleY(1); }
+}
+
+/* ---- Icône : pièces (cube) ---- */
+
+.icon-pieces .cube {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: cube-spin-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.icon-pieces .face-top { fill: var(--color-accent); }
+.icon-pieces .face-left { fill: var(--color-primary); }
+.icon-pieces .face-right { fill: var(--color-primary-light); }
+
+@keyframes cube-spin-in {
+    from { opacity: 0; transform: scale(0.5) rotate(-15deg); }
+    to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* ---- Icône : devis (document + check) ---- */
+
+.icon-devis .doc {
+    fill: var(--color-surface);
+    stroke: var(--color-primary);
+    stroke-width: 3;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: doc-pop 0.4s ease-out;
+}
+
+.icon-devis .doc-line {
+    stroke: var(--color-border);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.icon-devis .check-circle {
+    fill: var(--color-accent);
+    opacity: 0;
+    animation: check-pop 0.35s ease-out 0.35s forwards;
+}
+
+.icon-devis .check-mark {
+    fill: none;
+    stroke: white;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    animation: check-draw 0.3s ease-out 0.55s forwards;
+}
+
+@keyframes doc-pop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes check-pop {
+    from { opacity: 0; transform: scale(0); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes check-draw {
+    to { stroke-dashoffset: 0; }
+}
+
+/* ---- Icône : production (buse mobile) ---- */
+
+.icon-production .bed {
+    fill: var(--color-border);
+}
+
+.icon-production .print-object {
+    fill: var(--color-accent);
+    transform-box: fill-box;
+    transform-origin: bottom;
+    transform: scaleY(0);
+    animation: object-grow 1.4s ease-in-out 0.2s forwards;
+}
+
+.icon-production .moving-nozzle {
+    fill: var(--color-primary);
+    animation: nozzle-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes object-grow {
+    0% { transform: scaleY(0); }
+    60% { transform: scaleY(1); }
+    100% { transform: scaleY(1); }
+}
+
+@keyframes nozzle-sweep {
+    0% { transform: translate(30px, 60px); }
+    50% { transform: translate(80px, 60px); }
+    100% { transform: translate(30px, 60px); }
+}
+
+/* ---- Icône : fin (check final) ---- */
+
+.icon-done .done-circle {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 4;
+    stroke-dasharray: 264;
+    stroke-dashoffset: 264;
+    animation: circle-draw 0.6s ease-out forwards;
+}
+
+.icon-done .done-check {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: check-draw-big 0.4s ease-out 0.5s forwards;
+}
+
+@keyframes circle-draw {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes check-draw-big {
+    to { stroke-dashoffset: 0; }
+}
+
+@media (max-width: 520px) {
+    .onboarding-card {
+        padding: 2rem 1.25rem 1.5rem;
+    }
+}
