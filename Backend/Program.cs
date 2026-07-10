@@ -259,6 +259,24 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseResponseCompression();
+
+// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème de CORS élucidé.
+app.Use(async (context, next) =>
+{
+    var origin = context.Request.Headers["Origin"].ToString();
+    var isOptions = string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
+    if (isOptions)
+    {
+        Console.WriteLine($"[CORS-DEBUG] --> {context.Request.Method} {context.Request.Path} | Origin reçu = '{origin}'");
+    }
+    await next();
+    if (isOptions)
+    {
+        var allowOrigin = context.Response.Headers["Access-Control-Allow-Origin"].ToString();
+        Console.WriteLine($"[CORS-DEBUG] <-- Status={context.Response.StatusCode} | Access-Control-Allow-Origin = '{allowOrigin}'");
+    }
+});
+
 // Étape B : Gestion du CORS (Placé haut pour intercepter et autoriser immédiatement les requêtes OPTIONS)
 app.UseCors("AllowAngular");
 app.UseRateLimiter();
