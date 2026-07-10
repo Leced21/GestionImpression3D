@@ -10,5 +10,7 @@ namespace Backend.Interface
         Task<bool> UserExistsAsync(string email);
         Task<AuthResponse?> RefreshAsync(string refreshToken);
         Task<bool> LogoutAsync(int userId);
+        Task ForgotPasswordAsync(string email);
+        Task<bool> ResetPasswordAsync(string rawToken, string newPassword);
     }
 }

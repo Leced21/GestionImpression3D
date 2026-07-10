@@ -201,6 +201,8 @@ else
 builder.Services.AddScoped<IClientPortalMailSender, ClientPortalMailSender>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IAuthMailSender, AuthMailSender>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();

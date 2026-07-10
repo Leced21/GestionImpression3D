@@ -78,5 +78,25 @@ namespace Backend.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("forgot-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+        {
+            await _authService.ForgotPasswordAsync(request.Email);
+            // Réponse identique que le compte existe ou non : évite l'énumération d'emails.
+            return Ok(new { message = "Si ce compte existe, un email de réinitialisation a été envoyé." });
+        }
+
+        [HttpPost("reset-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+        {
+            var success = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+            if (!success)
+                return BadRequest(new { error = "Ce lien de réinitialisation est invalide ou a expiré." });
+
+            return Ok(new { message = "Mot de passe réinitialisé avec succès." });
+        }
     }
 }
