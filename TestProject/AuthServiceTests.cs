@@ -2,6 +2,7 @@
 using Backend.Models;
 using Backend.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace TestProject
@@ -11,18 +12,30 @@ namespace TestProject
         private readonly IAuthService _authService;
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IConfiguration> _configMock;
+        private readonly Mock<IPasswordResetTokenRepository> _passwordResetTokenRepositoryMock;
+        private readonly Mock<IAuthMailSender> _mailSenderMock;
 
         public AuthServiceTests()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _configMock = new Mock<IConfiguration>();
+            _passwordResetTokenRepositoryMock = new Mock<IPasswordResetTokenRepository>();
+            _mailSenderMock = new Mock<IAuthMailSender>();
 
             // Configuration JWT
             _configMock.Setup(c => c["Jwt:Key"]).Returns("c6f0b8d2e5a47f39d1e8c2a9f7b4d6e8");
             _configMock.Setup(c => c["Jwt:Issuer"]).Returns("PrintFlow3D");
             _configMock.Setup(c => c["Jwt:Audience"]).Returns("PrintFlow3DUsers");
+            _configMock.Setup(c => c["Frontend:BaseUrl"]).Returns("http://localhost:4200");
+            _configMock.Setup(c => c["PasswordReset:LinkExpiryMinutes"]).Returns("30");
 
-            _authService = new AuthService(_userRepositoryMock.Object, _configMock.Object);
+            _authService = new AuthService(
+                _userRepositoryMock.Object,
+                _configMock.Object,
+                _passwordResetTokenRepositoryMock.Object,
+                _mailSenderMock.Object,
+                NullLogger<AuthService>.Instance
+            );
         }
         [Fact]
         public async Task Login_WithValidCredentials_ReturnsToken()
@@ -347,6 +360,144 @@ namespace TestProject
 
             Assert.False(result);
             _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_WithExistingActiveUser_CreatesTokenAndSendsMail()
+        {
+            var user = new User { Id = 3, Email = "admin@test.com", Prenom = "Admin", IsActive = true };
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync("admin@test.com")).ReturnsAsync(user);
+
+            await _authService.ForgotPasswordAsync("admin@test.com");
+
+            _passwordResetTokenRepositoryMock.Verify(x => x.CreateAsync(It.Is<PasswordResetToken>(t =>
+                t.UserId == 3 && !string.IsNullOrEmpty(t.TokenHash) && t.ExpiresAt > DateTime.UtcNow)), Times.Once);
+            _mailSenderMock.Verify(x => x.SendPasswordResetAsync("admin@test.com", "Admin", It.Is<string>(url => url.Contains("token="))), Times.Once);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_WithNonExistingUser_DoesNothingSilently()
+        {
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync("nobody@test.com")).ReturnsAsync((User?)null);
+
+            await _authService.ForgotPasswordAsync("nobody@test.com");
+
+            _passwordResetTokenRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<PasswordResetToken>()), Times.Never);
+            _mailSenderMock.Verify(x => x.SendPasswordResetAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_WithInactiveUser_DoesNothingSilently()
+        {
+            var user = new User { Id = 3, Email = "inactive@test.com", IsActive = false };
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync("inactive@test.com")).ReturnsAsync(user);
+
+            await _authService.ForgotPasswordAsync("inactive@test.com");
+
+            _passwordResetTokenRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<PasswordResetToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_WhenMailSendFails_DoesNotThrowAndStillCreatesToken()
+        {
+            var user = new User { Id = 3, Email = "admin@test.com", Prenom = "Admin", IsActive = true };
+            _userRepositoryMock.Setup(x => x.GetByEmailAsync("admin@test.com")).ReturnsAsync(user);
+            _mailSenderMock
+                .Setup(x => x.SendPasswordResetAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("SMTP indisponible"));
+
+            await _authService.ForgotPasswordAsync("admin@test.com");
+
+            _passwordResetTokenRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<PasswordResetToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WithValidToken_UpdatesPasswordAndRevokesRefreshToken()
+        {
+            var user = new User
+            {
+                Id = 3,
+                Email = "admin@test.com",
+                PasswordHash = "old-hash",
+                IsActive = true,
+                RefreshToken = "some-refresh-token",
+                RefreshTokenExpiry = DateTime.UtcNow.AddDays(5)
+            };
+            var resetToken = new PasswordResetToken
+            {
+                Id = 1,
+                UserId = 3,
+                TokenHash = "irrelevant-in-this-test",
+                ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                ConsumedAt = null,
+                User = user
+            };
+            _passwordResetTokenRepositoryMock.Setup(x => x.GetByTokenHashAsync(It.IsAny<string>())).ReturnsAsync(resetToken);
+
+            var result = await _authService.ResetPasswordAsync("raw-token", "NewPass123!");
+
+            Assert.True(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u =>
+                u.Id == 3 && u.PasswordHash != "old-hash" && u.RefreshToken == null && u.RefreshTokenExpiry == null)), Times.Once);
+            _passwordResetTokenRepositoryMock.Verify(x => x.UpdateAsync(It.Is<PasswordResetToken>(t =>
+                t.Id == 1 && t.ConsumedAt.HasValue)), Times.Once);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WithUnknownToken_ReturnsFalse()
+        {
+            _passwordResetTokenRepositoryMock.Setup(x => x.GetByTokenHashAsync(It.IsAny<string>())).ReturnsAsync((PasswordResetToken?)null);
+
+            var result = await _authService.ResetPasswordAsync("unknown-token", "NewPass123!");
+
+            Assert.False(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WithExpiredToken_ReturnsFalse()
+        {
+            var resetToken = new PasswordResetToken
+            {
+                Id = 1,
+                UserId = 3,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(-5),
+                ConsumedAt = null,
+                User = new User { Id = 3, IsActive = true }
+            };
+            _passwordResetTokenRepositoryMock.Setup(x => x.GetByTokenHashAsync(It.IsAny<string>())).ReturnsAsync(resetToken);
+
+            var result = await _authService.ResetPasswordAsync("expired-token", "NewPass123!");
+
+            Assert.False(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WithAlreadyConsumedToken_ReturnsFalse()
+        {
+            var resetToken = new PasswordResetToken
+            {
+                Id = 1,
+                UserId = 3,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                ConsumedAt = DateTime.UtcNow.AddMinutes(-1),
+                User = new User { Id = 3, IsActive = true }
+            };
+            _passwordResetTokenRepositoryMock.Setup(x => x.GetByTokenHashAsync(It.IsAny<string>())).ReturnsAsync(resetToken);
+
+            var result = await _authService.ResetPasswordAsync("consumed-token", "NewPass123!");
+
+            Assert.False(result);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WithNullOrEmptyArguments_ReturnsFalse()
+        {
+            Assert.False(await _authService.ResetPasswordAsync("", "NewPass123!"));
+            Assert.False(await _authService.ResetPasswordAsync("token", ""));
+            _passwordResetTokenRepositoryMock.Verify(x => x.GetByTokenHashAsync(It.IsAny<string>()), Times.Never);
         }
     }
 }

@@ -46,8 +46,9 @@ export class Register {
       return;
     }
 
-    if (this.password.length < 6) {
-      this.errorMessage = 'Le mot de passe doit contenir au moins 6 caractères';
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordPattern.test(this.password)) {
+      this.errorMessage = 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)';
       return;
     }
 
@@ -69,7 +70,7 @@ export class Register {
         }, 1500);
       },
       error: (err) => {
-        this.errorMessage = err.error?.error || 'Erreur lors de l\'inscription';
+        this.errorMessage = err.message || 'Erreur lors de l\'inscription';
         this.isLoading = false;
       }
     });

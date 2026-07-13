@@ -8,10 +8,11 @@ import { User } from './models/user.model';
 import { Toasts } from './components/toast/toast';
 import { SettingsService } from './services/settings.service';
 import { TranslationService } from './services/translation.service';
+import { OnboardingTour } from './components/onboarding-tour/onboarding-tour';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterModule, Header, Sidebar, CommonModule, Toasts],
+  imports: [RouterOutlet, RouterModule, Header, Sidebar, CommonModule, Toasts, OnboardingTour],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })

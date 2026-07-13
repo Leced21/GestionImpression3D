@@ -258,22 +258,34 @@
             <div class="card">
                 <h3>⚡ Actions rapides</h3>
                 <div class="quick-actions">
-                    <button class="action-btn" (click)="nextStatus()"
-                        *ngIf="piece.statut !== PieceStatus.Commercialisable">⏩ Passer à
-                        l'étape suivante</button>
-                    <button class="action-btn" (click)="previousStatus()"
-                        *ngIf="piece.statut !== PieceStatus.Brouillon">⏪ Revenir à l'étape
-                        précédente</button>
-                    <button class="action-btn delete"
-                        (click)="deletePiece()">🗑️ Supprimer la pièce</button>
-                    <!-- Ajouter dans header-actions -->
-                    <button class="btn-pdf" (click)="exportPdf()">📄 Fiche
-                        technique (interne)</button>
-                    <button class="btn-pdf" (click)="exportFicheProduitPdf()">🛍️
-                        Fiche produit</button>
-                    <button class="btn-pdf" (click)="downloadTechnicalPlan()"
-                        *ngIf="piece.stlFileName" title="Nécessite un fichier STL analysé">📐
-                        Plan technique</button>
+                    <button class="action-btn action-btn--previous" (click)="previousStatus()"
+                        *ngIf="piece.statut !== PieceStatus.Brouillon">
+                        <span class="action-btn__icon" aria-hidden="true">⏪</span>
+                        <span>Revenir à l'étape précédente</span>
+                    </button>
+                    <button class="action-btn action-btn--next" (click)="nextStatus()"
+                        *ngIf="piece.statut !== PieceStatus.Commercialisable">
+                        <span>Passer à l'étape suivante</span>
+                        <span class="action-btn__icon" aria-hidden="true">⏩</span>
+                    </button>
+                    <button class="action-btn action-btn--danger" (click)="deletePiece()">
+                        <span class="action-btn__icon" aria-hidden="true">🗑️</span>
+                        <span>Supprimer la pièce</span>
+                    </button>
+                    <div class="quick-actions__divider" aria-hidden="true"></div>
+                    <button class="action-btn action-btn--document" (click)="exportPdf()">
+                        <span class="action-btn__icon" aria-hidden="true">📄</span>
+                        <span>Fiche technique <small>(interne)</small></span>
+                    </button>
+                    <button class="action-btn action-btn--document" (click)="exportFicheProduitPdf()">
+                        <span class="action-btn__icon" aria-hidden="true">🛍️</span>
+                        <span>Fiche produit</span>
+                    </button>
+                    <button class="action-btn action-btn--document" (click)="downloadTechnicalPlan()"
+                        *ngIf="piece.stlFileName" title="Nécessite un fichier STL analysé">
+                        <span class="action-btn__icon" aria-hidden="true">📐</span>
+                        <span>Plan technique</span>
+                    </button>
                 </div>
             </div>
         </div>

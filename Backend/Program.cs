@@ -201,6 +201,8 @@ else
 builder.Services.AddScoped<IClientPortalMailSender, ClientPortalMailSender>();
 builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IAuthMailSender, AuthMailSender>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();
@@ -259,6 +261,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseResponseCompression();
+
 // Étape B : Gestion du CORS (Placé haut pour intercepter et autoriser immédiatement les requêtes OPTIONS)
 app.UseCors("AllowAngular");
 app.UseRateLimiter();

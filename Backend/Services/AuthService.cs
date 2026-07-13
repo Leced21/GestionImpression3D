@@ -1,9 +1,11 @@
 ﻿using Backend.Interface;
 using Backend.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Backend.Services
@@ -11,12 +13,23 @@ namespace Backend.Services
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository; // Utilisation directe du UserRepository
+        private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
+        private readonly IAuthMailSender _mailSender;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IUserRepository userRepository, IConfiguration configuration)
+        public AuthService(
+            IUserRepository userRepository,
+            IConfiguration configuration,
+            IPasswordResetTokenRepository passwordResetTokenRepository,
+            IAuthMailSender mailSender,
+            ILogger<AuthService> logger)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _passwordResetTokenRepository = passwordResetTokenRepository ?? throw new ArgumentNullException(nameof(passwordResetTokenRepository));
+            _mailSender = mailSender ?? throw new ArgumentNullException(nameof(mailSender));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<User?> GetUserByIdAsync(int id)
@@ -195,6 +208,90 @@ namespace Backend.Services
                 rng.GetBytes(random);
             }
             return Convert.ToBase64String(random);
+        }
+
+        public async Task ForgotPasswordAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return;
+
+            // Ne jamais révéler si l'email correspond à un compte : même comportement
+            // (aucune erreur) qu'il existe ou non, pour éviter l'énumération.
+            var user = await _userRepository.GetByEmailAsync(email.Trim());
+            if (user == null || !user.IsActive) return;
+
+            var rawToken = GenerateRawResetToken();
+            var tokenHash = HashResetToken(rawToken);
+
+            await _passwordResetTokenRepository.CreateAsync(new PasswordResetToken
+            {
+                UserId = user.Id,
+                TokenHash = tokenHash,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(GetConfigInt("PasswordReset:LinkExpiryMinutes", 30)),
+                CreatedAt = DateTime.UtcNow
+            });
+
+            var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:4200";
+            var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(rawToken)}";
+
+            // Ne jamais laisser un échec d'envoi remonter : la réponse de cet endpoint doit
+            // rester identique que le compte existe ou non, y compris quand le fournisseur
+            // mail est en panne (sinon un compte existant renverrait une erreur là où un
+            // email inconnu renvoie normalement, ce qui recrée un canal d'énumération).
+            try
+            {
+                await _mailSender.SendPasswordResetAsync(user.Email, user.Prenom, resetUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Échec de l'envoi de l'email de réinitialisation à l'utilisateur {UserId}", user.Id);
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string rawToken, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(rawToken) || string.IsNullOrWhiteSpace(newPassword)) return false;
+
+            var tokenHash = HashResetToken(rawToken);
+            var resetToken = await _passwordResetTokenRepository.GetByTokenHashAsync(tokenHash);
+
+            if (resetToken == null) return false;
+            if (resetToken.ConsumedAt.HasValue) return false;
+            if (resetToken.ExpiresAt < DateTime.UtcNow) return false;
+
+            var user = resetToken.User;
+            if (!user.IsActive) return false;
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            // Révoque la session existante : un reset de mot de passe doit invalider les
+            // connexions déjà actives (notamment si le compte était compromis).
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            await _userRepository.UpdateAsync(user);
+
+            resetToken.ConsumedAt = DateTime.UtcNow;
+            await _passwordResetTokenRepository.UpdateAsync(resetToken);
+
+            return true;
+        }
+
+        private int GetConfigInt(string key, int defaultValue)
+        {
+            var raw = _configuration[key];
+            return int.TryParse(raw, out var value) ? value : defaultValue;
+        }
+
+        private static string GenerateRawResetToken()
+        {
+            var bytes = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(bytes);
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
+        private static string HashResetToken(string rawToken)
+        {
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
+            return Convert.ToHexString(hash);
         }
     }
 }

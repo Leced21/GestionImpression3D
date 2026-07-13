@@ -37,6 +37,7 @@ namespace Backend.Data
         public DbSet<FactureLigne> FactureLignes { get; set; }
         public DbSet<ClientMagicLink> ClientMagicLinks { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -409,6 +410,18 @@ namespace Backend.Data
                 entity.HasOne(e => e.Client)
                       .WithMany()
                       .HasForeignKey(e => e.ClientId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
