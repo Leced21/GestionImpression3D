@@ -73,21 +73,22 @@ namespace Backend.Repositories
         {
             var pieces = await _context.Pieces
                 .Where(p => p.Statut == PieceStatus.Commercialisable && p.PrixVente > 0 && p.EstDisponible && p.Stock > 0)
-                .Select(p => new CatalogueItem
-                {
-                    Id = p.Id,
-                    Nom = p.Nom,
-                    Reference = p.Reference,
-                    Description = p.Description,
-                    PrixVente = p.PrixVente,
-                    Categorie = p.Categorie ?? "Mécanique",
-                    Materiau = p.Materiau ?? "PLA",
-                    Stock = p.Stock,
-                    ImageUrl = p.ImageUrl
-                })
                 .ToListAsync();
 
-            return pieces;
+            // Projection faite après matérialisation : ToString() sur les enums Categorie/
+            // Materiau n'a pas besoin d'être traduit en SQL.
+            return pieces.Select(p => new CatalogueItem
+            {
+                Id = p.Id,
+                Nom = p.Nom,
+                Reference = p.Reference,
+                Description = p.Description,
+                PrixVente = p.PrixVente,
+                Categorie = p.Categorie.ToString(),
+                Materiau = p.Materiau.ToString(),
+                Stock = p.Stock,
+                ImageUrl = p.ImageUrl
+            });
         }
 
         public async Task<decimal> GetChiffreAffairesAsync()

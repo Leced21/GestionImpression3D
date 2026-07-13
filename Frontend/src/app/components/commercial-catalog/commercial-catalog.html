@@ -28,9 +28,9 @@
         <select class="filter-select" [(ngModel)]="filtreCategorie"
             (change)="filterPieces()">
             <option value>Toutes les catégories</option>
-            <option value="Mécanique">🔧 Mécanique</option>
-            <option value="Électronique">⚡ Électronique</option>
-            <option value="Décoration">🎨 Décoration</option>
+            <option value="Mecanique">🔧 Mécanique</option>
+            <option value="Electronique">⚡ Électronique</option>
+            <option value="Decoration">🎨 Décoration</option>
             <option value="Outillage">🔨 Outillage</option>
         </select>
         <select class="filter-select" [(ngModel)]="filtreMateriau"
@@ -39,7 +39,7 @@
             <option value="PLA">PLA</option>
             <option value="PETG">PETG</option>
             <option value="ABS">ABS</option>
-            <option value="Résine">Résine</option>
+            <option value="Resine">Résine</option>
         </select>
     </div>
 
@@ -52,7 +52,7 @@
             <div class="product-info">
                 <h3 class="product-title">{{ piece.nom }}</h3>
                 <div class="product-ref">{{ piece.reference }}</div>
-                <div class="product-category">{{ piece.categorie || 'Mécanique'
+                <div class="product-category">{{ getCategorieLabel(piece.categorie)
                     }}</div>
                 <div class="product-price">{{ piece.prixVente | number:'1.2-2'
                     }} €</div>

@@ -48,8 +48,11 @@ namespace Backend.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Nom).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Reference).HasMaxLength(50);
-                entity.Property(e => e.Categorie).HasMaxLength(50);
-                entity.Property(e => e.Materiau).HasMaxLength(50);
+
+                // Catégorie/Matériau forcés en texte (comme Statut ci-dessous) : le nom de
+                // l'enum reste lisible en base et via JsonStringEnumConverter côté API.
+                entity.Property(e => e.Categorie).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Materiau).HasConversion<string>().HasMaxLength(50).IsRequired();
 
                 // 💡 FIX CATALOGUE : On force l'enum PieceStatus à s'enregistrer en texte
                 entity.Property(e => e.Statut)

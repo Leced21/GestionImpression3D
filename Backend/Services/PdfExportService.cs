@@ -204,36 +204,27 @@ namespace Backend.Services
                                     table.Cell().Text($"{piece.PrixVente:F2} €").FontColor(Colors.Green.Medium);
                                 });
 
-                                if (!string.IsNullOrEmpty(piece.Categorie) || !string.IsNullOrEmpty(piece.Materiau))
+                                column.Item().Text("🔧 Caractéristiques").SemiBold().FontSize(14);
+                                column.Item().Table(table =>
                                 {
-                                    column.Item().Text("🔧 Caractéristiques").SemiBold().FontSize(14);
-                                    column.Item().Table(table =>
+                                    table.ColumnsDefinition(columns =>
                                     {
-                                        table.ColumnsDefinition(columns =>
-                                        {
-                                            columns.RelativeColumn(1);
-                                            columns.RelativeColumn(2);
-                                        });
-
-                                        if (!string.IsNullOrEmpty(piece.Categorie))
-                                        {
-                                            table.Cell().Text("Catégorie:").Bold();
-                                            table.Cell().Text(piece.Categorie);
-                                        }
-
-                                        if (!string.IsNullOrEmpty(piece.Materiau))
-                                        {
-                                            table.Cell().Text("Matériau:").Bold();
-                                            table.Cell().Text(piece.Materiau);
-                                        }
-
-                                        if (piece.Stock > 0)
-                                        {
-                                            table.Cell().Text("Stock disponible:").Bold();
-                                            table.Cell().Text($"{piece.Stock} unités");
-                                        }
+                                        columns.RelativeColumn(1);
+                                        columns.RelativeColumn(2);
                                     });
-                                }
+
+                                    table.Cell().Text("Catégorie:").Bold();
+                                    table.Cell().Text(piece.Categorie.ToString());
+
+                                    table.Cell().Text("Matériau:").Bold();
+                                    table.Cell().Text(piece.Materiau.ToString());
+
+                                    if (piece.Stock > 0)
+                                    {
+                                        table.Cell().Text("Stock disponible:").Bold();
+                                        table.Cell().Text($"{piece.Stock} unités");
+                                    }
+                                });
                             });
 
                         page.Footer()
@@ -537,7 +528,7 @@ namespace Backend.Services
                                 table.Cell().Text(piece.Reference);
 
                                 table.Cell().Text("Catégorie :").Bold();
-                                CellOrPlaceholder(table.Cell(), piece.Categorie);
+                                CellOrPlaceholder(table.Cell(), piece.Categorie.ToString());
 
                                 table.Cell().Text("Marque :").Bold();
                                 table.Cell().Text("3D Inspire");
@@ -574,7 +565,7 @@ namespace Backend.Services
                                     CellOrPlaceholder(table.Cell(), null, "À compléter (fichier STL non analysé)");
 
                                 table.Cell().Text("Matériau(x) :").Bold();
-                                CellOrPlaceholder(table.Cell(), piece.Materiau);
+                                CellOrPlaceholder(table.Cell(), piece.Materiau.ToString());
 
                                 table.Cell().Text("Couleur(s) :").Bold();
                                 CellOrPlaceholder(table.Cell(), piece.Couleurs);

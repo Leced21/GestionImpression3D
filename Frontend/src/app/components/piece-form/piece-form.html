@@ -33,9 +33,14 @@
             type="text"
             id="reference"
             formControlName="reference"
-            placeholder="Auto-généré si vide">
-          <div class="helper-text">Laissez vide pour génération
-            automatique</div>
+            placeholder="Ex: MEC-001 (auto-généré si vide)"
+            [class.invalid]="pieceForm.get('reference')?.invalid && pieceForm.get('reference')?.touched">
+          <div class="error-message"
+            *ngIf="pieceForm.get('reference')?.invalid && pieceForm.get('reference')?.touched">
+            Format attendu : XXX-000 (ex: MEC-001)
+          </div>
+          <div class="helper-text" *ngIf="pieceForm.get('reference')?.valid">Laissez vide pour génération
+            automatique à partir de la catégorie</div>
         </div>
       </div>
 
@@ -146,9 +151,9 @@
         <div class="form-group">
           <label for="categorie">Catégorie</label>
           <select id="categorie" formControlName="categorie">
-            <option value="Mécanique">🔧 Mécanique</option>
-            <option value="Électronique">⚡ Électronique</option>
-            <option value="Décoration">🎨 Décoration</option>
+            <option value="Mecanique">🔧 Mécanique</option>
+            <option value="Electronique">⚡ Électronique</option>
+            <option value="Decoration">🎨 Décoration</option>
             <option value="Outillage">🔨 Outillage</option>
           </select>
         </div>
@@ -159,7 +164,7 @@
             <option value="PLA">PLA</option>
             <option value="PETG">PETG</option>
             <option value="ABS">ABS</option>
-            <option value="Résine">Résine</option>
+            <option value="Resine">Résine</option>
           </select>
         </div>
 

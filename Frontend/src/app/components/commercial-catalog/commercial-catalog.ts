@@ -76,12 +76,23 @@ export class CommercialCatalog implements OnInit {
 
   getProductIcon(piece: Piece): string {
     const icons: Record<string, string> = {
-      'Mécanique': '🔧',
-      'Électronique': '⚡',
-      'Décoration': '🎨',
+      'Mecanique': '🔧',
+      'Electronique': '⚡',
+      'Decoration': '🎨',
       'Outillage': '🔨'
     };
-    return icons[piece.categorie || 'Mécanique'] || '📦';
+    return icons[piece.categorie || 'Mecanique'] || '📦';
+  }
+
+  private readonly categorieLabels: Record<string, string> = {
+    'Mecanique': 'Mécanique',
+    'Electronique': 'Électronique',
+    'Decoration': 'Décoration',
+    'Outillage': 'Outillage'
+  };
+
+  getCategorieLabel(categorie?: string): string {
+    return this.categorieLabels[categorie || 'Mecanique'] || (categorie ?? '');
   }
 
   ajouterAuPanier(piece: Piece): void {

@@ -36,16 +36,17 @@ namespace TestProject
         public async Task CreatePiece_WithValidData_ReturnsPiece()
         {
             // Arrange
-            var piece = new Piece { Nom = "Test Piece", Reference = "TEST-001" };
+            var piece = new Piece { Nom = "Test Piece", Reference = "TES-001" };
             var createdPiece = new Piece
             {
                 Id = 1,
                 Nom = "Test Piece",
-                Reference = "TEST-001",
+                Reference = "TES-001",
                 Statut = PieceStatus.Brouillon,
                 DateCreation = DateTime.Now
             };
 
+            _pieceRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<Piece>());
             _pieceRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Piece>())).ReturnsAsync(createdPiece);
             _pieceVersionRepositoryMock.Setup(x => x.GetNextVersionNumberAsync(It.IsAny<int>())).ReturnsAsync(1);
             _pieceVersionRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<PieceVersion>())).ReturnsAsync(new PieceVersion());
@@ -57,6 +58,50 @@ namespace TestProject
             Assert.NotNull(result);
             Assert.Equal("Test Piece", result.Nom);
             Assert.Equal("Brouillon", result.Statut.ToString());
+        }
+
+        [Fact]
+        public async Task CreatePiece_WithBlankReference_AutoGeneratesFromCategorie()
+        {
+            // Arrange
+            var piece = new Piece { Nom = "Support", Reference = "", Categorie = PieceCategorie.Mecanique };
+            _pieceRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<Piece>
+            {
+                new Piece { Id = 1, Reference = "MEC-001" },
+                new Piece { Id = 2, Reference = "MEC-002" },
+                new Piece { Id = 3, Reference = "ELE-001" }
+            });
+            _pieceRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Piece>())).ReturnsAsync((Piece p) => p);
+            _pieceVersionRepositoryMock.Setup(x => x.GetNextVersionNumberAsync(It.IsAny<int>())).ReturnsAsync(1);
+            _pieceVersionRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<PieceVersion>())).ReturnsAsync(new PieceVersion());
+
+            // Act
+            var result = await _pieceService.CreateAsync(piece);
+
+            // Assert
+            Assert.Equal("MEC-003", result.Reference);
+        }
+
+        [Fact]
+        public async Task CreatePiece_WithInvalidReferenceFormat_ThrowsArgumentException()
+        {
+            var piece = new Piece { Nom = "Test", Reference = "invalid" };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _pieceService.CreateAsync(piece));
+            _pieceRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Piece>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreatePiece_WithDuplicateReference_ThrowsArgumentException()
+        {
+            var piece = new Piece { Nom = "Test", Reference = "MEC-001" };
+            _pieceRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<Piece>
+            {
+                new Piece { Id = 1, Reference = "MEC-001" }
+            });
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _pieceService.CreateAsync(piece));
+            _pieceRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Piece>()), Times.Never);
         }
 
         [Fact]
@@ -196,6 +241,34 @@ namespace TestProject
 
             // Assert
             _auditLoggerMock.Verify(x => x.LogUpdateAsync(It.IsAny<EntityType>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdatePiece_WithInvalidReferenceFormat_ThrowsArgumentException()
+        {
+            var existingPiece = new Piece { Id = 1, Nom = "Test", Reference = "MEC-001" };
+            var updatedPiece = new Piece { Nom = "Test", Reference = "invalid" };
+
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(existingPiece);
+
+            await Assert.ThrowsAsync<ArgumentException>(() => _pieceService.UpdateAsync(1, updatedPiece));
+            _pieceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<int>(), It.IsAny<Piece>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdatePiece_WithReferenceUnchanged_DoesNotCheckUniqueness()
+        {
+            var existingPiece = new Piece { Id = 1, Nom = "Test", Reference = "MEC-001" };
+            var updatedPiece = new Piece { Nom = "Test Updated", Reference = "MEC-001" };
+
+            _pieceRepositoryMock.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(existingPiece);
+            _pieceRepositoryMock.Setup(x => x.UpdateAsync(1, It.IsAny<Piece>())).ReturnsAsync((int id, Piece p) => p);
+
+            var result = await _pieceService.UpdateAsync(1, updatedPiece);
+
+            Assert.NotNull(result);
+            Assert.Equal("MEC-001", result.Reference);
+            _pieceRepositoryMock.Verify(x => x.GetAllAsync(), Times.Never);
         }
 
         [Fact]

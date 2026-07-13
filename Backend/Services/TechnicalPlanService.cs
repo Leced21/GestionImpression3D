@@ -183,13 +183,13 @@ namespace Backend.Services
                                         table.Cell().Background(Colors.White).Padding(5)
                                             .Text("Catégorie:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.White).Padding(5)
-                                            .Text(piece.Categorie ?? "N/A").FontSize(9);
+                                            .Text(piece.Categorie.ToString()).FontSize(9);
 
                                         // Matériau / Statut
                                         table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                             .Text("Matériau:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
-                                            .Text(piece.Materiau ?? "N/A").FontSize(9);
+                                            .Text(piece.Materiau.ToString()).FontSize(9);
                                         table.Cell().Background(Colors.White).Padding(5)
                                             .Text("Statut:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.White).Padding(5)
@@ -439,7 +439,7 @@ namespace Backend.Services
                                     table.Cell().Padding(5).Text(piece.Reference).FontSize(8);
                                     table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                         .Text("Matériau:").Bold().FontSize(8);
-                                    table.Cell().Padding(5).Text(piece.Materiau ?? "N/A").FontSize(8);
+                                    table.Cell().Padding(5).Text(piece.Materiau.ToString()).FontSize(8);
 
                                     table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                         .Text("Dessiné par:").Bold().FontSize(8);
@@ -531,8 +531,8 @@ namespace Backend.Services
                                         columns.RelativeColumn(3);
                                     });
 
-                                    CreateTableCell(table, "Matériau:", piece.Materiau ?? "N/A", true);
-                                    CreateTableCell(table, "Catégorie:", piece.Categorie ?? "N/A", false);
+                                    CreateTableCell(table, "Matériau:", piece.Materiau.ToString(), true);
+                                    CreateTableCell(table, "Catégorie:", piece.Categorie.ToString(), false);
                                     CreateTableCell(table, "Longueur (X):", $"{metadata.BoundingBoxX:F1} mm", true);
                                     CreateTableCell(table, "Largeur (Y):", $"{metadata.BoundingBoxY:F1} mm", false);
                                 });

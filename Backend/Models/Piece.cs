@@ -18,8 +18,8 @@ namespace Backend.Models
         public DateTime DateCreation { get; set; } = DateTime.Now;
         public DateTime? DateModification { get; set; }
         // NOUVEAUX ATTRIBUTS POUR LE CATALOGUE
-        public string? Categorie { get; set; } = "Mécanique";  // Mécanique, Électronique, Décoration, Outillage
-        public string? Materiau { get; set; } = "PLA";         // PLA, PETG, ABS, Résine
+        public PieceCategorie Categorie { get; set; } = PieceCategorie.Mecanique;
+        public PieceMateriau Materiau { get; set; } = PieceMateriau.PLA;
         public int Stock { get; set; } = 0;
         public string? ImageUrl { get; set; }
         public bool EstDisponible { get; set; } = true;

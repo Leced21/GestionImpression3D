@@ -50,7 +50,7 @@ export class PieceForm implements OnInit, OnDestroy {
   initForm(): void {
     this.pieceForm = this.fb.group({
       nom: ['', Validators.required],
-      reference: [''],
+      reference: ['', [Validators.pattern(/^[A-Z]{3}-\d{3}$/)]],
       description: [''],
       coutMatiere: [0, [Validators.min(0)]],
       coutMachine: [0, [Validators.min(0)]],
@@ -58,7 +58,7 @@ export class PieceForm implements OnInit, OnDestroy {
       prixVente: [0, [Validators.min(0)]],
       statut: ['Brouillon'],
       stlFileName: [''],
-      categorie: ['Mécanique'],
+      categorie: ['Mecanique'],
       materiau: ['PLA'],
       stock: [0],
       estDisponible: [true],
@@ -185,11 +185,8 @@ export class PieceForm implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     const formValue = this.pieceForm.value;
-
-    // Générer une référence si vide
-    if (!formValue.reference) {
-      formValue.reference = `P-${Date.now()}`;
-    }
+    // Si vide, le backend génère automatiquement une référence à partir de la
+    // catégorie (ex: MEC-001) ; sinon elle doit suivre le format XXX-000.
 
     if (this.isEditMode && this.pieceId) {
       // Mode édition
