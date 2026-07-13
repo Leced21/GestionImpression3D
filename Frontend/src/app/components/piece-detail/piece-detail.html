@@ -215,7 +215,7 @@
                     </div>
                 </ng-template>
 
-                <div class="upload-zone" (click)="fileInput.click()"
+                <div class="upload-zone" *ngIf="!uploading" (click)="fileInput.click()"
                     (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
                     <input type="file" #fileInput accept=".stl,.step,.3mf"
                         style="display: none" (change)="onFileSelected($event)">
@@ -224,6 +224,18 @@
                         'Ajouter un fichier STL' }}</p>
                     <span>STL, STEP ou 3MF</span>
                 </div>
+
+                <div class="upload-progress" *ngIf="uploading">
+                    <div class="upload-progress-label">
+                        <span>Envoi en cours...</span>
+                        <span>{{ uploadProgress }}%</span>
+                    </div>
+                    <div class="upload-progress-bar">
+                        <div class="upload-progress-fill" [style.width.%]="uploadProgress"></div>
+                    </div>
+                </div>
+
+                <div class="error-message" *ngIf="uploadError">{{ uploadError }}</div>
 
                 <button class="btn btn-secondary"
                     style="width:100%; margin-top:1rem" (click)="downloadStl()"

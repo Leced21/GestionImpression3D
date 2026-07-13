@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { HttpEventType } from '@angular/common/http';
 import { Piece, PieceStatus } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -395,25 +396,25 @@ export class PieceDetail implements OnInit, OnDestroy {
     this.uploadProgress = 0;
     this.uploadError = '';
 
-    // Simuler progression
-    const interval = setInterval(() => {
-      if (this.uploadProgress < 90) {
-        this.uploadProgress += 10;
-      }
-    }, 200);
-
     this.pieceService.uploadStl(this.piece!.id, file).subscribe({
-      next: (response) => {
-        clearInterval(interval);
-        this.uploadProgress = 100;
-        setTimeout(() => {
-          this.uploading = false;
-          this.piece!.stlFileName = response.fileName;
-          this.loadStlFile();
-        }, 500);
+      next: (event) => {
+        switch (event.type) {
+          case HttpEventType.UploadProgress:
+            if (event.total) {
+              this.uploadProgress = Math.round((100 * event.loaded) / event.total);
+            }
+            break;
+          case HttpEventType.Response:
+            this.uploadProgress = 100;
+            setTimeout(() => {
+              this.uploading = false;
+              this.piece!.stlFileName = event.body!.fileName;
+              this.loadStlFile();
+            }, 300);
+            break;
+        }
       },
       error: (err) => {
-        clearInterval(interval);
         this.uploading = false;
         this.uploadError = err.error?.error || 'Erreur lors de l\'upload';
       }
