@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from "@angular/core";
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import { PieceService } from "../../services/piece.service";
@@ -21,6 +21,7 @@ export class PieceForm implements OnInit, OnDestroy {
   isSubmitting = false;
   submissionError: string = '';
   selectedFile: File | null = null;
+  private originalReference = '';
   private destroy$ = new Subject<void>();
 
   // Calculs en temps réel
@@ -50,7 +51,7 @@ export class PieceForm implements OnInit, OnDestroy {
   initForm(): void {
     this.pieceForm = this.fb.group({
       nom: ['', Validators.required],
-      reference: ['', [Validators.pattern(/^[A-Z]{3}-\d{3}$/)]],
+      reference: ['', [this.referenceFormatValidator()]],
       description: [''],
       coutMatiere: [0, [Validators.min(0)]],
       coutMachine: [0, [Validators.min(0)]],
@@ -84,9 +85,23 @@ export class PieceForm implements OnInit, OnDestroy {
     });
   }
 
+  // Même logique que le backend : ne valide le format XXX-000 que si la
+  // référence a été modifiée. Sans ça, une pièce existante créée avec
+  // l'ancien format (ex: P-<timestamp>) devenait impossible à modifier,
+  // même pour changer un champ sans rapport comme la fiche produit.
+  private referenceFormatValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (!value) return null;
+      if (this.isEditMode && value === this.originalReference) return null;
+      return /^[A-Z]{3}-\d{3}$/.test(value) ? null : { pattern: true };
+    };
+  }
+
   loadPiece(id: number): void {
     this.pieceService.getById(id).subscribe({
       next: (piece: Piece) => {
+        this.originalReference = piece.reference;
         this.pieceForm.patchValue({
           nom: piece.nom,
           reference: piece.reference,
@@ -179,7 +194,15 @@ export class PieceForm implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    if (this.pieceForm.invalid) return;
+    if (this.pieceForm.invalid) {
+      // Sans ça, un champ invalide mais jamais "touché" (ex: la référence d'une
+      // pièce existante ne respectant plus le format XXX-000) bloquait la
+      // soumission sans aucun message, ce qui semblait provenir de la section
+      // Fiche produit juste au-dessus du bouton.
+      this.pieceForm.markAllAsTouched();
+      this.submissionError = 'Merci de corriger les champs en erreur (voir ci-dessus, notamment la Référence).';
+      return;
+    }
 
     this.submissionError = '';
     this.isSubmitting = true;

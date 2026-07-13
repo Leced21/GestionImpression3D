@@ -327,7 +327,7 @@
       <button type="button" class="btn-secondary"
         routerLink="/pieces">Annuler</button>
       <button type="submit" class="btn-primary"
-        [disabled]="pieceForm.invalid || isSubmitting">
+        [disabled]="isSubmitting">
         {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' :
         'Créer la pièce') }}
       </button>
