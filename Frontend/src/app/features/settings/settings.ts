@@ -37,7 +37,8 @@ export class Settings implements OnInit {
     stockAlerts: true,
     productionAlerts: true,
     weeklyReports: false,
-    twoFactorEnabled: false
+    twoFactorEnabled: false,
+    electricityPricePerKwh: 0.25
   };
 
   // Sécurité
@@ -180,7 +181,8 @@ export class Settings implements OnInit {
         stockAlerts: true,
         productionAlerts: true,
         weeklyReports: false,
-        twoFactorEnabled: false
+        twoFactorEnabled: false,
+        electricityPricePerKwh: 0.25
       };
       this.applyTheme();
       this.applyColor();

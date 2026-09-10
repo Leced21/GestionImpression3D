@@ -12,7 +12,9 @@ namespace Backend.Controllers
     [Authorize]
     public class PieceController:ControllerBase
     {
-        private const long MaxUploadSizeBytes = 100 * 1024 * 1024;
+        private const long DefaultMaxUploadSizeMb = 500;
+        private readonly long _maxUploadSizeMb;
+        private readonly long _maxUploadSizeBytes;
 
         private readonly IPieceService _pieceService;
         private readonly IPdfExportService _pdfExportService;
@@ -20,7 +22,7 @@ namespace Backend.Controllers
         private readonly ISTLAnalyzerService _stlAnalyzerService;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<PieceController> _logger;
-        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService, IWebHostEnvironment env, ILogger<PieceController> logger)
+        public PieceController(IPieceService pieceService, IPdfExportService pdfExportService, IExcelExportService excelExportService, ISTLAnalyzerService stlAnalyzerService, IWebHostEnvironment env, ILogger<PieceController> logger, IConfiguration configuration)
         {
             _pieceService = pieceService;
             _pdfExportService = pdfExportService;
@@ -28,6 +30,8 @@ namespace Backend.Controllers
             _stlAnalyzerService = stlAnalyzerService;
             _env = env;
             _logger = logger;
+            _maxUploadSizeMb = configuration.GetValue("Upload:MaxFileSizeMb", DefaultMaxUploadSizeMb);
+            _maxUploadSizeBytes = _maxUploadSizeMb * 1024L * 1024L;
         }
 
         [HttpGet]
@@ -156,6 +160,7 @@ namespace Backend.Controllers
             return Ok(stats);
         }
         [HttpPost("{id}/upload-stl")]
+        [RequestSizeLimit(DefaultMaxUploadSizeMb * 1024L * 1024L)]
         [Authorize(Roles = "Admin,Designer,ProductionManager")]
         public async Task<IActionResult> UploadStl (int id,  IFormFile file)
         {
@@ -164,9 +169,9 @@ namespace Backend.Controllers
                 return BadRequest(new { error = "Aucun fichier fourni" });
             }
 
-            if (file.Length > MaxUploadSizeBytes)
+            if (file.Length > _maxUploadSizeBytes)
             {
-                return BadRequest(new { error = "Fichier trop volumineux. Taille maximale: 100 Mo" });
+                return BadRequest(new { error = $"Fichier trop volumineux. Taille maximale: {_maxUploadSizeMb} Mo" });
             }
 
             var piece = await _pieceService.GetByIdAsync(id);
@@ -313,14 +318,15 @@ namespace Backend.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Pieces_{DateTime.Now:yyyyMMdd}.xlsx");
         }
         [HttpPost("{id}/analyze-stl")]
+        [RequestSizeLimit(DefaultMaxUploadSizeMb * 1024L * 1024L)]
         [Authorize(Roles = "Admin,Designer")]
         public async Task<IActionResult> AnalyzeSTL(int id, IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { error = "Aucun fichier fourni" });
 
-            if (file.Length > MaxUploadSizeBytes)
-                return BadRequest(new { error = "Fichier trop volumineux. Taille maximale: 100 Mo" });
+            if (file.Length > _maxUploadSizeBytes)
+                return BadRequest(new { error = $"Fichier trop volumineux. Taille maximale: {_maxUploadSizeMb} Mo" });
 
             if (!string.Equals(Path.GetExtension(file.FileName), ".stl", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(new { error = "Seuls les fichiers STL peuvent être analysés" });

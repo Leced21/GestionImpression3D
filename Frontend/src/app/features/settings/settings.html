@@ -63,6 +63,11 @@
                     <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                 </select>
             </div>
+            <div class="setting-group">
+                <label>Prix de l'électricité (€/kWh)</label>
+                <input type="number" [(ngModel)]="settings.electricityPricePerKwh"
+                    min="0" step="0.0001" placeholder="Ex: 0.25">
+            </div>
         </div>
     </div>
 

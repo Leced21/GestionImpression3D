@@ -37,10 +37,10 @@
             [class.invalid]="pieceForm.get('reference')?.invalid && pieceForm.get('reference')?.touched">
           <div class="error-message"
             *ngIf="pieceForm.get('reference')?.invalid && pieceForm.get('reference')?.touched">
-            Format attendu : XXX-000 (ex: MEC-001)
+            Format attendu : XXX-000 ou VAS-XXX-000 (ex: MEC-001, VAS-CYL-001)
           </div>
           <div class="helper-text" *ngIf="pieceForm.get('reference')?.valid">Laissez vide pour génération
-            automatique à partir de la catégorie</div>
+            automatique à partir de la catégorie et de la forme</div>
         </div>
       </div>
 
@@ -158,6 +158,20 @@
           </select>
         </div>
 
+        <div class="form-group" *ngIf="isDecoration">
+          <label for="formeVase">Forme du vase</label>
+          <select id="formeVase" formControlName="formeVase">
+            <option value="Cylindrique">Cylindrique</option>
+            <option value="Conique">Conique</option>
+            <option value="Organique">Organique</option>
+            <option value="Twiste">Twisté / torsadé</option>
+            <option value="Geometrique">Géométrique</option>
+            <option value="Minimaliste">Minimaliste</option>
+            <option value="Moderne">Moderne</option>
+            <option value="Classique">Classique</option>
+          </select>
+        </div>
+
         <div class="form-group">
           <label for="materiau">Matériau</label>
           <select id="materiau" formControlName="materiau">
@@ -175,50 +189,8 @@
       </div>
     </div>
 
-    <!-- Section 4: Fichier STL -->
-    <div class="form-section">
-      <h2 class="section-title">📁 Fichier 3D</h2>
-
-      <div class="file-zone" (click)="fileInput.click()"
-        (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
-        <input
-          type="file"
-          #fileInput
-          accept=".stl,.step,.3mf"
-          (change)="onFileSelected($event)"
-          style="display: none">
-
-        <div *ngIf="!selectedFile && !pieceForm.get('stlFileName')?.value"
-          class="file-placeholder">
-          <div class="file-icon">📁</div>
-          <p>Cliquez ou glissez un fichier STL</p>
-          <span class="file-hint">Formats supportés : STL, STEP, 3MF</span>
-        </div>
-
-        <div *ngIf="selectedFile" class="file-info">
-          <div class="file-icon">📄</div>
-          <div class="file-details">
-            <strong>{{ selectedFile.name }}</strong>
-            <span>{{ (selectedFile.size / 1024 / 1024) | number:'1.2-2' }}
-              MB</span>
-          </div>
-          <button type="button" class="btn-remove"
-            (click)="removeFile($event)">✕</button>
-        </div>
-
-        <div *ngIf="!selectedFile && pieceForm.get('stlFileName')?.value"
-          class="file-info existing">
-          <div class="file-icon">📄</div>
-          <div class="file-details">
-            <strong>{{ pieceForm.get('stlFileName')?.value }}</strong>
-            <span>Fichier existant</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 5: Fiche produit -->
-    <div class="form-section">
+    <!-- Section 4: Fiche produit -->
+    <div class="form-section" *ngIf="canEditFicheProduit">
       <h2 class="section-title">🛍️ Fiche produit</h2>
       <p class="helper-text">Ces informations servent uniquement à générer la
         fiche produit (PDF). Dimensions, volume et poids sont calculés

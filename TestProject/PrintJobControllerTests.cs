@@ -202,7 +202,7 @@ namespace TestProject
 
         private async Task<int> CreatePieceAsync(string nom)
         {
-            var newPiece = new { Nom = nom, Reference = $"REF-{DateTime.UtcNow.Ticks}" };
+            var newPiece = new { Nom = nom, Reference = $"REF-{DateTime.UtcNow.Ticks % 1000:D3}" };
             var content = new StringContent(JsonSerializer.Serialize(newPiece), Encoding.UTF8, "application/json");
             var request = new HttpRequestMessage(HttpMethod.Post, "/api/piece") { Content = content };
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);

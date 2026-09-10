@@ -10,17 +10,26 @@ namespace Backend.Repositories
     public class DevisRepository : IDevisRepository
     {
         private readonly AppDbContext _context;
+        private static readonly SemaphoreSlim NumberGenerationLock = new(1, 1);
         public DevisRepository(AppDbContext context)
         {
             _context = context;
         }
         public async Task<Devis> CreateAsync(Devis devis)
         {
-            devis.NumeroDevis = await GenerateDevisNumberAsync();
-            devis.CreatedAt = DateTime.UtcNow;
-            _context.Devis.Add(devis);
-            await _context.SaveChangesAsync();
-            return devis;
+            await NumberGenerationLock.WaitAsync();
+            try
+            {
+                devis.NumeroDevis = await GenerateDevisNumberAsync();
+                devis.CreatedAt = DateTime.UtcNow;
+                _context.Devis.Add(devis);
+                await _context.SaveChangesAsync();
+                return devis;
+            }
+            finally
+            {
+                NumberGenerationLock.Release();
+            }
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -36,19 +45,17 @@ namespace Backend.Repositories
         public async Task<string> GenerateDevisNumberAsync()
         {
             var year = DateTime.Now.Year;
-            var lastDevis = await _context.Devis
+            var devisNumbers = await _context.Devis
                 .Where(d => d.NumeroDevis.StartsWith($"DEV-{year}"))
-                .OrderByDescending(d => d.NumeroDevis)
-                .FirstOrDefaultAsync();
+                .Select(d => d.NumeroDevis)
+                .ToListAsync();
 
-            int nextNumber = 1;
-            if (lastDevis != null)
-            {
-                var lastNumber = int.Parse(lastDevis.NumeroDevis.Split('-').Last());
-                nextNumber = lastNumber + 1;
-            }
+            var maxNumber = devisNumbers
+                .Select(numero => int.TryParse(numero.Split('-').LastOrDefault(), out var n) ? n : 0)
+                .DefaultIfEmpty(0)
+                .Max();
 
-            return $"DEV-{year}-{nextNumber:D4}";
+            return $"DEV-{year}-{maxNumber + 1:D4}";
         }
 
         public async Task<IEnumerable<Devis>> GetAllAsync()

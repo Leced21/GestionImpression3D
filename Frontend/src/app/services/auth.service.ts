@@ -1,7 +1,7 @@
 // src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, tap, throwError, of, map } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthResponse, ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, User } from '../models/user.model';
 import { API_BASE_URL, AUTH_TOKEN_KEY, CURRENT_USER_KEY } from '../config/api.config';
@@ -11,6 +11,7 @@ import { REFRESH_TOKEN_KEY } from '../config/api.config';
 export class AuthService {
   private apiUrl = `${API_BASE_URL}/auth`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private refreshRequest$: Observable<boolean> | null = null;
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
@@ -127,8 +128,8 @@ export class AuthService {
     };
 
     localStorage.setItem(AUTH_TOKEN_KEY, response.token);
-    if ((response as any).refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, (response as any).refreshToken);
+    if (response.refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
     }
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
     this.currentUserSubject.next(user);
@@ -136,20 +137,30 @@ export class AuthService {
 
   // Attempt to refresh JWT using refresh token or current token
   refreshToken(): Observable<boolean> {
+    if (this.refreshRequest$) {
+      return this.refreshRequest$;
+    }
+
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
       return of(false);
     }
 
-    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
+    this.refreshRequest$ = this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
       tap(response => this.storeAuthResponse(response)),
       map(() => true),
       catchError(err => {
         console.warn('Refresh token failed', err);
         this.logout();
         return of(false);
-      })
+      }),
+      finalize(() => {
+        this.refreshRequest$ = null;
+      }),
+      shareReplay(1)
     );
+
+    return this.refreshRequest$;
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

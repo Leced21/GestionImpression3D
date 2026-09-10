@@ -140,11 +140,11 @@ namespace Backend.Services
                             column.Item()
                                 .Row(row =>
                                 {
-                                    row.RelativeColumn().AlignLeft()
+                                    row.RelativeItem().AlignLeft()
                                         .Text("PLAN TECHNIQUE")
                                         .SemiBold().FontSize(16).FontColor(Colors.Blue.Medium);
 
-                                    row.RelativeColumn().AlignRight()
+                                    row.RelativeItem().AlignRight()
                                         .Text($"Réf. {piece.Reference}")
                                         .FontSize(10).FontColor(Colors.Grey.Medium);
                                 });
@@ -255,7 +255,7 @@ namespace Backend.Services
                                     inner.Item()
                                         .Row(row =>
                                         {
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue de face")
@@ -270,7 +270,7 @@ namespace Backend.Services
                                                         sharedScale, cellSize);
                                                 });
 
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue de côté")
@@ -289,7 +289,7 @@ namespace Backend.Services
                                     inner.Item().PaddingTop(10)
                                         .Row(row =>
                                         {
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue de dessus")
@@ -304,7 +304,7 @@ namespace Backend.Services
                                                         sharedScale, cellSize);
                                                 });
 
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue isométrique")
@@ -487,11 +487,11 @@ namespace Backend.Services
                                 column.Item()
                                     .Row(row =>
                                     {
-                                        row.RelativeColumn().AlignLeft()
+                                        row.RelativeItem().AlignLeft()
                                             .Text($"PROJET: {project.Reference}")
                                             .SemiBold().FontSize(14).FontColor(Colors.Blue.Medium);
 
-                                        row.RelativeColumn().AlignRight()
+                                        row.RelativeItem().AlignRight()
                                             .Text($"Pièce {project.ProjetPieces.IndexOf(projectPiece) + 1}/{project.ProjetPieces.Count}")
                                             .FontSize(10).FontColor(Colors.Grey.Medium);
                                     });
@@ -499,11 +499,11 @@ namespace Backend.Services
                                 column.Item()
                                     .Row(row =>
                                     {
-                                        row.RelativeColumn()
+                                        row.RelativeItem()
                                             .Text($"Référence: {piece.Reference}")
                                             .FontSize(10);
 
-                                        row.RelativeColumn()
+                                        row.RelativeItem()
                                             .AlignRight()
                                             .Text($"Quantité: {projectPiece.Quantite}")
                                             .FontSize(10);
@@ -544,7 +544,7 @@ namespace Backend.Services
                                         inner.Item()
                                             .Row(row =>
                                             {
-                                                row.RelativeColumn()
+                                                row.RelativeItem()
                                                     .Column(col =>
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Face")
@@ -558,7 +558,7 @@ namespace Backend.Services
                                                             sharedScale, cellSize);
                                                     });
 
-                                                row.RelativeColumn()
+                                                row.RelativeItem()
                                                     .Column(col =>
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Côté")
@@ -572,7 +572,7 @@ namespace Backend.Services
                                                             sharedScale, cellSize);
                                                     });
 
-                                                row.RelativeColumn()
+                                                row.RelativeItem()
                                                     .Column(col =>
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Dessus")

@@ -56,9 +56,16 @@ namespace Backend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdatePrinterRequest request)
         {
-            var printer = await _printerService.UpdateAsync(id, request);
-            if (printer == null) return NotFound();
-            return Ok(printer);
+            try
+            {
+                var printer = await _printerService.UpdateAsync(id, request);
+                if (printer == null) return NotFound();
+                return Ok(printer);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPatch("{id}/status")]

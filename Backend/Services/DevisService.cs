@@ -26,6 +26,8 @@ namespace Backend.Services
         }
         public async Task<Devis> CreateAsync(CreateDevisRequest request)
         {
+            ValidateDevisRequest(request);
+
             var client = await _clientRepository.GetByIdAsync(request.ClientId);
             if (client == null)
                 throw new InvalidOperationException("Client non trouvé");
@@ -90,6 +92,8 @@ namespace Backend.Services
 
             if (existing.Statut == DevisStatus.Accepté)
                 throw new InvalidOperationException("Un devis accepté ne peut plus être modifié.");
+
+            ValidateDevisRequest(request);
 
             var client = await _clientRepository.GetByIdAsync(request.ClientId);
             if (client == null)
@@ -232,6 +236,42 @@ namespace Backend.Services
                 return;
 
             await _factureService.CreateFromDevisAsync(devis);
+        }
+
+        private static void ValidateDevisRequest(CreateDevisRequest request)
+        {
+            ValidateDevisValues(request.ClientId, request.DateValidite, request.TVA, request.Lignes);
+        }
+
+        private static void ValidateDevisRequest(UpdateDevisRequest request)
+        {
+            ValidateDevisValues(request.ClientId, request.DateValidite, request.TVA, request.Lignes);
+        }
+
+        private static void ValidateDevisValues(int clientId, DateTime dateValidite, decimal tva, IReadOnlyCollection<DevisLigneRequest> lignes)
+        {
+            if (clientId <= 0)
+                throw new InvalidOperationException("Le client est obligatoire.");
+            if (dateValidite == default)
+                throw new InvalidOperationException("La date de validité est obligatoire.");
+            if (tva < 0 || tva > 100)
+                throw new InvalidOperationException("La TVA doit être comprise entre 0 et 100.");
+            if (lignes.Count == 0)
+                throw new InvalidOperationException("Un devis doit contenir au moins une ligne.");
+
+            foreach (var ligne in lignes)
+            {
+                if (ligne.PieceId.HasValue && ligne.PieceId.Value <= 0)
+                    throw new InvalidOperationException("L'identifiant de pièce est invalide.");
+                if (!ligne.PieceId.HasValue && string.IsNullOrWhiteSpace(ligne.Description))
+                    throw new InvalidOperationException("La description est obligatoire pour une ligne sans pièce.");
+                if (ligne.Quantite <= 0)
+                    throw new InvalidOperationException("La quantité doit être positive.");
+                if (ligne.PrixUnitaire < 0)
+                    throw new InvalidOperationException("Le prix unitaire ne peut pas être négatif.");
+
+                ligne.Description = ligne.Description.Trim();
+            }
         }
     }
 }

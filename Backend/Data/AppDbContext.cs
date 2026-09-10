@@ -53,6 +53,7 @@ namespace Backend.Data
                 // l'enum reste lisible en base et via JsonStringEnumConverter côté API.
                 entity.Property(e => e.Categorie).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Materiau).HasConversion<string>().HasMaxLength(50).IsRequired();
+                entity.Property(e => e.FormeVase).HasConversion<string>().HasMaxLength(50);
 
                 // 💡 FIX CATALOGUE : On force l'enum PieceStatus à s'enregistrer en texte
                 entity.Property(e => e.Statut)
@@ -150,6 +151,7 @@ namespace Backend.Data
                 entity.Property(e => e.Model).HasMaxLength(100);
                 entity.Property(e => e.Brand).HasMaxLength(100);
                 entity.Property(e => e.IpAddress).HasMaxLength(50);
+                entity.Property(e => e.PowerWatts).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.ApiKey).HasMaxLength(200);
             });
 
@@ -342,6 +344,16 @@ namespace Backend.Data
                 entity.Property(e => e.Severity).HasMaxLength(20);
                 entity.Property(e => e.Status).HasMaxLength(20);
                 entity.Property(e => e.Resolution).HasMaxLength(500);
+                entity.HasOne(e => e.ReportedByUser)
+                      .WithMany()
+                      .HasForeignKey(e => e.ReportedBy)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.ResolvedByUser)
+                      .WithMany()
+                      .HasForeignKey(e => e.ResolvedBy)
+                      .OnDelete(DeleteBehavior.SetNull);
+
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.OccurredAt);
             });
@@ -436,6 +448,7 @@ namespace Backend.Data
                 entity.Property(e => e.DateFormat).HasMaxLength(20);
                 entity.Property(e => e.Theme).HasMaxLength(20);
                 entity.Property(e => e.PrimaryColor).HasMaxLength(20);
+                entity.Property(e => e.ElectricityPricePerKwh).HasColumnType("decimal(18,4)");
 
                 entity.HasOne(e => e.User)
                       .WithMany()

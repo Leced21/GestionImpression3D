@@ -20,6 +20,7 @@ namespace Backend.Models
         // NOUVEAUX ATTRIBUTS POUR LE CATALOGUE
         public PieceCategorie Categorie { get; set; } = PieceCategorie.Mecanique;
         public PieceMateriau Materiau { get; set; } = PieceMateriau.PLA;
+        public PieceFormeVase? FormeVase { get; set; }
         public int Stock { get; set; } = 0;
         public string? ImageUrl { get; set; }
         public bool EstDisponible { get; set; } = true;

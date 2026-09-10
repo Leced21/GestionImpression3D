@@ -4,7 +4,7 @@ import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validatio
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import { PieceService } from "../../services/piece.service";
-import { Piece } from "../../models/piece.model";
+import { Piece, PieceStatus } from "../../models/piece.model";
 import { ToastService } from "../../services/toast.service";
 
 @Component({
@@ -20,7 +20,6 @@ export class PieceForm implements OnInit, OnDestroy {
   pieceId?: number;
   isSubmitting = false;
   submissionError: string = '';
-  selectedFile: File | null = null;
   private originalReference = '';
   private destroy$ = new Subject<void>();
 
@@ -59,8 +58,9 @@ export class PieceForm implements OnInit, OnDestroy {
       prixVente: [0, [Validators.min(0)]],
       statut: ['Brouillon'],
       stlFileName: [''],
-      categorie: ['Mecanique'],
+      categorie: ['Decoration'],
       materiau: ['PLA'],
+      formeVase: ['Cylindrique'],
       stock: [0],
       estDisponible: [true],
       couleurs: [''],
@@ -94,7 +94,7 @@ export class PieceForm implements OnInit, OnDestroy {
       const value = control.value;
       if (!value) return null;
       if (this.isEditMode && value === this.originalReference) return null;
-      return /^[A-Z]{3}-\d{3}$/.test(value) ? null : { pattern: true };
+      return /^[A-Z]{3}(-[A-Z]{3})?-\d{3}$/.test(value) ? null : { pattern: true };
     };
   }
 
@@ -114,6 +114,7 @@ export class PieceForm implements OnInit, OnDestroy {
           stlFileName: piece.stlFileName,
           categorie: piece.categorie,
           materiau: piece.materiau,
+          formeVase: piece.formeVase ?? 'Cylindrique',
           stock: piece.stock,
           estDisponible: piece.estDisponible,
           couleurs: piece.couleurs,
@@ -165,34 +166,6 @@ export class PieceForm implements OnInit, OnDestroy {
     return this.coutTotal > 0 ? (this.marge / this.coutTotal) * 100 : 0;
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
-    }
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  onFileDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.selectedFile = files[0];
-    }
-  }
-
-  removeFile(event: Event): void {
-    event.stopPropagation();
-    this.selectedFile = null;
-    this.pieceForm.patchValue({ stlFileName: '' });
-  }
-
   onSubmit(): void {
     if (this.pieceForm.invalid) {
       // Sans ça, un champ invalide mais jamais "touché" (ex: la référence d'une
@@ -207,9 +180,12 @@ export class PieceForm implements OnInit, OnDestroy {
     this.submissionError = '';
     this.isSubmitting = true;
 
-    const formValue = this.pieceForm.value;
-    // Si vide, le backend génère automatiquement une référence à partir de la
-    // catégorie (ex: MEC-001) ; sinon elle doit suivre le format XXX-000.
+    const formValue = { ...this.pieceForm.value };
+    if (formValue.categorie !== 'Decoration') {
+      formValue.formeVase = null;
+    }
+      // Si vide, le backend génère automatiquement une référence à partir de la
+      // catégorie, et pour les vases déco de la forme (ex: VAS-CYL-001).
 
     if (this.isEditMode && this.pieceId) {
       // Mode édition
@@ -236,13 +212,7 @@ export class PieceForm implements OnInit, OnDestroy {
         next: (newPiece) => {
           this.isSubmitting = false;
           this.toast.success('Pièce créée');
-
-          // Si un fichier STL est sélectionné, l'uploader
-          if (this.selectedFile) {
-            this.uploadStl(newPiece.id, this.selectedFile);
-          } else {
-            this.router.navigate(['/pieces', newPiece.id]);
-          }
+          this.router.navigate(['/pieces', newPiece.id]);
         },
         error: (err) => {
           this.submissionError = err?.message || 'Erreur lors de la création';
@@ -252,13 +222,21 @@ export class PieceForm implements OnInit, OnDestroy {
     }
   }
 
-  uploadStl(pieceId: number, file: File): void {
-    this.toast.info(`Fichier ${file.name} sélectionné. Upload STL à finaliser.`);
-    this.router.navigate(['/pieces', pieceId]);
-  }
-
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  get isDecoration(): boolean {
+    return this.pieceForm.get('categorie')?.value === 'Decoration';
+  }
+
+  get canEditFicheProduit(): boolean {
+    const statut = this.pieceForm.get('statut')?.value as PieceStatus | string | undefined;
+    return this.isEditMode && [
+      PieceStatus.Validation,
+      PieceStatus.Production,
+      PieceStatus.Commercialisable
+    ].includes(statut as PieceStatus);
   }
 }

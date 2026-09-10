@@ -28,7 +28,8 @@ namespace Backend.Services
                 request.IpAddress,
                 request.MaxPrintSizeX,
                 request.MaxPrintSizeY,
-                request.MaxPrintSizeZ
+                request.MaxPrintSizeZ,
+                request.PowerWatts
             );
 
             var created = await _printerRepository.CreateAsync(printer);
@@ -87,19 +88,21 @@ namespace Backend.Services
             if (printer == null) return null;
 
             var oldNom = printer.Nom;
+            if (!Enum.TryParse<PrinterType>(request.Type, true, out var type))
+                throw new ArgumentException($"Type d'imprimante invalide: {request.Type}");
 
-            // Mise à jour des propriétés
-            var propertyInfo = printer.GetType().GetProperty("Nom");
-            propertyInfo?.SetValue(printer, request.Nom);
-
-            propertyInfo = printer.GetType().GetProperty("IpAddress");
-            propertyInfo?.SetValue(printer, request.IpAddress);
-
-            propertyInfo = printer.GetType().GetProperty("IsActive");
-            propertyInfo?.SetValue(printer, request.IsActive);
-
-            propertyInfo = printer.GetType().GetProperty("UpdatedAt");
-            propertyInfo?.SetValue(printer, DateTime.UtcNow);
+            printer.UpdateDetails(
+                request.Nom,
+                request.Reference,
+                request.Model,
+                request.Brand,
+                type,
+                request.IpAddress,
+                request.MaxPrintSizeX,
+                request.MaxPrintSizeY,
+                request.MaxPrintSizeZ,
+                request.PowerWatts,
+                request.IsActive);
 
             var updated = await _printerRepository.UpdateAsync(printer);
 
@@ -155,6 +158,7 @@ namespace Backend.Services
                 MaxPrintSizeX = printer.MaxPrintSizeX,
                 MaxPrintSizeY = printer.MaxPrintSizeY,
                 MaxPrintSizeZ = printer.MaxPrintSizeZ,
+                PowerWatts = printer.PowerWatts,
                 TotalPrintHours = printer.TotalPrintHours,
                 TotalPrintJobs = printer.TotalPrintJobs,
                 LastMaintenance = printer.LastMaintenance,

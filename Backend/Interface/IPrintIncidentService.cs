@@ -11,6 +11,7 @@ namespace Backend.Interface
         Task<IEnumerable<PrintIncident>> GetByPrinterAsync(int printerId);
         Task<IEnumerable<PrintIncident>> GetByPrintJobAsync(int printJobId);
         Task<PrintIncident> CreateAsync(CreateIncidentRequest request);
+        Task<PrintIncident?> UpdateAsync(int id, CreateIncidentRequest request);
         Task<PrintIncident?> UpdateStatusAsync(int id, IncidentStatus status);
         Task<PrintIncident?> ResolveAsync(int id, ResolveIncidentRequest request);
         Task<bool> DeleteAsync(int id);

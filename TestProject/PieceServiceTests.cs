@@ -83,6 +83,53 @@ namespace TestProject
         }
 
         [Fact]
+        public async Task CreatePiece_WithDecorationVase_AutoGeneratesFromVaseShape()
+        {
+            var piece = new Piece
+            {
+                Nom = "Vase organique",
+                Reference = "",
+                Categorie = PieceCategorie.Decoration,
+                FormeVase = PieceFormeVase.Organique
+            };
+            _pieceRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<Piece>
+            {
+                new Piece { Id = 1, Reference = "VAS-ORG-001" },
+                new Piece { Id = 2, Reference = "VAS-ORG-002" },
+                new Piece { Id = 3, Reference = "VAS-CYL-001" }
+            });
+            _pieceRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Piece>())).ReturnsAsync((Piece p) => p);
+            _pieceVersionRepositoryMock.Setup(x => x.GetNextVersionNumberAsync(It.IsAny<int>())).ReturnsAsync(1);
+            _pieceVersionRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<PieceVersion>())).ReturnsAsync(new PieceVersion());
+
+            var result = await _pieceService.CreateAsync(piece);
+
+            Assert.Equal("VAS-ORG-003", result.Reference);
+            Assert.Equal(PieceFormeVase.Organique, result.FormeVase);
+        }
+
+        [Fact]
+        public async Task CreatePiece_WithVaseReferenceFormat_AcceptsReference()
+        {
+            var piece = new Piece
+            {
+                Nom = "Vase cylindrique",
+                Reference = "vas-cyl-001",
+                Categorie = PieceCategorie.Decoration,
+                FormeVase = PieceFormeVase.Cylindrique
+            };
+
+            _pieceRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<Piece>());
+            _pieceRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<Piece>())).ReturnsAsync((Piece p) => p);
+            _pieceVersionRepositoryMock.Setup(x => x.GetNextVersionNumberAsync(It.IsAny<int>())).ReturnsAsync(1);
+            _pieceVersionRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<PieceVersion>())).ReturnsAsync(new PieceVersion());
+
+            var result = await _pieceService.CreateAsync(piece);
+
+            Assert.Equal("VAS-CYL-001", result.Reference);
+        }
+
+        [Fact]
         public async Task CreatePiece_WithInvalidReferenceFormat_ThrowsArgumentException()
         {
             var piece = new Piece { Nom = "Test", Reference = "invalid" };

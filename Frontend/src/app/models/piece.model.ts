@@ -22,6 +22,7 @@ export interface Piece {
   dateModification?: Date;
   categorie?: string;      // Mecanique, Electronique, Decoration, Outillage
   materiau?: string;       // PLA, PETG, ABS, Resine
+  formeVase?: string;      // Cylindrique, Conique, Organique, Twiste, Geometrique, Minimaliste, Moderne, Classique
   stock?: number;
   imageUrl?: string;
   estDisponible?: boolean;

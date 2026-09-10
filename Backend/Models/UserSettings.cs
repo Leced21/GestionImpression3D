@@ -23,6 +23,9 @@
         // Sécurité
         public bool TwoFactorEnabled { get; set; } = false;
 
+        // Coûts
+        public decimal ElectricityPricePerKwh { get; set; } = 0.25m;
+
         // Métadonnées
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

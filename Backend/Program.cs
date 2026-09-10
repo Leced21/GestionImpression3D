@@ -8,6 +8,7 @@ using Backend.Options;
 using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +20,20 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+var maxUploadSizeMb = builder.Configuration.GetValue("Upload:MaxFileSizeMb", 500);
+var maxUploadSizeBytes = maxUploadSizeMb * 1024L * 1024L;
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = maxUploadSizeBytes;
+});
 
 // --- 1. Configuration des services de base ---
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxUploadSizeBytes;
+});
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     // Évite les boucles infinies de sérialisation JSON si vos entités ont des relations bidirectionnelles

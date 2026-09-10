@@ -43,7 +43,9 @@ export class PrinterForm implements OnInit {
       ipAddress: [''],
       maxPrintSizeX: [210],
       maxPrintSizeY: [210],
-      maxPrintSizeZ: [210]
+      maxPrintSizeZ: [210],
+      powerWatts: [120, [Validators.required, Validators.min(1)]],
+      isActive: [true]
     });
   }
 

@@ -13,6 +13,7 @@ namespace Backend.DTOs
         public int MaxPrintSizeX { get; set; }
         public int MaxPrintSizeY { get; set; }
         public int MaxPrintSizeZ { get; set; }
+        public decimal PowerWatts { get; set; }
         public int TotalPrintHours { get; set; }
         public int TotalPrintJobs { get; set; }
         public DateTime? LastMaintenance { get; set; }
@@ -53,12 +54,21 @@ namespace Backend.DTOs
         public int MaxPrintSizeX { get; set; }
         public int MaxPrintSizeY { get; set; }
         public int MaxPrintSizeZ { get; set; }
+        public decimal PowerWatts { get; set; } = 120m;
     }
 
     public class UpdatePrinterRequest
     {
         public string Nom { get; set; } = string.Empty;
+        public string Reference { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
         public string IpAddress { get; set; } = string.Empty;
+        public int MaxPrintSizeX { get; set; }
+        public int MaxPrintSizeY { get; set; }
+        public int MaxPrintSizeZ { get; set; }
+        public decimal PowerWatts { get; set; } = 120m;
         public bool IsActive { get; set; }
     }
 }
