@@ -33,9 +33,14 @@
             type="text"
             id="reference"
             formControlName="reference"
-            placeholder="Auto-généré si vide">
-          <div class="helper-text">Laissez vide pour génération
-            automatique</div>
+            placeholder="Ex: MEC-001 (auto-généré si vide)"
+            [class.invalid]="pieceForm.get('reference')?.invalid && pieceForm.get('reference')?.touched">
+          <div class="error-message"
+            *ngIf="pieceForm.get('reference')?.invalid && pieceForm.get('reference')?.touched">
+            Format attendu : XXX-000 ou VAS-XXX-000 (ex: MEC-001, VAS-CYL-001)
+          </div>
+          <div class="helper-text" *ngIf="pieceForm.get('reference')?.valid">Laissez vide pour génération
+            automatique à partir de la catégorie et de la forme</div>
         </div>
       </div>
 
@@ -146,10 +151,24 @@
         <div class="form-group">
           <label for="categorie">Catégorie</label>
           <select id="categorie" formControlName="categorie">
-            <option value="Mécanique">🔧 Mécanique</option>
-            <option value="Électronique">⚡ Électronique</option>
-            <option value="Décoration">🎨 Décoration</option>
+            <option value="Mecanique">🔧 Mécanique</option>
+            <option value="Electronique">⚡ Électronique</option>
+            <option value="Decoration">🎨 Décoration</option>
             <option value="Outillage">🔨 Outillage</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="isDecoration">
+          <label for="formeVase">Forme du vase</label>
+          <select id="formeVase" formControlName="formeVase">
+            <option value="Cylindrique">Cylindrique</option>
+            <option value="Conique">Conique</option>
+            <option value="Organique">Organique</option>
+            <option value="Twiste">Twisté / torsadé</option>
+            <option value="Geometrique">Géométrique</option>
+            <option value="Minimaliste">Minimaliste</option>
+            <option value="Moderne">Moderne</option>
+            <option value="Classique">Classique</option>
           </select>
         </div>
 
@@ -159,8 +178,15 @@
             <option value="PLA">PLA</option>
             <option value="PETG">PETG</option>
             <option value="ABS">ABS</option>
-            <option value="Résine">Résine</option>
+            <option value="Resine">Résine</option>
           </select>
+        </div>
+
+        <div class="form-group">
+          <label for="poidsProduitGrammes">Poids du produit (g)</label>
+          <input type="number" id="poidsProduitGrammes"
+            formControlName="poidsProduitGrammes" step="0.01" min="0"
+            placeholder="Ex: 350">
         </div>
 
         <div class="form-group">
@@ -170,54 +196,106 @@
       </div>
     </div>
 
-    <!-- Section 4: Fichier STL -->
+    <!-- Section 4: Catalogue -->
     <div class="form-section">
-      <h2 class="section-title">📁 Fichier 3D</h2>
+      <h2 class="section-title">🛍️ Catalogue</h2>
+      <p class="helper-text">Ces champs servent à créer les fiches commerciales,
+        le catalogue et les exports pour les réseaux sociaux.</p>
 
-      <div class="file-zone" (click)="fileInput.click()"
-        (dragover)="onDragOver($event)" (drop)="onFileDrop($event)">
-        <input
-          type="file"
-          #fileInput
-          accept=".stl,.step,.3mf"
-          (change)="onFileSelected($event)"
-          style="display: none">
-
-        <div *ngIf="!selectedFile && !pieceForm.get('stlFileName')?.value"
-          class="file-placeholder">
-          <div class="file-icon">📁</div>
-          <p>Cliquez ou glissez un fichier STL</p>
-          <span class="file-hint">Formats supportés : STL, STEP, 3MF</span>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nomCommercial">Nom commercial</label>
+          <input type="text" id="nomCommercial" formControlName="nomCommercial"
+            placeholder="Ex: Néria">
         </div>
 
-        <div *ngIf="selectedFile" class="file-info">
-          <div class="file-icon">📄</div>
-          <div class="file-details">
-            <strong>{{ selectedFile.name }}</strong>
-            <span>{{ (selectedFile.size / 1024 / 1024) | number:'1.2-2' }}
-              MB</span>
-          </div>
-          <button type="button" class="btn-remove"
-            (click)="removeFile($event)">✕</button>
+        <div class="form-group">
+          <label for="sloganProduit">Slogan produit</label>
+          <input type="text" id="sloganProduit" formControlName="sloganProduit"
+            placeholder="Ex: L'harmonie des courbes">
         </div>
 
-        <div *ngIf="!selectedFile && pieceForm.get('stlFileName')?.value"
-          class="file-info existing">
-          <div class="file-icon">📄</div>
-          <div class="file-details">
-            <strong>{{ pieceForm.get('stlFileName')?.value }}</strong>
-            <span>Fichier existant</span>
-          </div>
+        <div class="form-group">
+          <label for="accrocheMarketing">Accroche</label>
+          <input type="text" id="accrocheMarketing"
+            formControlName="accrocheMarketing"
+            placeholder="Ex: Sublimez votre intérieur">
         </div>
+      </div>
+
+      <div class="form-group">
+        <label for="descriptionMarketing">Description catalogue</label>
+        <textarea id="descriptionMarketing" formControlName="descriptionMarketing"
+          rows="3"
+          placeholder="Texte court et vendeur utilisé dans les fiches catalogue."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="hauteurCm">Hauteur (cm)</label>
+          <input type="number" id="hauteurCm" formControlName="hauteurCm"
+            step="0.01" min="0" placeholder="Ex: 25">
+        </div>
+
+        <div class="form-group">
+          <label for="ouvertureCm">Ouverture (cm)</label>
+          <input type="number" id="ouvertureCm" formControlName="ouvertureCm"
+            step="0.01" min="0" placeholder="Ex: 8.5">
+        </div>
+
+        <div class="form-group">
+          <label for="matiereMarketing">Matière affichée</label>
+          <input type="text" id="matiereMarketing" formControlName="matiereMarketing"
+            placeholder="Ex: PLA bio-sourcé">
+        </div>
+
+        <div class="form-group">
+          <label for="estEtanche">Étanchéité</label>
+          <select id="estEtanche" formControlName="estEtanche">
+            <option [ngValue]="false">Non</option>
+            <option [ngValue]="true">Oui</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="utilisationProduit">Utilisation</label>
+          <input type="text" id="utilisationProduit"
+            formControlName="utilisationProduit"
+            placeholder="Ex: Fleurs fraîches, fleurs séchées ou décoration seule">
+        </div>
+
+        <div class="form-group">
+          <label for="conseilsEntretien">Entretien</label>
+          <input type="text" id="conseilsEntretien"
+            formControlName="conseilsEntretien"
+            placeholder="Ex: Chiffon doux et eau tiède">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="colorisDisponibles">Coloris disponibles</label>
+        <input type="text" id="colorisDisponibles"
+          formControlName="colorisDisponibles"
+          placeholder="Ex: Coffee, White, Orange, Red, Olive Green">
+      </div>
+
+      <div class="form-group">
+        <label for="beneficesMarketing">Bénéfices marketing</label>
+        <textarea id="beneficesMarketing" formControlName="beneficesMarketing"
+          rows="3"
+          placeholder="Ex: Design intemporel; S'intègre partout; Étanche; Fabrication soignée"></textarea>
       </div>
     </div>
 
     <!-- Section 5: Fiche produit -->
-    <div class="form-section">
+    <div class="form-section" *ngIf="canEditFicheProduit">
       <h2 class="section-title">🛍️ Fiche produit</h2>
       <p class="helper-text">Ces informations servent uniquement à générer la
-        fiche produit (PDF). Dimensions, volume et poids sont calculés
-        automatiquement à partir du fichier STL.</p>
+        fiche produit (PDF). Dimensions et volume sont calculés automatiquement
+        à partir du fichier STL; le poids produit peut être saisi dans la section
+        commerciale.</p>
 
       <div class="form-row">
         <div class="form-group">
@@ -322,7 +400,7 @@
       <button type="button" class="btn-secondary"
         routerLink="/pieces">Annuler</button>
       <button type="submit" class="btn-primary"
-        [disabled]="pieceForm.invalid || isSubmitting">
+        [disabled]="isSubmitting">
         {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' :
         'Créer la pièce') }}
       </button>

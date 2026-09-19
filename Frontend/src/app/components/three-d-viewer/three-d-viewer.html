@@ -2,7 +2,7 @@
     <canvas #canvas3d class="viewer-canvas"></canvas>
 
     <!-- Contrôles des vues -->
-    <div class="view-controls">
+    <div class="view-controls" *ngIf="!compact">
         <button class="view-btn" [class.active]="currentView === 'perspective'"
             (click)="setView('perspective')">
             🎯 Perspective
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Panneau des dimensions -->
-    <div class="dimensions-panel" *ngIf="dimensions">
+    <div class="dimensions-panel" *ngIf="dimensions && !compact">
         <h4>📏 Dimensions réelles</h4>
         <div class="dimension-item">
             <span>Longueur (X) :</span>
@@ -52,7 +52,7 @@
     </div>
 
     <!-- Barre d'échelle -->
-    <div class="scale-bar" *ngIf="dimensions">
+    <div class="scale-bar" *ngIf="dimensions && !compact">
         <span>📏 Échelle</span>
         <div class="scale-line">
             <div class="scale-marker"></div>
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Contrôles bottom -->
-    <div class="bottom-controls">
+    <div class="bottom-controls" *ngIf="!compact">
         <button class="bottom-btn" (click)="resetView()">⟳
             Réinitialiser</button>
         <button class="bottom-btn" (click)="toggleWireframe()">🔲 Mode fil de
@@ -71,5 +71,12 @@
         <button class="bottom-btn" (click)="toggleAutoRotate()">🔄 Rotation
             auto</button>
         <button class="bottom-btn" (click)="centerView()">🎯 Centrer</button>
+    </div>
+
+    <div class="compact-controls" *ngIf="compact">
+        <button class="compact-btn" type="button" title="Réinitialiser"
+            (click)="resetView()">⟳</button>
+        <button class="compact-btn" type="button" title="Mode fil de fer"
+            (click)="toggleWireframe()">▣</button>
     </div>
 </div>

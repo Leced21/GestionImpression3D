@@ -18,11 +18,27 @@ namespace Backend.Models
         public DateTime DateCreation { get; set; } = DateTime.Now;
         public DateTime? DateModification { get; set; }
         // NOUVEAUX ATTRIBUTS POUR LE CATALOGUE
-        public string? Categorie { get; set; } = "Mécanique";  // Mécanique, Électronique, Décoration, Outillage
-        public string? Materiau { get; set; } = "PLA";         // PLA, PETG, ABS, Résine
+        public PieceCategorie Categorie { get; set; } = PieceCategorie.Mecanique;
+        public PieceMateriau Materiau { get; set; } = PieceMateriau.PLA;
+        public PieceFormeVase? FormeVase { get; set; }
+        public decimal? PoidsProduitGrammes { get; set; }
         public int Stock { get; set; } = 0;
         public string? ImageUrl { get; set; }
         public bool EstDisponible { get; set; } = true;
+
+        // Champs catalogue : présentation commerciale et exports réseaux sociaux.
+        public string? NomCommercial { get; set; }
+        public string? SloganProduit { get; set; }
+        public string? AccrocheMarketing { get; set; }
+        public string? DescriptionMarketing { get; set; }
+        public decimal? HauteurCm { get; set; }
+        public decimal? OuvertureCm { get; set; }
+        public string? MatiereMarketing { get; set; }
+        public bool EstEtanche { get; set; }
+        public string? UtilisationProduit { get; set; }
+        public string? ConseilsEntretien { get; set; }
+        public string? ColorisDisponibles { get; set; }
+        public string? BeneficesMarketing { get; set; }
 
         // Champs de la fiche produit (aucune source automatique : renseignés une fois ici,
         // réutilisés à chaque génération de la fiche).

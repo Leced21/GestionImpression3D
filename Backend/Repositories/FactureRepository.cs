@@ -9,6 +9,7 @@ namespace Backend.Repositories
     public class FactureRepository : IFactureRepository
     {
         private readonly AppDbContext _context;
+        private static readonly SemaphoreSlim NumberGenerationLock = new(1, 1);
         public FactureRepository(AppDbContext context)
         {
             _context = context;
@@ -16,11 +17,19 @@ namespace Backend.Repositories
 
         public async Task<Facture> CreateAsync(Facture facture)
         {
-            facture.NumeroFacture = await GenerateNumeroFactureAsync();
-            facture.CreatedAt = DateTime.UtcNow;
-            _context.Factures.Add(facture);
-            await _context.SaveChangesAsync();
-            return facture;
+            await NumberGenerationLock.WaitAsync();
+            try
+            {
+                facture.NumeroFacture = await GenerateNumeroFactureAsync();
+                facture.CreatedAt = DateTime.UtcNow;
+                _context.Factures.Add(facture);
+                await _context.SaveChangesAsync();
+                return facture;
+            }
+            finally
+            {
+                NumberGenerationLock.Release();
+            }
         }
 
         public async Task<bool> ExistsForDevisAsync(int devisId)
@@ -31,19 +40,17 @@ namespace Backend.Repositories
         public async Task<string> GenerateNumeroFactureAsync()
         {
             var year = DateTime.Now.Year;
-            var lastFacture = await _context.Factures
+            var factureNumbers = await _context.Factures
                 .Where(f => f.NumeroFacture.StartsWith($"FACT-{year}"))
-                .OrderByDescending(f => f.NumeroFacture)
-                .FirstOrDefaultAsync();
+                .Select(f => f.NumeroFacture)
+                .ToListAsync();
 
-            int nextNumber = 1;
-            if (lastFacture != null)
-            {
-                var lastNumber = int.Parse(lastFacture.NumeroFacture.Split('-').Last());
-                nextNumber = lastNumber + 1;
-            }
+            var maxNumber = factureNumbers
+                .Select(numero => int.TryParse(numero.Split('-').LastOrDefault(), out var n) ? n : 0)
+                .DefaultIfEmpty(0)
+                .Max();
 
-            return $"FACT-{year}-{nextNumber:D4}";
+            return $"FACT-{year}-{maxNumber + 1:D4}";
         }
 
         public async Task<IEnumerable<Facture>> GetAllAsync()

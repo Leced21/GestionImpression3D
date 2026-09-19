@@ -8,6 +8,7 @@ using Backend.Options;
 using Backend.Repositories;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +20,20 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+var maxUploadSizeMb = builder.Configuration.GetValue("Upload:MaxFileSizeMb", 500);
+var maxUploadSizeBytes = maxUploadSizeMb * 1024L * 1024L;
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = maxUploadSizeBytes;
+});
 
 // --- 1. Configuration des services de base ---
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxUploadSizeBytes;
+});
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     // Évite les boucles infinies de sérialisation JSON si vos entités ont des relations bidirectionnelles
@@ -203,6 +216,8 @@ builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IAuthMailSender, AuthMailSender>();
+builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<IPieceSocialExportService, PieceSocialExportService>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();
@@ -292,6 +307,10 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var failStartupOnMigrationError = app.Configuration.GetValue(
+        "Database:FailStartupOnMigrationError",
+        !app.Environment.IsDevelopment());
+
     try
     {
         logger.LogInformation("Attente de la base de données SQL Server...");
@@ -305,7 +324,13 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     catch (Exception ex)
     {
         app.Logger.LogCritical(ex, "Database migration failed during startup");
-        throw;
+        if (failStartupOnMigrationError)
+        {
+            throw;
+        }
+
+        app.Logger.LogWarning(
+            "Le démarrage continue sans migration automatique. Corrigez SQL Server/LocalDB puis lancez 'dotnet ef database update'.");
     }
 }
 app.MapGet("/", () => Results.Ok("3D Inspire API"));

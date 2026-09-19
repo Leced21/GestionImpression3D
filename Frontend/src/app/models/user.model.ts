@@ -47,6 +47,7 @@ export interface AuthResponse {
   role: string;
   token: string;
   expiration: Date;
+  refreshToken?: string;
 }
 
 export interface ForgotPasswordRequest {

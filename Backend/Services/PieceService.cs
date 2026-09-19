@@ -4,6 +4,7 @@ using Backend.Interface;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Backend.Services
 {
@@ -31,11 +32,21 @@ namespace Backend.Services
         {
             if (string.IsNullOrWhiteSpace(piece.Reference))
             {
-                piece.Reference = $"P-{DateTime.Now.Ticks}";
+                piece.Reference = await GenerateReferenceAsync(piece);
+            }
+            else
+            {
+                piece.Reference = piece.Reference.Trim().ToUpperInvariant();
+                if (!ReferencePattern.IsMatch(piece.Reference))
+                {
+                    throw new ArgumentException("La référence doit suivre le format XXX-000 ou VAS-XXX-000 (ex: MEC-001, VAS-CYL-001).");
+                }
+                await EnsureReferenceUniqueAsync(piece.Reference, excludeId: null);
             }
 
             piece.DateCreation = DateTime.Now;
             piece.Statut = PieceStatus.Brouillon;
+            ClearFicheProduitFields(piece);
 
             var created = await _pieceRepository.CreateAsync(piece);
 
@@ -98,6 +109,29 @@ namespace Backend.Services
             {
                 return null;
             }
+
+            if (string.IsNullOrWhiteSpace(piece.Reference))
+            {
+                piece.Reference = existingPiece.Reference;
+            }
+            else
+            {
+                piece.Reference = piece.Reference.Trim().ToUpperInvariant();
+                if (piece.Reference != existingPiece.Reference)
+                {
+                    if (!ReferencePattern.IsMatch(piece.Reference))
+                    {
+                        throw new ArgumentException("La référence doit suivre le format XXX-000 ou VAS-XXX-000 (ex: MEC-001, VAS-CYL-001).");
+                    }
+                    await EnsureReferenceUniqueAsync(piece.Reference, excludeId: id);
+                }
+            }
+
+            if (!CanEditFicheProduit(existingPiece.Statut))
+            {
+                PreserveFicheProduitFields(existingPiece, piece);
+            }
+
             if (existingPiece.Nom != piece.Nom)
             {
                 await _auditLogger.LogUpdateAsync(
@@ -148,7 +182,7 @@ namespace Backend.Services
             if (piece == null) return null;
 
             using var stream = file.OpenReadStream();
-            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, file.FileName, piece.Materiau);
+            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, file.FileName, piece.Materiau.ToString());
         }
 
         public async Task<STLMetadata?> AnalyzeAndSaveStlFileAsync(int pieceId, string filePath, string fileName)
@@ -157,7 +191,7 @@ namespace Backend.Services
             if (piece == null) return null;
 
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, fileName, piece.Materiau);
+            return await AnalyzeAndSaveStlStreamAsync(pieceId, stream, fileName, piece.Materiau.ToString());
         }
 
         private async Task<STLMetadata> AnalyzeAndSaveStlStreamAsync(int pieceId, Stream stream, string fileName, string? materiau)
@@ -193,6 +227,106 @@ namespace Backend.Services
 
             // On ne peut avancer que d'une étape (et pas reculer)
             return newIndex == oldIndex + 1;
+        }
+
+        private static bool CanEditFicheProduit(PieceStatus statut)
+        {
+            return statut is PieceStatus.Validation or PieceStatus.Production or PieceStatus.Commercialisable;
+        }
+
+        private static void ClearFicheProduitFields(Piece piece)
+        {
+            piece.Couleurs = null;
+            piece.CapaciteContenance = null;
+            piece.NormesCertifications = null;
+            piece.InstructionsUtilisation = null;
+            piece.PrecautionsUsage = null;
+            piece.PublicCible = null;
+            piece.Conditionnement = null;
+            piece.DimensionsColis = null;
+            piece.PoidsColisKg = null;
+            piece.MoqUnites = null;
+            piece.DelaiLivraisonJours = null;
+            piece.PointsForts = null;
+            piece.Faq = null;
+            piece.TarifsDegressifs = null;
+        }
+
+        private static void PreserveFicheProduitFields(Piece source, Piece target)
+        {
+            target.Couleurs = source.Couleurs;
+            target.CapaciteContenance = source.CapaciteContenance;
+            target.NormesCertifications = source.NormesCertifications;
+            target.InstructionsUtilisation = source.InstructionsUtilisation;
+            target.PrecautionsUsage = source.PrecautionsUsage;
+            target.PublicCible = source.PublicCible;
+            target.Conditionnement = source.Conditionnement;
+            target.DimensionsColis = source.DimensionsColis;
+            target.PoidsColisKg = source.PoidsColisKg;
+            target.MoqUnites = source.MoqUnites;
+            target.DelaiLivraisonJours = source.DelaiLivraisonJours;
+            target.PointsForts = source.PointsForts;
+            target.Faq = source.Faq;
+            target.TarifsDegressifs = source.TarifsDegressifs;
+        }
+
+        // Formats acceptés : l'ancien CAT-000 et la nomenclature vase VAS-FOR-000.
+        private static readonly Regex ReferencePattern = new(@"^[A-Z]{3}(-[A-Z]{3})?-\d{3}$", RegexOptions.Compiled);
+
+        private static string GetCategoriePrefix(PieceCategorie categorie) => categorie switch
+        {
+            PieceCategorie.Mecanique => "MEC",
+            PieceCategorie.Electronique => "ELE",
+            PieceCategorie.Decoration => "DEC",
+            PieceCategorie.Outillage => "OUT",
+            _ => "GEN"
+        };
+
+        private static string GetFormeVasePrefix(PieceFormeVase? forme) => forme switch
+        {
+            PieceFormeVase.Conique => "CON",
+            PieceFormeVase.Organique => "ORG",
+            PieceFormeVase.Twiste => "TWI",
+            PieceFormeVase.Geometrique => "GEO",
+            PieceFormeVase.Minimaliste => "MIN",
+            PieceFormeVase.Moderne => "MOD",
+            PieceFormeVase.Classique => "CLA",
+            _ => "CYL"
+        };
+
+        private static string GetReferencePrefix(Piece piece)
+        {
+            if (piece.Categorie == PieceCategorie.Decoration)
+            {
+                piece.FormeVase ??= PieceFormeVase.Cylindrique;
+                return $"VAS-{GetFormeVasePrefix(piece.FormeVase)}";
+            }
+
+            return GetCategoriePrefix(piece.Categorie);
+        }
+
+        private async Task<string> GenerateReferenceAsync(Piece piece)
+        {
+            var prefix = GetReferencePrefix(piece);
+            var existing = await _pieceRepository.GetAllAsync() ?? Enumerable.Empty<Piece>();
+
+            var maxSeq = existing
+                .Where(p => !string.IsNullOrEmpty(p.Reference) && p.Reference.StartsWith(prefix + "-"))
+                .Select(p => int.TryParse(p.Reference.Substring(prefix.Length + 1), out var n) ? n : 0)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return $"{prefix}-{(maxSeq + 1):D3}";
+        }
+
+        private async Task EnsureReferenceUniqueAsync(string reference, int? excludeId)
+        {
+            var existing = await _pieceRepository.GetAllAsync() ?? Enumerable.Empty<Piece>();
+            var duplicate = existing.Any(p => p.Reference == reference && p.Id != excludeId);
+            if (duplicate)
+            {
+                throw new ArgumentException($"La référence '{reference}' est déjà utilisée.");
+            }
         }
     }
 }

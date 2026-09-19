@@ -41,6 +41,10 @@
                         <span>{{ printer.ipAddress || 'Non configurée' }}</span>
                     </div>
                     <div class="info-row">
+                        <span>Puissance moyenne</span>
+                        <strong>{{ printer.powerWatts || 120 }} W</strong>
+                    </div>
+                    <div class="info-row">
                         <span>Statut</span>
                         <div class="status-indicator">
                             <div class="status-led"

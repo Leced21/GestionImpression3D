@@ -60,7 +60,8 @@ namespace Backend.Services
                     StockAlerts = true,
                     ProductionAlerts = true,
                     WeeklyReports = false,
-                    TwoFactorEnabled = false
+                    TwoFactorEnabled = false,
+                    ElectricityPricePerKwh = 0.25m
                 };
 
                 settings = await _settingsRepository.CreateAsync(defaultSettings);
@@ -131,6 +132,7 @@ namespace Backend.Services
             setting.ProductionAlerts = settings.ProductionAlerts;
             setting.WeeklyReports = settings.WeeklyReports;
             setting.TwoFactorEnabled = settings.TwoFactorEnabled;
+            setting.ElectricityPricePerKwh = settings.ElectricityPricePerKwh < 0 ? 0 : settings.ElectricityPricePerKwh;
 
             var updated = setting.Id == 0
                 ? await _settingsRepository.CreateAsync(setting)
@@ -153,7 +155,8 @@ namespace Backend.Services
                 StockAlerts = settings.StockAlerts,
                 ProductionAlerts = settings.ProductionAlerts,
                 WeeklyReports = settings.WeeklyReports,
-                TwoFactorEnabled = settings.TwoFactorEnabled
+                TwoFactorEnabled = settings.TwoFactorEnabled,
+                ElectricityPricePerKwh = settings.ElectricityPricePerKwh
             };
         }
     }

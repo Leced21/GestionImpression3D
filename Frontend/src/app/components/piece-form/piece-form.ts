@@ -1,10 +1,10 @@
 import { CommonModule } from "@angular/common";
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from "@angular/core";
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 import { PieceService } from "../../services/piece.service";
-import { Piece } from "../../models/piece.model";
+import { Piece, PieceStatus } from "../../models/piece.model";
 import { ToastService } from "../../services/toast.service";
 
 @Component({
@@ -20,7 +20,7 @@ export class PieceForm implements OnInit, OnDestroy {
   pieceId?: number;
   isSubmitting = false;
   submissionError: string = '';
-  selectedFile: File | null = null;
+  private originalReference = '';
   private destroy$ = new Subject<void>();
 
   // Calculs en temps réel
@@ -50,7 +50,7 @@ export class PieceForm implements OnInit, OnDestroy {
   initForm(): void {
     this.pieceForm = this.fb.group({
       nom: ['', Validators.required],
-      reference: [''],
+      reference: ['', [this.referenceFormatValidator()]],
       description: [''],
       coutMatiere: [0, [Validators.min(0)]],
       coutMachine: [0, [Validators.min(0)]],
@@ -58,10 +58,24 @@ export class PieceForm implements OnInit, OnDestroy {
       prixVente: [0, [Validators.min(0)]],
       statut: ['Brouillon'],
       stlFileName: [''],
-      categorie: ['Mécanique'],
+      categorie: ['Decoration'],
       materiau: ['PLA'],
+      formeVase: ['Cylindrique'],
+      poidsProduitGrammes: [null, [Validators.min(0)]],
       stock: [0],
       estDisponible: [true],
+      nomCommercial: [''],
+      sloganProduit: [''],
+      accrocheMarketing: [''],
+      descriptionMarketing: [''],
+      hauteurCm: [null, [Validators.min(0)]],
+      ouvertureCm: [null, [Validators.min(0)]],
+      matiereMarketing: [''],
+      estEtanche: [false],
+      utilisationProduit: [''],
+      conseilsEntretien: [''],
+      colorisDisponibles: [''],
+      beneficesMarketing: [''],
       couleurs: [''],
       capaciteContenance: [''],
       normesCertifications: [''],
@@ -84,9 +98,23 @@ export class PieceForm implements OnInit, OnDestroy {
     });
   }
 
+  // Même logique que le backend : ne valide le format XXX-000 que si la
+  // référence a été modifiée. Sans ça, une pièce existante créée avec
+  // l'ancien format (ex: P-<timestamp>) devenait impossible à modifier,
+  // même pour changer un champ sans rapport comme la fiche produit.
+  private referenceFormatValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (!value) return null;
+      if (this.isEditMode && value === this.originalReference) return null;
+      return /^[A-Z]{3}(-[A-Z]{3})?-\d{3}$/.test(value) ? null : { pattern: true };
+    };
+  }
+
   loadPiece(id: number): void {
     this.pieceService.getById(id).subscribe({
       next: (piece: Piece) => {
+        this.originalReference = piece.reference;
         this.pieceForm.patchValue({
           nom: piece.nom,
           reference: piece.reference,
@@ -99,8 +127,22 @@ export class PieceForm implements OnInit, OnDestroy {
           stlFileName: piece.stlFileName,
           categorie: piece.categorie,
           materiau: piece.materiau,
+          formeVase: piece.formeVase ?? 'Cylindrique',
+          poidsProduitGrammes: piece.poidsProduitGrammes,
           stock: piece.stock,
           estDisponible: piece.estDisponible,
+          nomCommercial: piece.nomCommercial,
+          sloganProduit: piece.sloganProduit,
+          accrocheMarketing: piece.accrocheMarketing,
+          descriptionMarketing: piece.descriptionMarketing,
+          hauteurCm: piece.hauteurCm,
+          ouvertureCm: piece.ouvertureCm,
+          matiereMarketing: piece.matiereMarketing,
+          estEtanche: piece.estEtanche,
+          utilisationProduit: piece.utilisationProduit,
+          conseilsEntretien: piece.conseilsEntretien,
+          colorisDisponibles: piece.colorisDisponibles,
+          beneficesMarketing: piece.beneficesMarketing,
           couleurs: piece.couleurs,
           capaciteContenance: piece.capaciteContenance,
           normesCertifications: piece.normesCertifications,
@@ -150,46 +192,26 @@ export class PieceForm implements OnInit, OnDestroy {
     return this.coutTotal > 0 ? (this.marge / this.coutTotal) * 100 : 0;
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
-    }
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  onFileDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.selectedFile = files[0];
-    }
-  }
-
-  removeFile(event: Event): void {
-    event.stopPropagation();
-    this.selectedFile = null;
-    this.pieceForm.patchValue({ stlFileName: '' });
-  }
-
   onSubmit(): void {
-    if (this.pieceForm.invalid) return;
+    if (this.pieceForm.invalid) {
+      // Sans ça, un champ invalide mais jamais "touché" (ex: la référence d'une
+      // pièce existante ne respectant plus le format XXX-000) bloquait la
+      // soumission sans aucun message, ce qui semblait provenir de la section
+      // Fiche produit juste au-dessus du bouton.
+      this.pieceForm.markAllAsTouched();
+      this.submissionError = 'Merci de corriger les champs en erreur (voir ci-dessus, notamment la Référence).';
+      return;
+    }
 
     this.submissionError = '';
     this.isSubmitting = true;
 
-    const formValue = this.pieceForm.value;
-
-    // Générer une référence si vide
-    if (!formValue.reference) {
-      formValue.reference = `P-${Date.now()}`;
+    const formValue = { ...this.pieceForm.value };
+    if (formValue.categorie !== 'Decoration') {
+      formValue.formeVase = null;
     }
+      // Si vide, le backend génère automatiquement une référence à partir de la
+      // catégorie, et pour les vases déco de la forme (ex: VAS-CYL-001).
 
     if (this.isEditMode && this.pieceId) {
       // Mode édition
@@ -216,13 +238,7 @@ export class PieceForm implements OnInit, OnDestroy {
         next: (newPiece) => {
           this.isSubmitting = false;
           this.toast.success('Pièce créée');
-
-          // Si un fichier STL est sélectionné, l'uploader
-          if (this.selectedFile) {
-            this.uploadStl(newPiece.id, this.selectedFile);
-          } else {
-            this.router.navigate(['/pieces', newPiece.id]);
-          }
+          this.router.navigate(['/pieces', newPiece.id]);
         },
         error: (err) => {
           this.submissionError = err?.message || 'Erreur lors de la création';
@@ -232,13 +248,21 @@ export class PieceForm implements OnInit, OnDestroy {
     }
   }
 
-  uploadStl(pieceId: number, file: File): void {
-    this.toast.info(`Fichier ${file.name} sélectionné. Upload STL à finaliser.`);
-    this.router.navigate(['/pieces', pieceId]);
-  }
-
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  get isDecoration(): boolean {
+    return this.pieceForm.get('categorie')?.value === 'Decoration';
+  }
+
+  get canEditFicheProduit(): boolean {
+    const statut = this.pieceForm.get('statut')?.value as PieceStatus | string | undefined;
+    return this.isEditMode && [
+      PieceStatus.Validation,
+      PieceStatus.Production,
+      PieceStatus.Commercialisable
+    ].includes(statut as PieceStatus);
   }
 }

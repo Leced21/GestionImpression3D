@@ -63,7 +63,7 @@ namespace TestProject
             using var streamPetg = BuildSingleTriangleBinaryStl();
 
             var metadataPla = await _service.AnalyzeAsync(streamPla, "test.stl", pieceId: 1, "PLA");
-            var metadataPetg = await _service.AnalyzeAsync(streamPetg, "test.stl", pieceId: 1, "PETG");
+            var metadataPetg = await _service.AnalyzeAsync(streamPetg, "test.stl", pieceId: 1, "ABS");
 
             Assert.Equal(metadataPla.Volume, metadataPetg.Volume);
             Assert.NotEqual(metadataPla.EstimatedWeight, metadataPetg.EstimatedWeight);

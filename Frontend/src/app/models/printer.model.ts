@@ -26,6 +26,7 @@ export interface Printer {
   maxPrintSizeX: number;
   maxPrintSizeY: number;
   maxPrintSizeZ: number;
+  powerWatts: number;
   totalPrintHours: number;
   totalPrintJobs: number;
   lastMaintenance?: Date;

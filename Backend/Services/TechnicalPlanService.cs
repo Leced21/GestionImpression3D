@@ -140,11 +140,11 @@ namespace Backend.Services
                             column.Item()
                                 .Row(row =>
                                 {
-                                    row.RelativeColumn().AlignLeft()
+                                    row.RelativeItem().AlignLeft()
                                         .Text("PLAN TECHNIQUE")
                                         .SemiBold().FontSize(16).FontColor(Colors.Blue.Medium);
 
-                                    row.RelativeColumn().AlignRight()
+                                    row.RelativeItem().AlignRight()
                                         .Text($"Réf. {piece.Reference}")
                                         .FontSize(10).FontColor(Colors.Grey.Medium);
                                 });
@@ -183,13 +183,13 @@ namespace Backend.Services
                                         table.Cell().Background(Colors.White).Padding(5)
                                             .Text("Catégorie:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.White).Padding(5)
-                                            .Text(piece.Categorie ?? "N/A").FontSize(9);
+                                            .Text(piece.Categorie.ToString()).FontSize(9);
 
                                         // Matériau / Statut
                                         table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                             .Text("Matériau:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
-                                            .Text(piece.Materiau ?? "N/A").FontSize(9);
+                                            .Text(piece.Materiau.ToString()).FontSize(9);
                                         table.Cell().Background(Colors.White).Padding(5)
                                             .Text("Statut:").Bold().FontSize(9);
                                         table.Cell().Background(Colors.White).Padding(5)
@@ -255,7 +255,7 @@ namespace Backend.Services
                                     inner.Item()
                                         .Row(row =>
                                         {
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue de face")
@@ -270,7 +270,7 @@ namespace Backend.Services
                                                         sharedScale, cellSize);
                                                 });
 
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue de côté")
@@ -289,7 +289,7 @@ namespace Backend.Services
                                     inner.Item().PaddingTop(10)
                                         .Row(row =>
                                         {
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue de dessus")
@@ -304,7 +304,7 @@ namespace Backend.Services
                                                         sharedScale, cellSize);
                                                 });
 
-                                            row.RelativeColumn()
+                                            row.RelativeItem()
                                                 .Column(col =>
                                                 {
                                                     col.Item().PaddingBottom(5).Text("Vue isométrique")
@@ -439,7 +439,7 @@ namespace Backend.Services
                                     table.Cell().Padding(5).Text(piece.Reference).FontSize(8);
                                     table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                         .Text("Matériau:").Bold().FontSize(8);
-                                    table.Cell().Padding(5).Text(piece.Materiau ?? "N/A").FontSize(8);
+                                    table.Cell().Padding(5).Text(piece.Materiau.ToString()).FontSize(8);
 
                                     table.Cell().Background(Colors.Grey.Lighten4).Padding(5)
                                         .Text("Dessiné par:").Bold().FontSize(8);
@@ -487,11 +487,11 @@ namespace Backend.Services
                                 column.Item()
                                     .Row(row =>
                                     {
-                                        row.RelativeColumn().AlignLeft()
+                                        row.RelativeItem().AlignLeft()
                                             .Text($"PROJET: {project.Reference}")
                                             .SemiBold().FontSize(14).FontColor(Colors.Blue.Medium);
 
-                                        row.RelativeColumn().AlignRight()
+                                        row.RelativeItem().AlignRight()
                                             .Text($"Pièce {project.ProjetPieces.IndexOf(projectPiece) + 1}/{project.ProjetPieces.Count}")
                                             .FontSize(10).FontColor(Colors.Grey.Medium);
                                     });
@@ -499,11 +499,11 @@ namespace Backend.Services
                                 column.Item()
                                     .Row(row =>
                                     {
-                                        row.RelativeColumn()
+                                        row.RelativeItem()
                                             .Text($"Référence: {piece.Reference}")
                                             .FontSize(10);
 
-                                        row.RelativeColumn()
+                                        row.RelativeItem()
                                             .AlignRight()
                                             .Text($"Quantité: {projectPiece.Quantite}")
                                             .FontSize(10);
@@ -531,8 +531,8 @@ namespace Backend.Services
                                         columns.RelativeColumn(3);
                                     });
 
-                                    CreateTableCell(table, "Matériau:", piece.Materiau ?? "N/A", true);
-                                    CreateTableCell(table, "Catégorie:", piece.Categorie ?? "N/A", false);
+                                    CreateTableCell(table, "Matériau:", piece.Materiau.ToString(), true);
+                                    CreateTableCell(table, "Catégorie:", piece.Categorie.ToString(), false);
                                     CreateTableCell(table, "Longueur (X):", $"{metadata.BoundingBoxX:F1} mm", true);
                                     CreateTableCell(table, "Largeur (Y):", $"{metadata.BoundingBoxY:F1} mm", false);
                                 });
@@ -544,7 +544,7 @@ namespace Backend.Services
                                         inner.Item()
                                             .Row(row =>
                                             {
-                                                row.RelativeColumn()
+                                                row.RelativeItem()
                                                     .Column(col =>
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Face")
@@ -558,7 +558,7 @@ namespace Backend.Services
                                                             sharedScale, cellSize);
                                                     });
 
-                                                row.RelativeColumn()
+                                                row.RelativeItem()
                                                     .Column(col =>
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Côté")
@@ -572,7 +572,7 @@ namespace Backend.Services
                                                             sharedScale, cellSize);
                                                     });
 
-                                                row.RelativeColumn()
+                                                row.RelativeItem()
                                                     .Column(col =>
                                                     {
                                                         col.Item().PaddingBottom(3).Text("Dessus")

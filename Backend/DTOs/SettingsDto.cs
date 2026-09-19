@@ -12,5 +12,6 @@
         public bool ProductionAlerts { get; set; } = true;
         public bool WeeklyReports { get; set; } = false;
         public bool TwoFactorEnabled { get; set; } = false;
+        public decimal ElectricityPricePerKwh { get; set; } = 0.25m;
     }
 }

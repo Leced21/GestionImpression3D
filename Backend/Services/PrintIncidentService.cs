@@ -18,6 +18,8 @@ namespace Backend.Services
         }
         public async Task<PrintIncident> CreateAsync(CreateIncidentRequest request)
         {
+            ValidateIncidentRequest(request);
+
             var incident = new PrintIncident
             {
                 PrintJobId = request.PrintJobId,
@@ -35,6 +37,27 @@ namespace Backend.Services
             await _auditLogger.LogCreationAsync(EntityType.PrintIncident, created.Id, created.Title);
 
             return created;
+        }
+
+        public async Task<PrintIncident?> UpdateAsync(int id, CreateIncidentRequest request)
+        {
+            ValidateIncidentRequest(request);
+
+            var incident = await _incidentRepository.GetByIdAsync(id);
+            if (incident == null) return null;
+            if (incident.Status == IncidentStatus.Résolu || incident.Status == IncidentStatus.Fermé)
+                throw new InvalidOperationException("Un incident résolu ou fermé ne peut plus être modifié.");
+
+            incident.PrintJobId = request.PrintJobId;
+            incident.PrinterId = request.PrinterId;
+            incident.Title = request.Title.Trim();
+            incident.Description = request.Description.Trim();
+            incident.Severity = request.Severity;
+
+            var updated = await _incidentRepository.UpdateAsync(incident);
+            await _auditLogger.LogUpdateAsync(EntityType.PrintIncident, id, "Incident", "Modifié", updated.Title);
+
+            return updated;
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -80,6 +103,11 @@ namespace Backend.Services
             var incident = await _incidentRepository.GetByIdAsync(id);
             if (incident == null) return null;
 
+            if (incident.Status == IncidentStatus.Résolu || incident.Status == IncidentStatus.Fermé)
+                throw new InvalidOperationException("Cet incident est déjà résolu ou fermé.");
+            if (string.IsNullOrWhiteSpace(request.Resolution))
+                throw new InvalidOperationException("La résolution est obligatoire.");
+
             if (!_currentUser.UserId.HasValue)
                 throw new InvalidOperationException("Impossible de résoudre l'incident sans utilisateur authentifié.");
 
@@ -95,6 +123,9 @@ namespace Backend.Services
             var incident = await _incidentRepository.GetByIdAsync(id);
             if (incident == null) return null;
 
+            if (!IsValidTransition(incident.Status, status))
+                throw new InvalidOperationException($"Transition impossible de {incident.Status} vers {status}");
+
             var oldStatus = incident.Status;
             incident.Status = status;
 
@@ -108,6 +139,33 @@ namespace Backend.Services
             await _auditLogger.LogStatusChangeAsync(EntityType.PrintIncident, id, oldStatus.ToString(), status.ToString());
 
             return updated;
+        }
+
+        private static void ValidateIncidentRequest(CreateIncidentRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Title))
+                throw new InvalidOperationException("Le titre de l'incident est obligatoire.");
+            if (string.IsNullOrWhiteSpace(request.Description))
+                throw new InvalidOperationException("La description de l'incident est obligatoire.");
+            if (!request.PrintJobId.HasValue && !request.PrinterId.HasValue)
+                throw new InvalidOperationException("Un incident doit être lié à une impression ou à une imprimante.");
+
+            request.Title = request.Title.Trim();
+            request.Description = request.Description.Trim();
+        }
+
+        private static bool IsValidTransition(IncidentStatus oldStatus, IncidentStatus newStatus)
+        {
+            if (oldStatus == newStatus) return true;
+
+            return oldStatus switch
+            {
+                IncidentStatus.Ouvert => newStatus is IncidentStatus.EnCours or IncidentStatus.Résolu,
+                IncidentStatus.EnCours => newStatus is IncidentStatus.Résolu or IncidentStatus.Fermé,
+                IncidentStatus.Résolu => newStatus == IncidentStatus.Fermé,
+                IncidentStatus.Fermé => false,
+                _ => false
+            };
         }
     }
 }

@@ -16,6 +16,7 @@ namespace Backend.Models
         public int MaxPrintSizeX { get; private set; }  // mm
         public int MaxPrintSizeY { get; private set; }  // mm
         public int MaxPrintSizeZ { get; private set; }  // mm
+        public decimal PowerWatts { get; private set; } = 120m;
         public int TotalPrintHours { get; private set; }
         public int TotalPrintJobs { get; private set; }
         public DateTime? LastMaintenance { get; private set; }
@@ -35,8 +36,12 @@ namespace Backend.Models
             string ipAddress,
             int maxSizeX,
             int maxSizeY,
-            int maxSizeZ)
+            int maxSizeZ,
+            decimal powerWatts = 120m)
         {
+            if (powerWatts <= 0)
+                throw new ArgumentException("La puissance de l'imprimante doit être supérieure à 0 W.", nameof(powerWatts));
+
             return new Printer
             {
                 Nom = nom,
@@ -49,6 +54,7 @@ namespace Backend.Models
                 MaxPrintSizeX = maxSizeX,
                 MaxPrintSizeY = maxSizeY,
                 MaxPrintSizeZ = maxSizeZ,
+                PowerWatts = powerWatts,
                 TotalPrintHours = 0,
                 TotalPrintJobs = 0,
                 IsActive = true,
@@ -108,6 +114,44 @@ namespace Backend.Models
         public void UpdateApiKey(string apiKey)
         {
             ApiKey = apiKey;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateDetails(
+            string nom,
+            string reference,
+            string model,
+            string brand,
+            PrinterType type,
+            string ipAddress,
+            int maxSizeX,
+            int maxSizeY,
+            int maxSizeZ,
+            decimal powerWatts,
+            bool isActive)
+        {
+            if (string.IsNullOrWhiteSpace(nom))
+                throw new ArgumentException("Le nom de l'imprimante est obligatoire.", nameof(nom));
+            if (string.IsNullOrWhiteSpace(model))
+                throw new ArgumentException("Le modèle de l'imprimante est obligatoire.", nameof(model));
+            if (string.IsNullOrWhiteSpace(brand))
+                throw new ArgumentException("La marque de l'imprimante est obligatoire.", nameof(brand));
+            if (maxSizeX <= 0 || maxSizeY <= 0 || maxSizeZ <= 0)
+                throw new ArgumentException("Le volume d'impression doit être supérieur à 0 mm sur les trois axes.");
+            if (powerWatts <= 0)
+                throw new ArgumentException("La puissance de l'imprimante doit être supérieure à 0 W.", nameof(powerWatts));
+
+            Nom = nom.Trim();
+            Reference = reference?.Trim() ?? string.Empty;
+            Model = model.Trim();
+            Brand = brand.Trim();
+            Type = type;
+            IpAddress = ipAddress?.Trim() ?? string.Empty;
+            MaxPrintSizeX = maxSizeX;
+            MaxPrintSizeY = maxSizeY;
+            MaxPrintSizeZ = maxSizeZ;
+            PowerWatts = powerWatts;
+            IsActive = isActive;
             UpdatedAt = DateTime.UtcNow;
         }
     }

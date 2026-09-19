@@ -9,7 +9,7 @@ namespace Backend.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class PrintIncidentController:ControllerBase
+    public class PrintIncidentController : ControllerBase
     {
         private readonly IPrintIncidentService _incidentService;
         public PrintIncidentController(IPrintIncidentService incidentService)
@@ -56,26 +56,63 @@ namespace Backend.Controllers
         [Authorize(Roles = "Admin,ProductionManager,Operator")]
         public async Task<IActionResult> Create([FromBody] CreateIncidentRequest request)
         {
-            var incident = await _incidentService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = incident.Id }, incident);
+            try
+            {
+                var incident = await _incidentService.CreateAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = incident.Id }, incident);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,ProductionManager")]
+        public async Task<IActionResult> Update(int id, [FromBody] CreateIncidentRequest request)
+        {
+            try
+            {
+                var incident = await _incidentService.UpdateAsync(id, request);
+                if (incident == null) return NotFound();
+                return Ok(incident);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPatch("{id}/status")]
         [Authorize(Roles = "Admin,ProductionManager")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] IncidentStatus status)
         {
-            var incident = await _incidentService.UpdateStatusAsync(id, status);
-            if (incident == null) return NotFound();
-            return Ok(incident);
+            try
+            {
+                var incident = await _incidentService.UpdateStatusAsync(id, status);
+                if (incident == null) return NotFound();
+                return Ok(incident);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/resolve")]
         [Authorize(Roles = "Admin,ProductionManager")]
         public async Task<IActionResult> Resolve(int id, [FromBody] ResolveIncidentRequest request)
         {
-            var incident = await _incidentService.ResolveAsync(id, request);
-            if (incident == null) return NotFound();
-            return Ok(incident);
+            try
+            {
+                var incident = await _incidentService.ResolveAsync(id, request);
+                if (incident == null) return NotFound();
+                return Ok(incident);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

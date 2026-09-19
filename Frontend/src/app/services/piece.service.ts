@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpHeaders } from '@angular/common/http';
 import { catchError, map, throwError, Observable } from 'rxjs';
 import { Piece, PieceStatus } from '../models/piece.model';
 import { DashboardStat } from '../models/dashboardstat';
@@ -64,10 +64,13 @@ export class PieceService {
     return this.http.get<DashboardStat>(`${this.apiUrl}/dashboard/stats`).pipe(catchError(this.handleError));
   }
 
-  uploadStl(id: number, file: File): Observable<UploadResponse> {
+  uploadStl(id: number, file: File): Observable<HttpEvent<UploadResponse>> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<UploadResponse>(`${this.apiUrl}/${id}/upload-stl`, formData).pipe(catchError(this.handleError));
+    return this.http.post<UploadResponse>(`${this.apiUrl}/${id}/upload-stl`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    }).pipe(catchError(this.handleError));
   }
 
   getStlUrl(id: number): string {

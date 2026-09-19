@@ -14,6 +14,7 @@ namespace TestProject
         private readonly CustomWebApplicationFactory _factory;
         private readonly HttpClient _client;
         private string _token = string.Empty;
+        private static int _referenceSequence;
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
@@ -75,8 +76,24 @@ namespace TestProject
             var newPiece = new
             {
                 Nom = "Test Integration",
-                Reference = $"TEST-INT-{DateTime.UtcNow.Ticks}",
-                Description = "Test description"
+                Reference = "",
+                Description = "Test description",
+                Categorie = "Decoration",
+                FormeVase = "Organique",
+                Couleurs = "Blanc, Noir",
+                CapaciteContenance = "1.2 L",
+                NormesCertifications = "CE",
+                InstructionsUtilisation = "Nettoyer avec un chiffon doux",
+                PrecautionsUsage = "Ne pas exposer à une forte chaleur",
+                PublicCible = "Tous publics",
+                Conditionnement = "Boîte individuelle",
+                DimensionsColis = "20 x 20 x 25 cm",
+                PoidsColisKg = 0.42m,
+                MoqUnites = 5,
+                DelaiLivraisonJours = 7,
+                PointsForts = "Léger et personnalisable",
+                Faq = "Compatible usage intérieur ? Oui.",
+                TarifsDegressifs = "10 unités : -10%"
             };
 
             var response = await SendJsonAsync(HttpMethod.Post, "/api/piece", newPiece);
@@ -87,6 +104,22 @@ namespace TestProject
             var createdPiece = JsonSerializer.Deserialize<PieceResponse>(responseContent, JsonOptions);
             Assert.NotNull(createdPiece);
             Assert.Equal("Test Integration", createdPiece.Nom);
+            Assert.StartsWith("VAS-ORG-", createdPiece.Reference);
+            Assert.Equal("Organique", createdPiece.FormeVase);
+            Assert.Null(createdPiece.Couleurs);
+            Assert.Null(createdPiece.CapaciteContenance);
+            Assert.Null(createdPiece.NormesCertifications);
+            Assert.Null(createdPiece.InstructionsUtilisation);
+            Assert.Null(createdPiece.PrecautionsUsage);
+            Assert.Null(createdPiece.PublicCible);
+            Assert.Null(createdPiece.Conditionnement);
+            Assert.Null(createdPiece.DimensionsColis);
+            Assert.Null(createdPiece.PoidsColisKg);
+            Assert.Null(createdPiece.MoqUnites);
+            Assert.Null(createdPiece.DelaiLivraisonJours);
+            Assert.Null(createdPiece.PointsForts);
+            Assert.Null(createdPiece.Faq);
+            Assert.Null(createdPiece.TarifsDegressifs);
         }
 
         [Fact]
@@ -102,7 +135,7 @@ namespace TestProject
         [Fact]
         public async Task GetPieceById_WithValidId_ReturnsOkResult()
         {
-            var piece = await CreatePieceAsync("Test Get By Id", $"TEST-GET-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Get By Id", NextReference("GET"));
             var request = CreateAuthorizedRequest(HttpMethod.Get, $"/api/piece/{piece.Id}");
 
             var response = await _client.SendAsync(request);
@@ -113,7 +146,7 @@ namespace TestProject
         [Fact]
         public async Task UpdatePieceStatus_WithValidId_ReturnsOkResult()
         {
-            var piece = await CreatePieceAsync("Test Status Update", $"TEST-STATUS-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Status Update", NextReference("STA"));
             var request = CreateAuthorizedRequest(HttpMethod.Patch, $"/api/piece/{piece.Id}/statut");
             request.Content = new StringContent("\"Conception\"", Encoding.UTF8, "application/json");
 
@@ -125,7 +158,7 @@ namespace TestProject
         [Fact]
         public async Task DeletePiece_WithValidId_ReturnsNoContent()
         {
-            var piece = await CreatePieceAsync("Test Delete", $"TEST-DELETE-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Delete", NextReference("DEL"));
             var request = CreateAuthorizedRequest(HttpMethod.Delete, $"/api/piece/{piece.Id}");
 
             var response = await _client.SendAsync(request);
@@ -157,7 +190,7 @@ namespace TestProject
         [Fact]
         public async Task UpdatePieceStatus_WithInvalidTransition_ReturnsBadRequest()
         {
-            var piece = await CreatePieceAsync("Test Invalid Transition", $"TEST-INVALID-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Invalid Transition", NextReference("INV"));
             var request = CreateAuthorizedRequest(HttpMethod.Patch, $"/api/piece/{piece.Id}/statut");
             request.Content = new StringContent("\"Production\"", Encoding.UTF8, "application/json");
 
@@ -179,13 +212,20 @@ namespace TestProject
         [Fact]
         public async Task UpdatePiece_WithValidData_ReturnsOkResult()
         {
-            var piece = await CreatePieceAsync("Test Update", $"TEST-UPDATE-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Update", NextReference("UPD"));
+            await UpdateStatusAsync(piece.Id, "Conception");
+            await UpdateStatusAsync(piece.Id, "Prototypage");
+            await UpdateStatusAsync(piece.Id, "Validation");
+
             var updatedPiece = new
             {
                 Id = piece.Id,
                 Nom = "Test Update Modifié",
-                Reference = $"TEST-UPDATE-{DateTime.UtcNow.Ticks}",
-                Description = "Description modifiée"
+                Reference = NextReference("UPX"),
+                Description = "Description modifiée",
+                Couleurs = "Rouge",
+                PointsForts = "Résistant",
+                MoqUnites = 3
             };
             var request = CreateAuthorizedRequest(HttpMethod.Put, $"/api/piece/{piece.Id}");
             request.Content = new StringContent(JsonSerializer.Serialize(updatedPiece), Encoding.UTF8, "application/json");
@@ -193,12 +233,18 @@ namespace TestProject
             var response = await _client.SendAsync(request);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var updated = JsonSerializer.Deserialize<PieceResponse>(responseContent, JsonOptions);
+            Assert.NotNull(updated);
+            Assert.Equal("Rouge", updated.Couleurs);
+            Assert.Equal("Résistant", updated.PointsForts);
+            Assert.Equal(3, updated.MoqUnites);
         }
 
         [Fact]
         public async Task UpdatePiece_WithMismatchedId_ReturnsBadRequest()
         {
-            var piece = await CreatePieceAsync("Test Mismatch", $"TEST-MISMATCH-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Mismatch", NextReference("MIS"));
             var updatedPiece = new { Id = piece.Id + 1, Nom = "Test", Reference = piece.Nom };
             var request = CreateAuthorizedRequest(HttpMethod.Put, $"/api/piece/{piece.Id}");
             request.Content = new StringContent(JsonSerializer.Serialize(updatedPiece), Encoding.UTF8, "application/json");
@@ -211,7 +257,7 @@ namespace TestProject
         [Fact]
         public async Task GetPrixRecommande_WithValidId_ReturnsOkResult()
         {
-            var piece = await CreatePieceAsync("Test Prix", $"TEST-PRIX-{DateTime.UtcNow.Ticks}");
+            var piece = await CreatePieceAsync("Test Prix", NextReference("PRX"));
             var request = CreateAuthorizedRequest(HttpMethod.Get, $"/api/piece/{piece.Id}/prix-recommande");
 
             var response = await _client.SendAsync(request);
@@ -247,11 +293,25 @@ namespace TestProject
             return await _client.SendAsync(request);
         }
 
+        private async Task UpdateStatusAsync(int pieceId, string status)
+        {
+            var request = CreateAuthorizedRequest(HttpMethod.Patch, $"/api/piece/{pieceId}/statut");
+            request.Content = new StringContent(JsonSerializer.Serialize(status), Encoding.UTF8, "application/json");
+            var response = await _client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
         private HttpRequestMessage CreateAuthorizedRequest(HttpMethod method, string url)
         {
             var request = new HttpRequestMessage(method, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
             return request;
+        }
+
+        private static string NextReference(string prefix)
+        {
+            var sequence = Interlocked.Increment(ref _referenceSequence);
+            return $"{prefix}-{sequence % 1000:D3}";
         }
     }
 
@@ -259,5 +319,21 @@ namespace TestProject
     {
         public int Id { get; set; }
         public string Nom { get; set; } = string.Empty;
+        public string Reference { get; set; } = string.Empty;
+        public string? FormeVase { get; set; }
+        public string? Couleurs { get; set; }
+        public string? CapaciteContenance { get; set; }
+        public string? NormesCertifications { get; set; }
+        public string? InstructionsUtilisation { get; set; }
+        public string? PrecautionsUsage { get; set; }
+        public string? PublicCible { get; set; }
+        public string? Conditionnement { get; set; }
+        public string? DimensionsColis { get; set; }
+        public decimal? PoidsColisKg { get; set; }
+        public int? MoqUnites { get; set; }
+        public int? DelaiLivraisonJours { get; set; }
+        public string? PointsForts { get; set; }
+        public string? Faq { get; set; }
+        public string? TarifsDegressifs { get; set; }
     }
 }

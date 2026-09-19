@@ -18,6 +18,7 @@ export class ThreeDViewer implements OnInit, AfterViewInit, OnChanges, OnDestroy
   @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;
   @Input() stlUrl: string = '';
   @Input() height: string = '500px';
+  @Input() compact: boolean = false;
 
   dimensions?: {
     longueur: number;
@@ -119,12 +120,13 @@ export class ThreeDViewer implements OnInit, AfterViewInit, OnChanges, OnDestroy
     this.scene.add(backLight);
 
     // Grille
-    const gridHelper = new THREE.GridHelper(10, 20, 0x888888, 0x444444);
-    this.scene.add(gridHelper);
+    if (!this.compact) {
+      const gridHelper = new THREE.GridHelper(10, 20, 0x888888, 0x444444);
+      this.scene.add(gridHelper);
 
-    // Axes (optionnel)
-    const axesHelper = new THREE.AxesHelper(5);
-    this.scene.add(axesHelper);
+      const axesHelper = new THREE.AxesHelper(5);
+      this.scene.add(axesHelper);
+    }
 
     this.animate();
 
@@ -195,6 +197,10 @@ export class ThreeDViewer implements OnInit, AfterViewInit, OnChanges, OnDestroy
 
         // Appliquer la vue actuelle
         this.setView(this.currentView);
+        if (this.compact) {
+          this.controls.autoRotate = true;
+          this.controls.enablePan = false;
+        }
         
         // Déclencher le rafraîchissement d'Angular pour l'affichage des calculs dans le HTML
         this.cdr.detectChanges();
