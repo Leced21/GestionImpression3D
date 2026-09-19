@@ -877,14 +877,30 @@ namespace Backend.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("AccrocheMarketing")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("BeneficesMarketing")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("Categorie")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("ColorisDisponibles")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Conditionnement")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ConseilsEntretien")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("Couleurs")
                         .HasMaxLength(200)
@@ -912,11 +928,17 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DescriptionMarketing")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("DimensionsColis")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("EstDisponible")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EstEtanche")
                         .HasColumnType("bit");
 
                     b.Property<string>("Faq")
@@ -925,6 +947,9 @@ namespace Backend.Migrations
                     b.Property<string>("FormeVase")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("HauteurCm")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -937,6 +962,10 @@ namespace Backend.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("MatiereMarketing")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int?>("MoqUnites")
                         .HasColumnType("int");
 
@@ -945,11 +974,21 @@ namespace Backend.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("NomCommercial")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("NormesCertifications")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<decimal?>("OuvertureCm")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("PoidsColisKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PoidsProduitGrammes")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("PointsForts")
@@ -970,6 +1009,10 @@ namespace Backend.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("SloganProduit")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("Statut")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -985,9 +1028,61 @@ namespace Backend.Migrations
                     b.Property<string>("TarifsDegressifs")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UtilisationProduit")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Pieces");
+                });
+
+            modelBuilder.Entity("Backend.Models.PieceCosting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("FilamentPricePerKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("MaterialName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("ModelingTimeHours")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("PieceId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PostProcessingTimeHours")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("PrintTimeHours")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("QuantityKg")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("RealSalePriceHt")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PieceId")
+                        .IsUnique();
+
+                    b.ToTable("PieceCostings");
                 });
 
             modelBuilder.Entity("Backend.Models.PieceVersion", b =>
@@ -1054,6 +1149,67 @@ namespace Backend.Migrations
                         .IsUnique();
 
                     b.ToTable("PieceVersions");
+                });
+
+            modelBuilder.Entity("Backend.Models.PricingSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("AbsPricePerKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AveragePrinterPowerKw")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("ConsumablesCostPerPiece")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("ElectricityPricePerKwh")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("LaborHourlyRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PackagingCostPerPiece")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PetgPricePerKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PlaPricePerKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrinterPurchasePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ProductiveLifetimeHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SellingFeesRate")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TargetGrossMarginRate")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TpuPricePerKg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("VatRate")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("WasteRate")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PricingSettings");
                 });
 
             modelBuilder.Entity("Backend.Models.PrintIncident", b =>
@@ -1662,7 +1818,7 @@ namespace Backend.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<decimal>("ElectricityPricePerKwh")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<bool>("EmailNotifications")
                         .HasColumnType("bit");
@@ -1899,6 +2055,17 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Backend.Models.PieceCosting", b =>
+                {
+                    b.HasOne("Backend.Models.Piece", "Piece")
+                        .WithOne()
+                        .HasForeignKey("Backend.Models.PieceCosting", "PieceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Piece");
                 });
 
             modelBuilder.Entity("Backend.Models.PieceVersion", b =>

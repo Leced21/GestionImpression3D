@@ -70,7 +70,6 @@ export class CommercialCatalog implements OnInit {
   }
 
   getStock(piece: Piece): number {
-    // Simuler un stock (à remplacer par API)
     return piece.stock || 0;
   }
 

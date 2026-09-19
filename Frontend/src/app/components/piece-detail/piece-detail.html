@@ -36,6 +36,8 @@
             (click)="activeTab = 'versions'">📦 Versions</button>
         <button class="tab" [class.active]="activeTab === 'commercial'"
             (click)="activeTab = 'commercial'">💰 Commercial</button>
+        <button class="tab" [class.active]="activeTab === 'rentabilite'"
+            (click)="activeTab = 'rentabilite'">📈 Rentabilité</button>
     </div>
 
     <!-- Nouvel onglet Versions -->
@@ -79,6 +81,22 @@
                             <span>Description</span>
                             <span>{{ piece.description }}</span>
                         </div>
+                        <div class="info-row" *ngIf="piece.poidsProduitGrammes">
+                            <span>Poids du produit</span>
+                            <span>{{ piece.poidsProduitGrammes | number:'1.0-2' }} g</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.nomCommercial">
+                            <span>Nom commercial</span>
+                            <span>{{ piece.nomCommercial }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.sloganProduit">
+                            <span>Slogan</span>
+                            <span>{{ piece.sloganProduit }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.accrocheMarketing">
+                            <span>Accroche</span>
+                            <span>{{ piece.accrocheMarketing }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -105,9 +123,14 @@
                             <span>{{ getElectricite() | number:'1.2-2' }}
                                 €</span>
                         </div>
+                        <div class="info-row" *ngIf="pricing">
+                            <span>Amortissement machine</span>
+                            <span>{{ pricing.machineAmortizationCost | number:'1.2-2' }}
+                                €</span>
+                        </div>
                         <div class="info-row" style="font-weight:700">
                             <span>Coût de revient</span>
-                            <span>{{ getCoutTotal() | number:'1.2-2' }} €</span>
+                            <span>{{ getCoutRevientV2() | number:'1.2-2' }} €</span>
                         </div>
                         <div class="info-row"
                             style="background:#f0fdf4; margin-top:0.5rem; border-radius:0.5rem">
@@ -136,6 +159,12 @@
                                 / 60°C</span></div>
                         <div class="info-row"><span>Temps estimé</span><span>{{
                                 getTempsImpression() }}</span></div>
+                        <div class="info-row" *ngIf="pricing"><span>Temps modélisation</span><span>{{
+                                pricing.costing.modelingTimeHours | number:'1.1-2'
+                                }} h</span></div>
+                        <div class="info-row" *ngIf="pricing"><span>Post-traitement</span><span>{{
+                                pricing.costing.postProcessingTimeHours | number:'1.1-2'
+                                }} h</span></div>
                     </div>
                 </div>
             </div>
@@ -177,13 +206,22 @@
                                 recommandé</span><span>{{ getPrixRecommande() |
                                 number:'1.2-2' }} €</span></div>
                         <div class="info-row"><span>Marge</span><span
-                                [style.color]="getMarge() >= 0 ? '#10b981' : '#ef4444'">{{
-                                getMarge() | number:'1.2-2' }} € ({{
-                                getMargePourcentage() | number:'1.0-0'
+                                [style.color]="getMargeV2() >= 0 ? '#10b981' : '#ef4444'">{{
+                                getMargeV2() | number:'1.2-2' }} € ({{
+                                getMargePourcentageV2() | number:'1.0-0'
                                 }}%)</span></div>
                         <div class="info-row"><span>Stock
                                 disponible</span><span>{{ getStock() }}
                                 unités</span></div>
+                        <div class="info-row" *ngIf="piece.poidsProduitGrammes"><span>Poids produit</span><span>{{
+                                piece.poidsProduitGrammes | number:'1.0-2'
+                                }} g</span></div>
+                        <div class="info-row" *ngIf="piece.colorisDisponibles"><span>Coloris</span><span>{{
+                                piece.colorisDisponibles
+                                }}</span></div>
+                        <div class="info-row" *ngIf="piece.estEtanche !== undefined"><span>Étanche</span><span>{{
+                                piece.estEtanche ? 'Oui' : 'Non'
+                                }}</span></div>
                     </div>
                     <button class="btn-primary"
                         style="width:100%; margin-top:1rem"
@@ -192,6 +230,98 @@
                         Rendre commercialisable
                     </button>
                 </div>
+
+                <div class="card">
+                    <h3>🛍️ Catalogue</h3>
+                    <div style="margin-top:1rem">
+                        <div class="info-row" *ngIf="piece.nomCommercial">
+                            <span>Nom commercial</span><span>{{ piece.nomCommercial }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.sloganProduit">
+                            <span>Slogan</span><span>{{ piece.sloganProduit }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.accrocheMarketing">
+                            <span>Accroche</span><span>{{ piece.accrocheMarketing }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.descriptionMarketing">
+                            <span>Description catalogue</span><span>{{ piece.descriptionMarketing }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.hauteurCm">
+                            <span>Hauteur</span><span>{{ piece.hauteurCm | number:'1.0-2' }} cm</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.ouvertureCm">
+                            <span>Ouverture</span><span>{{ piece.ouvertureCm | number:'1.0-2' }} cm</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.matiereMarketing">
+                            <span>Matière affichée</span><span>{{ piece.matiereMarketing }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.utilisationProduit">
+                            <span>Utilisation</span><span>{{ piece.utilisationProduit }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.conseilsEntretien">
+                            <span>Entretien</span><span>{{ piece.conseilsEntretien }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="piece.beneficesMarketing">
+                            <span>Bénéfices</span><span>{{ piece.beneficesMarketing }}</span>
+                        </div>
+                        <div class="info-row" *ngIf="!piece.nomCommercial && !piece.sloganProduit && !piece.accrocheMarketing && !piece.descriptionMarketing && !piece.hauteurCm && !piece.ouvertureCm && !piece.matiereMarketing && !piece.colorisDisponibles && !piece.utilisationProduit && !piece.conseilsEntretien && !piece.beneficesMarketing">
+                            <span>Catalogue</span><span>Aucune information renseignée</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet: Rentabilite -->
+            <div *ngIf="activeTab === 'rentabilite'">
+                <div class="card pricing-card" *ngIf="pricing; else pricingLoading">
+                    <h3>📈 Rentabilité V2</h3>
+                    <div class="pricing-status" [class.profitable]="pricing.status === 'Rentable'"
+                        [class.warning]="pricing.status === 'Sous cible'"
+                        [class.danger]="pricing.status === 'A perte'">
+                        {{ pricing.status }}
+                    </div>
+
+                    <div class="pricing-grid">
+                        <div class="pricing-metric">
+                            <span>Prix conseillé HT</span>
+                            <strong>{{ pricing.recommendedPriceHt | number:'1.2-2' }} €</strong>
+                        </div>
+                        <div class="pricing-metric">
+                            <span>Prix conseillé TTC</span>
+                            <strong>{{ pricing.recommendedPriceTtc | number:'1.2-2' }} €</strong>
+                        </div>
+                        <div class="pricing-metric">
+                            <span>Coût avec rebuts</span>
+                            <strong>{{ pricing.costWithWaste | number:'1.2-2' }} €</strong>
+                        </div>
+                        <div class="pricing-metric">
+                            <span>Marge cible</span>
+                            <strong>{{ pricing.grossMarginRate * 100 | number:'1.0-1' }}%</strong>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem">
+                        <div class="info-row"><span>Matière</span><span>{{ pricing.materialCost | number:'1.2-2' }} €</span></div>
+                        <div class="info-row"><span>Électricité</span><span>{{ pricing.electricityCost | number:'1.2-2' }} €</span></div>
+                        <div class="info-row"><span>Main d'œuvre</span><span>{{ pricing.laborCost | number:'1.2-2' }} €</span></div>
+                        <div class="info-row"><span>Amortissement</span><span>{{ pricing.machineAmortizationCost | number:'1.2-2' }} €</span></div>
+                        <div class="info-row"><span>Emballage</span><span>{{ pricing.packagingCost | number:'1.2-2' }} €</span></div>
+                        <div class="info-row"><span>Consommables</span><span>{{ pricing.consumablesCost | number:'1.2-2' }} €</span></div>
+                        <div class="info-row" style="font-weight:700"><span>Sous-total production</span><span>{{ pricing.productionSubtotal | number:'1.2-2' }} €</span></div>
+                    </div>
+
+                    <button class="btn-primary"
+                        style="width:100%; margin-top:1rem"
+                        (click)="applyRecommendedPrice()">
+                        Appliquer le prix conseillé
+                    </button>
+                </div>
+                <ng-template #pricingLoading>
+                    <div class="card">
+                        <h3>📈 Rentabilité V2</h3>
+                        <p class="muted">Calcul en cours...</p>
+                    </div>
+                </ng-template>
             </div>
 
             <div *ngIf="activeTab === '3d'" class="card">
@@ -256,13 +386,11 @@
                             fichier STL</div>
                     </div>
                     <ng-template #viewer3dPreview>
-                        <canvas #canvas3d class="viewer-canvas"></canvas>
-                        <div class="viewer-controls">
-                            <button class="control-btn"
-                                (click)="resetView()">↻</button>
-                            <button class="control-btn"
-                                (click)="toggleWireframe()">🔲</button>
-                        </div>
+                        <app-three-d-viewer
+                            [stlUrl]="getStlUrl()"
+                            height="300px"
+                            [compact]="true">
+                        </app-three-d-viewer>
                     </ng-template>
                 </div>
             </div>
@@ -292,6 +420,22 @@
                     <button class="action-btn action-btn--document" (click)="exportFicheProduitPdf()">
                         <span class="action-btn__icon" aria-hidden="true">🛍️</span>
                         <span>Fiche produit</span>
+                    </button>
+                    <button class="action-btn action-btn--document" (click)="exportSocialPng('square')">
+                        <span class="action-btn__icon" aria-hidden="true">🖼️</span>
+                        <span>Post PNG <small>carré</small></span>
+                    </button>
+                    <button class="action-btn action-btn--document" (click)="exportSocialPng('story')">
+                        <span class="action-btn__icon" aria-hidden="true">📱</span>
+                        <span>Story PNG</span>
+                    </button>
+                    <button class="action-btn action-btn--document" (click)="exportSocialPdf('square')">
+                        <span class="action-btn__icon" aria-hidden="true">📄</span>
+                        <span>Post PDF <small>carré</small></span>
+                    </button>
+                    <button class="action-btn action-btn--document" (click)="exportSocialPdf('story')">
+                        <span class="action-btn__icon" aria-hidden="true">📄</span>
+                        <span>Story PDF</span>
                     </button>
                     <button class="action-btn action-btn--document" (click)="downloadTechnicalPlan()"
                         *ngIf="piece.stlFileName" title="Nécessite un fichier STL analysé">

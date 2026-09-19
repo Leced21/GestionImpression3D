@@ -1,17 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpEventType } from '@angular/common/http';
 import { Piece, PieceStatus } from '../../models/piece.model';
 import { PieceService } from '../../services/piece.service';
 import { Subject, takeUntil } from 'rxjs';
-import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ThreeDViewer } from '../three-d-viewer/three-d-viewer';
 import { ExportService } from '../../services/export.service';
 import { TechnicalPlanService } from '../../services/technical-plan.service';
 import { PieceVersions } from '../piece-versions/piece-versions';
+import { PricingService } from '../../services/pricing.service';
+import { PiecePricing } from '../../models/pricing.model';
 
 @Component({
   selector: 'app-piece-detail',
@@ -22,20 +21,13 @@ import { PieceVersions } from '../piece-versions/piece-versions';
 })
 export class PieceDetail implements OnInit, OnDestroy {
   piece: Piece | null = null;
+  pricing: PiecePricing | null = null;
   prixRecommande: number = 0;
   activeTab: string = 'general';
   statuts: PieceStatus[] = Object.values(PieceStatus);
   PieceStatus = PieceStatus;
   versionNumber: number = 1;
   private destroy$ = new Subject<void>();
-  @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;
-  private scene!: THREE.Scene;
-  private camera!: THREE.PerspectiveCamera;
-  private renderer!: THREE.WebGLRenderer;
-  private controls!: OrbitControls;
-  private currentMesh: THREE.Mesh | null = null;
-  private wireframeMode = false;
-  private animationId!: number;
 
   uploading = false;
   uploadProgress = 0;
@@ -51,7 +43,8 @@ export class PieceDetail implements OnInit, OnDestroy {
     private pieceService: PieceService,
     private cdr: ChangeDetectorRef,
     private exportService: ExportService,
-    private technicalPlanService: TechnicalPlanService
+    private technicalPlanService: TechnicalPlanService,
+    private pricingService: PricingService
   ) { }
 
   ngOnInit(): void {
@@ -65,36 +58,15 @@ export class PieceDetail implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
-    // 1. Arrête l'animation
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
-    // 2. Nettoie les contrôles et le renderer
-    if (this.renderer) {
-      this.renderer.dispose();
-      this.renderer.forceContextLoss();
-    }
-    if (this.controls) {
-      this.controls.dispose();
-    }
   }
   loadPiece(id: number): void {
     this.pieceService.getById(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
         this.piece = data;
         this.loadPrixRecommande(id);
+        this.loadPricing(id);
         this.extractVersionNumber();
         this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
-        if (this.piece?.stlFileName) {
-          setTimeout(() => {
-            if (this.canvasRef && this.canvasRef.nativeElement) {
-              this.initThreeJS();
-              this.loadStlFile();
-            } else {
-              console.warn('Canvas reference not found');
-            }
-          }, 50);
-        }
       },
       error: (err) => console.error('Erreur chargement:', err)
     });
@@ -104,6 +76,16 @@ export class PieceDetail implements OnInit, OnDestroy {
     this.pieceService.getPrixRecommande(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (prix) => this.prixRecommande = prix,
       error: (err) => console.error('Erreur calcul prix:', err)
+    });
+  }
+
+  loadPricing(id: number): void {
+    this.pricingService.getPiecePricing(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (pricing) => {
+        this.pricing = pricing;
+        this.prixRecommande = pricing.recommendedPriceHt;
+      },
+      error: (err) => console.error('Erreur calcul rentabilite V2:', err)
     });
   }
 
@@ -169,7 +151,7 @@ export class PieceDetail implements OnInit, OnDestroy {
   applyRecommendedPrice(): void {
     if (!this.piece) return;
 
-    const updatedPiece = { ...this.piece, prixVente: this.prixRecommande };
+    const updatedPiece = { ...this.piece, prixVente: this.getPrixRecommande() };
 
     this.pieceService.update(this.piece.id, updatedPiece).subscribe({
       next: () => {
@@ -250,126 +232,6 @@ export class PieceDetail implements OnInit, OnDestroy {
       printWindow.print();
     }
   }
-  initThreeJS(): void {
-
-    if (this.renderer) {
-      return; // Déjà initialisé
-    }
-    const canvas = this.canvasRef.nativeElement;
-
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x1a1a2e);
-
-    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    this.camera.position.set(2, 2, 2);
-    this.camera.lookAt(0, 0, 0);
-
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    this.renderer.setSize(canvas.clientWidth || 400, canvas.clientHeight || 400);
-
-    // Contrôles
-    this.controls = new OrbitControls(this.camera, canvas);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
-    this.controls.autoRotate = true;
-    this.controls.autoRotateSpeed = 2;
-
-    // Lumières
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    this.scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(2, 3, 4);
-    this.scene.add(directionalLight);
-
-    const backLight = new THREE.DirectionalLight(0x404040, 0.5);
-    backLight.position.set(-2, 1, -3);
-    this.scene.add(backLight);
-
-    // Grille et axes
-    const gridHelper = new THREE.GridHelper(5, 20, 0x888888, 0x444444);
-    this.scene.add(gridHelper);
-
-    this.animate();
-  }
-
-  loadStlFile(): void {
-    if (!this.piece?.stlFileName || !this.scene) return;
-
-    const loader = new STLLoader();
-    const url = this.pieceService.getStlUrl(this.piece.id);
-
-    console.log("URL envoyée au STLLoader :", url);
-    // 💡 RÉCUPÉRATION DU TOKEN : À adapter selon ta méthode de stockage (localStorage, injecté via AuthService, etc.)
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    console.log("Token récupéré pour Three.js :", token);
-    // 💡 INJECTION DU TOKEN : Si le token existe, on l'ajoute aux en-têtes de Three.js
-    if (token) {
-      loader.setRequestHeader({
-        'Authorization': `Bearer ${token}`
-      });
-    } else {
-      console.warn("Aucun token trouvé pour l'authentification Three.js");
-    }
-
-    loader.load(url, (geometry) => {
-      // Supprimer l'ancien mesh
-      if (this.currentMesh) {
-        this.scene.remove(this.currentMesh);
-      }
-
-      // Centrer la géométrie
-      geometry.computeBoundingBox();
-      const center = geometry.boundingBox!.getCenter(new THREE.Vector3());
-      geometry.translate(-center.x, -center.y, -center.z);
-
-      // Créer le matériau
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x3b82f6,
-        roughness: 0.4,
-        metalness: 0.6,
-        flatShading: false,
-        side: THREE.DoubleSide
-      });
-
-      this.currentMesh = new THREE.Mesh(geometry, material);
-      this.scene.add(this.currentMesh);
-
-      // Ajuster la caméra
-      const boundingBox = geometry.boundingBox;
-      const size = boundingBox!.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const distance = maxDim * 2;
-      this.camera.position.set(distance, distance * 0.8, distance);
-      this.camera.lookAt(0, 0, 0);
-      this.controls.target.set(0, 0, 0);
-      this.controls.update();
-      this.cdr.detectChanges(); // Assure que les changements sont pris en compte immédiatement
-    }, undefined, (error) => {
-      console.error('Erreur chargement STL:', error);
-    });
-  }
-
-  animate(): void {
-    this.animationId = requestAnimationFrame(() => this.animate());
-    this.controls.update(); // Met à jour autoRotate si activé
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  resetView(): void {
-    this.camera.position.set(2, 2, 2);
-    this.camera.lookAt(0, 0, 0);
-    this.controls.target.set(0, 0, 0);
-    this.controls.update();
-  }
-
-  toggleWireframe(): void {
-    this.wireframeMode = !this.wireframeMode;
-    if (this.currentMesh) {
-      (this.currentMesh.material as THREE.MeshStandardMaterial).wireframe = this.wireframeMode;
-    }
-  }
-
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -409,7 +271,7 @@ export class PieceDetail implements OnInit, OnDestroy {
             setTimeout(() => {
               this.uploading = false;
               this.piece!.stlFileName = event.body!.fileName;
-              this.loadStlFile();
+              this.cdr.detectChanges();
             }, 300);
             break;
         }
@@ -448,23 +310,40 @@ export class PieceDetail implements OnInit, OnDestroy {
     });
   }
   getStock(): number {
-    return Math.floor(Math.random() * 100) + 10;
+    return this.piece?.stock ?? 0;
   }
   getTempsImpression(): string {
-    const minutes = Math.round(this.getCoutTotal() * 15);
+    const minutes = Math.round((this.pricing?.costing.printTimeHours ?? this.getCoutTotal() * 0.25) * 60);
     const heures = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${heures}h${mins.toString().padStart(2, '0')}`;
   }
 
   getPrixRecommande(): number {
-    return this.getCoutTotal() * 1.3;
+    return this.pricing?.recommendedPriceHt ?? this.prixRecommande ?? this.getCoutTotal() * 1.3;
   }
   getElectricite(): number {
-    return this.getCoutTotal() * 0.05;
+    return this.pricing?.electricityCost ?? this.getCoutTotal() * 0.05;
   }
   getMatiereNom(): string {
-    return 'PLA - 350g';
+    if (!this.pricing) {
+      return `${this.piece?.materiau || 'PLA'}`;
+    }
+
+    return `${this.pricing.costing.materialName} - ${(this.pricing.costing.quantityKg * 1000).toFixed(0)}g`;
+  }
+
+  getCoutRevientV2(): number {
+    return this.pricing?.costWithWaste ?? this.getCoutTotal();
+  }
+
+  getMargeV2(): number {
+    return this.pricing?.realProfit ?? this.getMarge();
+  }
+
+  getMargePourcentageV2(): number {
+    const marginRate = this.pricing?.realMarginRate ?? this.pricing?.grossMarginRate;
+    return marginRate !== undefined && marginRate !== null ? marginRate * 100 : this.getMargePourcentage();
   }
   getStatusClass(statut: string): string {
     const classes: Record<string, string> = {
@@ -507,6 +386,34 @@ export class PieceDetail implements OnInit, OnDestroy {
         this.exportService.downloadPdf(blob, `FicheProduit_${this.piece?.reference}.pdf`);
       },
       error: (err) => console.error('Erreur export fiche produit:', err)
+    });
+  }
+
+  exportSocialPng(format: 'square' | 'story'): void {
+    if (!this.piece) {
+      console.warn("Impossible d'exporter : aucune pièce n'est chargée.");
+      return;
+    }
+
+    this.exportService.exportPieceSocialPng(this.piece.id, format).subscribe({
+      next: (blob) => {
+        this.exportService.downloadFile(blob, `Post_${this.piece?.reference}_${format}.png`);
+      },
+      error: (err) => console.error('Erreur export PNG réseaux sociaux:', err)
+    });
+  }
+
+  exportSocialPdf(format: 'square' | 'story'): void {
+    if (!this.piece) {
+      console.warn("Impossible d'exporter : aucune pièce n'est chargée.");
+      return;
+    }
+
+    this.exportService.exportPieceSocialPdf(this.piece.id, format).subscribe({
+      next: (blob) => {
+        this.exportService.downloadPdf(blob, `Post_${this.piece?.reference}_${format}.pdf`);
+      },
+      error: (err) => console.error('Erreur export PDF réseaux sociaux:', err)
     });
   }
 

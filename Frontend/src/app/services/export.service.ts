@@ -35,6 +35,18 @@ export class ExportService {
     });
   }
 
+  exportPieceSocialPng(pieceId: number, format: 'square' | 'story' = 'square'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/pieces/${pieceId}/social-export/png?format=${format}`, {
+      responseType: 'blob'
+    });
+  }
+
+  exportPieceSocialPdf(pieceId: number, format: 'square' | 'story' = 'square'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/pieces/${pieceId}/social-export/pdf?format=${format}`, {
+      responseType: 'blob'
+    });
+  }
+
   downloadPdf(blob: Blob, filename: string): void {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');

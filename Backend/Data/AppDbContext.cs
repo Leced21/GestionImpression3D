@@ -38,6 +38,8 @@ namespace Backend.Data
         public DbSet<ClientMagicLink> ClientMagicLinks { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<PricingSettings> PricingSettings { get; set; }
+        public DbSet<PieceCosting> PieceCostings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -54,6 +56,17 @@ namespace Backend.Data
                 entity.Property(e => e.Categorie).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Materiau).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(e => e.FormeVase).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.PoidsProduitGrammes).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.NomCommercial).HasMaxLength(200);
+                entity.Property(e => e.SloganProduit).HasMaxLength(200);
+                entity.Property(e => e.AccrocheMarketing).HasMaxLength(200);
+                entity.Property(e => e.HauteurCm).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.OuvertureCm).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.MatiereMarketing).HasMaxLength(100);
+                entity.Property(e => e.UtilisationProduit).HasMaxLength(300);
+                entity.Property(e => e.ConseilsEntretien).HasMaxLength(300);
+                entity.Property(e => e.ColorisDisponibles).HasMaxLength(500);
+                entity.Property(e => e.BeneficesMarketing).HasMaxLength(1000);
 
                 // 💡 FIX CATALOGUE : On force l'enum PieceStatus à s'enregistrer en texte
                 entity.Property(e => e.Statut)
@@ -457,6 +470,47 @@ namespace Backend.Data
                 entity.HasIndex(e => e.UserId).IsUnique();
             });
 
+            modelBuilder.Entity<PricingSettings>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.ElectricityPricePerKwh).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.AveragePrinterPowerKw).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.PrinterPurchasePrice).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ProductiveLifetimeHours).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.LaborHourlyRate).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.WasteRate).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.PackagingCostPerPiece).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ConsumablesCostPerPiece).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.SellingFeesRate).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.TargetGrossMarginRate).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.VatRate).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.PlaPricePerKg).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.AbsPricePerKg).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PetgPricePerKg).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TpuPricePerKg).HasColumnType("decimal(18,2)");
+                entity.Ignore(e => e.MachineAmortizationHourly);
+            });
+
+            modelBuilder.Entity<PieceCosting>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.MaterialName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.QuantityKg).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.FilamentPricePerKg).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PrintTimeHours).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.ModelingTimeHours).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.PostProcessingTimeHours).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.RealSalePriceHt).HasColumnType("decimal(18,2)");
+
+                entity.HasOne(e => e.Piece)
+                      .WithOne()
+                      .HasForeignKey<PieceCosting>(e => e.PieceId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.PieceId).IsUnique();
+            });
+
             // 🚀 BUCKET MAGIQUE : Configure globalement tous les types decimal à (18,2)
             // Éteint instantanément les 25 avertissements de troncature de tes logs !
             var decimalProperties = modelBuilder.Model.GetEntityTypes()
@@ -465,7 +519,10 @@ namespace Backend.Data
 
             foreach (var property in decimalProperties)
             {
-                property.SetColumnType("decimal(18,2)");
+                if (property.GetColumnType() == null)
+                {
+                    property.SetColumnType("decimal(18,2)");
+                }
             }
         }
     }

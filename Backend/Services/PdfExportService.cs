@@ -490,8 +490,13 @@ namespace Backend.Services
                             }
                             column.Item().AlignCenter().Text("FICHE PRODUIT")
                                 .SemiBold().FontSize(22).FontColor(BrandNavy);
-                            column.Item().AlignCenter().Text(piece.Nom)
+                            column.Item().AlignCenter().Text(GetProductName(piece))
                                 .FontSize(14).FontColor(Colors.Grey.Medium);
+                            if (!string.IsNullOrWhiteSpace(piece.SloganProduit))
+                            {
+                                column.Item().AlignCenter().Text(piece.SloganProduit)
+                                    .FontSize(11).Italic().FontColor(Colors.Grey.Darken1);
+                            }
                             column.Item().PaddingTop(8).BorderBottom(1).BorderColor(BrandNavy);
                         });
 
@@ -522,10 +527,13 @@ namespace Backend.Services
                                 });
 
                                 table.Cell().Text("Nom du produit :").Bold();
-                                table.Cell().Text(piece.Nom);
+                                table.Cell().Text(GetProductName(piece));
 
                                 table.Cell().Text("Référence :").Bold();
                                 table.Cell().Text(piece.Reference);
+
+                                table.Cell().Text("Accroche :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.AccrocheMarketing);
 
                                 table.Cell().Text("Catégorie :").Bold();
                                 CellOrPlaceholder(table.Cell(), piece.Categorie.ToString());
@@ -535,7 +543,7 @@ namespace Backend.Services
                             });
 
                             column.Item().Text("2. Description").SemiBold().FontSize(14).FontColor(BrandNavy);
-                            CellOrPlaceholder(column.Item().PaddingBottom(10), piece.Description);
+                            CellOrPlaceholder(column.Item().PaddingBottom(10), GetProductDescription(piece));
 
                             column.Item().Text("3. Caractéristiques techniques").SemiBold().FontSize(14).FontColor(BrandNavy);
                             column.Item().PaddingBottom(10).Table(table =>
@@ -558,17 +566,28 @@ namespace Backend.Services
                                 else
                                     CellOrPlaceholder(table.Cell(), null, "À compléter (fichier STL non analysé)");
 
-                                table.Cell().Text("Poids estimé :").Bold();
-                                if (stlMetadata != null)
-                                    table.Cell().Text($"{stlMetadata.EstimatedWeight} g");
+                                table.Cell().Text("Hauteur catalogue :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.HauteurCm.HasValue ? $"{piece.HauteurCm:F2} cm" : null);
+
+                                table.Cell().Text("Ouverture :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.OuvertureCm.HasValue ? $"{piece.OuvertureCm:F2} cm" : null);
+
+                                table.Cell().Text("Poids du produit :").Bold();
+                                if (piece.PoidsProduitGrammes.HasValue)
+                                    table.Cell().Text($"{piece.PoidsProduitGrammes:F2} g");
+                                else if (stlMetadata != null)
+                                    table.Cell().Text($"{stlMetadata.EstimatedWeight} g estimé");
                                 else
                                     CellOrPlaceholder(table.Cell(), null, "À compléter (fichier STL non analysé)");
 
                                 table.Cell().Text("Matériau(x) :").Bold();
-                                CellOrPlaceholder(table.Cell(), piece.Materiau.ToString());
+                                CellOrPlaceholder(table.Cell(), GetMaterialLabel(piece));
+
+                                table.Cell().Text("Étanchéité :").Bold();
+                                table.Cell().Text(piece.EstEtanche ? "Oui" : "Non");
 
                                 table.Cell().Text("Couleur(s) :").Bold();
-                                CellOrPlaceholder(table.Cell(), piece.Couleurs);
+                                CellOrPlaceholder(table.Cell(), GetColorsLabel(piece));
 
                                 table.Cell().Text("Capacité / Contenance :").Bold();
                                 CellOrPlaceholder(table.Cell(), piece.CapaciteContenance);
@@ -587,10 +606,13 @@ namespace Backend.Services
                                 });
 
                                 table.Cell().Text("Instructions d'utilisation :").Bold();
-                                CellOrPlaceholder(table.Cell(), piece.InstructionsUtilisation);
+                                CellOrPlaceholder(table.Cell(), piece.UtilisationProduit ?? piece.InstructionsUtilisation);
 
                                 table.Cell().Text("Précautions d'usage :").Bold();
                                 CellOrPlaceholder(table.Cell(), piece.PrecautionsUsage);
+
+                                table.Cell().Text("Entretien :").Bold();
+                                CellOrPlaceholder(table.Cell(), piece.ConseilsEntretien);
 
                                 table.Cell().Text("Public cible :").Bold();
                                 CellOrPlaceholder(table.Cell(), piece.PublicCible);
@@ -622,6 +644,9 @@ namespace Backend.Services
                             });
 
                             column.Item().Text("6. Éléments marketing").SemiBold().FontSize(14).FontColor(BrandNavy);
+                            column.Item().PaddingBottom(5).Text("Bénéfices catalogue :").Bold();
+                            CellOrPlaceholder(column.Item().PaddingBottom(10), piece.BeneficesMarketing);
+
                             column.Item().PaddingBottom(5).Text("Points forts / avantages :").Bold();
                             CellOrPlaceholder(column.Item().PaddingBottom(10), piece.PointsForts);
 
@@ -665,6 +690,32 @@ namespace Backend.Services
                 cell.Text(placeholder).Italic().FontColor(Colors.Grey.Medium);
             else
                 cell.Text(value);
+        }
+
+        private static string GetProductName(Piece piece)
+        {
+            return string.IsNullOrWhiteSpace(piece.NomCommercial) ? piece.Nom : piece.NomCommercial;
+        }
+
+        private static string? GetProductDescription(Piece piece)
+        {
+            return string.IsNullOrWhiteSpace(piece.DescriptionMarketing)
+                ? piece.Description
+                : piece.DescriptionMarketing;
+        }
+
+        private static string GetMaterialLabel(Piece piece)
+        {
+            return string.IsNullOrWhiteSpace(piece.MatiereMarketing)
+                ? piece.Materiau.ToString()
+                : piece.MatiereMarketing;
+        }
+
+        private static string? GetColorsLabel(Piece piece)
+        {
+            return string.IsNullOrWhiteSpace(piece.ColorisDisponibles)
+                ? piece.Couleurs
+                : piece.ColorisDisponibles;
         }
 
         public async Task<byte[]> ExportFacturePdfAsync(Facture facture)

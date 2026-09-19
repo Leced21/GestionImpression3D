@@ -183,18 +183,119 @@
         </div>
 
         <div class="form-group">
+          <label for="poidsProduitGrammes">Poids du produit (g)</label>
+          <input type="number" id="poidsProduitGrammes"
+            formControlName="poidsProduitGrammes" step="0.01" min="0"
+            placeholder="Ex: 350">
+        </div>
+
+        <div class="form-group">
           <label for="stock">Stock initial</label>
           <input type="number" id="stock" formControlName="stock" min="0">
         </div>
       </div>
     </div>
 
-    <!-- Section 4: Fiche produit -->
+    <!-- Section 4: Catalogue -->
+    <div class="form-section">
+      <h2 class="section-title">🛍️ Catalogue</h2>
+      <p class="helper-text">Ces champs servent à créer les fiches commerciales,
+        le catalogue et les exports pour les réseaux sociaux.</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nomCommercial">Nom commercial</label>
+          <input type="text" id="nomCommercial" formControlName="nomCommercial"
+            placeholder="Ex: Néria">
+        </div>
+
+        <div class="form-group">
+          <label for="sloganProduit">Slogan produit</label>
+          <input type="text" id="sloganProduit" formControlName="sloganProduit"
+            placeholder="Ex: L'harmonie des courbes">
+        </div>
+
+        <div class="form-group">
+          <label for="accrocheMarketing">Accroche</label>
+          <input type="text" id="accrocheMarketing"
+            formControlName="accrocheMarketing"
+            placeholder="Ex: Sublimez votre intérieur">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="descriptionMarketing">Description catalogue</label>
+        <textarea id="descriptionMarketing" formControlName="descriptionMarketing"
+          rows="3"
+          placeholder="Texte court et vendeur utilisé dans les fiches catalogue."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="hauteurCm">Hauteur (cm)</label>
+          <input type="number" id="hauteurCm" formControlName="hauteurCm"
+            step="0.01" min="0" placeholder="Ex: 25">
+        </div>
+
+        <div class="form-group">
+          <label for="ouvertureCm">Ouverture (cm)</label>
+          <input type="number" id="ouvertureCm" formControlName="ouvertureCm"
+            step="0.01" min="0" placeholder="Ex: 8.5">
+        </div>
+
+        <div class="form-group">
+          <label for="matiereMarketing">Matière affichée</label>
+          <input type="text" id="matiereMarketing" formControlName="matiereMarketing"
+            placeholder="Ex: PLA bio-sourcé">
+        </div>
+
+        <div class="form-group">
+          <label for="estEtanche">Étanchéité</label>
+          <select id="estEtanche" formControlName="estEtanche">
+            <option [ngValue]="false">Non</option>
+            <option [ngValue]="true">Oui</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="utilisationProduit">Utilisation</label>
+          <input type="text" id="utilisationProduit"
+            formControlName="utilisationProduit"
+            placeholder="Ex: Fleurs fraîches, fleurs séchées ou décoration seule">
+        </div>
+
+        <div class="form-group">
+          <label for="conseilsEntretien">Entretien</label>
+          <input type="text" id="conseilsEntretien"
+            formControlName="conseilsEntretien"
+            placeholder="Ex: Chiffon doux et eau tiède">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="colorisDisponibles">Coloris disponibles</label>
+        <input type="text" id="colorisDisponibles"
+          formControlName="colorisDisponibles"
+          placeholder="Ex: Coffee, White, Orange, Red, Olive Green">
+      </div>
+
+      <div class="form-group">
+        <label for="beneficesMarketing">Bénéfices marketing</label>
+        <textarea id="beneficesMarketing" formControlName="beneficesMarketing"
+          rows="3"
+          placeholder="Ex: Design intemporel; S'intègre partout; Étanche; Fabrication soignée"></textarea>
+      </div>
+    </div>
+
+    <!-- Section 5: Fiche produit -->
     <div class="form-section" *ngIf="canEditFicheProduit">
       <h2 class="section-title">🛍️ Fiche produit</h2>
       <p class="helper-text">Ces informations servent uniquement à générer la
-        fiche produit (PDF). Dimensions, volume et poids sont calculés
-        automatiquement à partir du fichier STL.</p>
+        fiche produit (PDF). Dimensions et volume sont calculés automatiquement
+        à partir du fichier STL; le poids produit peut être saisi dans la section
+        commerciale.</p>
 
       <div class="form-row">
         <div class="form-group">

@@ -216,6 +216,8 @@ builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IAuthMailSender, AuthMailSender>();
+builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<IPieceSocialExportService, PieceSocialExportService>();
 
 // Mappers & Validations
 builder.Services.AddScoped<IUserMapper, UserMapper>();
@@ -305,6 +307,10 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var failStartupOnMigrationError = app.Configuration.GetValue(
+        "Database:FailStartupOnMigrationError",
+        !app.Environment.IsDevelopment());
+
     try
     {
         logger.LogInformation("Attente de la base de données SQL Server...");
@@ -318,7 +324,13 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     catch (Exception ex)
     {
         app.Logger.LogCritical(ex, "Database migration failed during startup");
-        throw;
+        if (failStartupOnMigrationError)
+        {
+            throw;
+        }
+
+        app.Logger.LogWarning(
+            "Le démarrage continue sans migration automatique. Corrigez SQL Server/LocalDB puis lancez 'dotnet ef database update'.");
     }
 }
 app.MapGet("/", () => Results.Ok("3D Inspire API"));
